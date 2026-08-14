@@ -1,0 +1,85 @@
+今の要件だけに絞ると、こうです。
+
+Better Authベースの認証基盤
+OIDC Providerとして動作
+かっこいいログイン画面
+初回起動時だけセットアップ画面を出して最初の管理者を作る
+以降は自由登録を閉じて、招待リンクでユーザー追加
+Principal
+User
+人間のユーザー
+Service Account
+Bot / CI / バックエンドなどの非人間アカウント
+OwnerをUserまたはTeamに持たせたい
+専用Credentialを持つ
+System Role
+認証基盤そのものを操作するためのRole
+例:
+root
+user-admin
+application-admin
+ユーザーを管理できるユーザー、Applicationを管理できるユーザーなどを表す
+Team
+Userをまとめる単位
+Team単位でApplication Roleを付与できる
+Teamに所属するUserは、そのRoleを継承する
+直接付与とTeam由来のRoleは区別する
+Application
+認証基盤を利用するサービス単位
+各Applicationに以下を持たせる
+OIDC Client設定
+Application Role
+User / Service Account / TeamへのRole割り当て
+Provisioning設定
+Application Role
+「そのPrincipalが、そのApplication内で何者か」を表す
+例:
+Grafana: Admin
+Grafana: Editor
+Wiki: Viewer
+Userへ直接付与可能
+Service Accountへ直接付与可能
+Teamへ付与可能
+Userの実効Roleは Direct + Team継承
+Roleが具体的に何を許可するかはApplication側が判断する
+OIDC
+認証基盤 → Application のログインに使う
+sub, name, email, roles, teams などをClaimとして渡す
+Application Aへのログイン時には、A向けApplication Roleを渡す
+Provisioning
+ログイン時だけでなく変更時にもApplicationへ反映
+主にSCIM 2.0を想定
+User作成・更新・無効化
+Team membership変更
+Application Role変更
+Applicationへの割り当て変更
+などを同期する
+今回管理しないもの
+Application Aがさらに外部向けに提供するOAuth
+Application A独自のOAuth Client
+repo:write などの独自OAuth Scope / Permission
+Application Aが発行するAccess Token
+
+全体像はこれです。
+
+Identity Platform
+├─ Principals
+│   ├─ Users
+│   └─ Service Accounts
+│
+├─ Teams
+│
+├─ System Roles
+│
+└─ Applications
+    ├─ OIDC Client
+    ├─ Application Roles
+    ├─ User → Application Roles
+    ├─ Service Account → Application Roles
+    ├─ Team → Application Roles
+    └─ Provisioning
+
+一言でいうと、「誰がどのApplicationで何のRoleを持つか」を中央管理し、OIDCとProvisioningで各Applicationへ伝える認証基盤です。 
+
+どう思う？
+システム構成はElysia on Workersでやりたい
