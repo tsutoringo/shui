@@ -42,7 +42,7 @@ export function AuthPage() {
         shui にログインする
       </h1>
       <LayerCard className="mt-10 bg-kumo-elevated px-5 py-4 ring ring-kumo-line">
-        <h2 className="text-2xl font-semibold text-kumo-strong">Sign in</h2>
+        <h2 className="text-2xl font-semibold text-kumo-strong">サインイン</h2>
         <p className="mt-2 text-sm text-kumo-subtle">
           M0 uses Better Auth email/password as its first protocol probe.
         </p>
@@ -59,7 +59,7 @@ export function AuthPage() {
                 id="email"
                 autoComplete="email"
                 className="text-sm transition-none"
-                label="Email"
+                label="メールアドレス"
                 onChange={(event) => field.handleChange(event.target.value)}
                 value={field.state.value}
               />
@@ -71,7 +71,7 @@ export function AuthPage() {
                 id="password"
                 autoComplete="current-password"
                 className="text-sm transition-none"
-                label="Password"
+                label="パスワード"
                 onChange={(event) => field.handleChange(event.target.value)}
                 type="password"
                 value={field.state.value}
@@ -80,7 +80,7 @@ export function AuthPage() {
           </form.Field>
           <Button
             aria-busy={signIn.isPending}
-            className="w-full text-sm transition-none"
+            className="w-full justify-center text-sm transition-none"
             disabled={signIn.isPending}
             type="submit"
             variant="primary"
