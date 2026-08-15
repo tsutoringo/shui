@@ -1,11 +1,12 @@
 {
-  description = "Node + pnpm + Wrangler";
+  description = "Node + pnpm + Wrangler + Vite+";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nix-vite-plus.url = "github:ryoppippi/nix-vite-plus";
   };
 
-  outputs = { nixpkgs, ... }:
+  outputs = { nixpkgs, nix-vite-plus, ... }:
     let
       systems = [
         "aarch64-darwin"
@@ -25,6 +26,7 @@
               nodejs_24
               pnpm
               wrangler
+              nix-vite-plus.packages.${system}.vp
             ];
           };
         });
