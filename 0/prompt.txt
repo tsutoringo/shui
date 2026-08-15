@@ -1,0 +1,1 @@
+このリポジトリを読み取り専用で確認し、sign-in を TanStack Query の useMutation に置き換え、health を queryOptions/ensureQueryData と useQuery で整理する場合のテスト計画を作ってください。既存の Workers/Vitest 構成で追加すべきテスト、ブラウザ側でしか確認できないこと、Cookie/OAuth redirect の検証ポイント、実行すべき vp コマンドを具体的に返してください。ファイル編集は絶対に行わないでください。
