@@ -1,0 +1,1 @@
+このリポジトリを読み取り専用で調査し、TanStack React Query の Provider、QueryClient、Router context、既存 useQuery の実装、認証/API の構成を確認してください。sign-in の useMutation 化に必要な設計（query key、API helper、エラー処理、invalidate/redirect）と、既存構成上の制約を報告してください。ファイル編集は絶対に行わないでください。
