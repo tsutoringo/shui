@@ -3,7 +3,7 @@
   "checkpoint_id": "01M03EXH7A59HMF1NJECQTSN9J",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "ROADMAP.md",
     "auth.config.ts",
@@ -11,7 +11,11 @@
     "pnpm-lock.yaml",
     "src/routes/api.$.ts",
     "src/server/auth.ts",
-    "test/worker-runtime.test.ts"
+    "test/worker-runtime.test.ts",
+    "worker-configuration.d.ts",
+    "wrangler.jsonc",
+    "wrangler.production.jsonc",
+    "wrangler.staging.jsonc"
   ],
   "sessions": [
     {
@@ -20,13 +24,20 @@
       "compact_transcript": "/0/transcript.jsonl",
       "content_hash": "/0/content_hash.txt",
       "prompt": "/0/prompt.txt"
+    },
+    {
+      "metadata": "/1/metadata.json",
+      "transcript": "/1/full.jsonl",
+      "compact_transcript": "/1/transcript.jsonl",
+      "content_hash": "/1/content_hash.txt",
+      "prompt": ""
     }
   ],
   "token_usage": {
-    "input_tokens": 2331685,
+    "input_tokens": 4617676,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 9505792,
-    "output_tokens": 19804,
-    "api_call_count": 96
+    "cache_read_tokens": 18929664,
+    "output_tokens": 38976,
+    "api_call_count": 189
   }
 }
