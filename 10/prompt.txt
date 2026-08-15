@@ -1,0 +1,5 @@
+Research, without modifying files, the exact minimal Better Auth 1.7.0-rc.5 + @better-auth/oauth-provider 1.7.0-rc.5 setup on Cloudflare Workers D1 using Drizzle. Determine package set, config shape, schema generation/migration approach, how to construct auth per request or with cloudflare:workers env, how to mount Elysia routes and well-known metadata, and how to run an M0 health/JWKS/discovery check without production secrets. Consult current docs/package types where needed. Identify any blockers or RC-specific gotchas. Return concrete recommendations and sources/observations.
+
+---
+
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
