@@ -26,7 +26,7 @@ const auth = betterAuth({
       consentPage: "/consent",
       grantTypes: ["authorization_code", "client_credentials"],
       loginPage: "/sign-in",
-      scopes: ["openid", "profile", "email"],
+      scopes: ["openid", "profile", "email", "api:read"],
     }),
   ],
   secret: process.env.BETTER_AUTH_SECRET,

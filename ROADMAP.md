@@ -412,31 +412,32 @@ Required quality:
 
 Purpose: prove the riskiest framework and protocol combination before building domain features.
 
-- [ ] Initialize pnpm, TypeScript strict mode, TanStack Start, React 19, Elysia, Wrangler, Drizzle, and Vitest
-- [ ] Pin `better-auth` and every `@better-auth/*` package to `1.7.0-rc.5` without caret ranges
-- [ ] Configure current Workers compatibility date and `nodejs_compat`
-- [ ] Configure `@cloudflare/vite-plugin` for the TanStack Start SSR environment
-- [ ] Mount Elysia in a TanStack Start `/api/$` server route and dispatch every supported HTTP method through `app.fetch(request)`
-- [ ] Configure Eden Treaty for direct SSR calls and browser HTTP calls while preserving request-scoped cookies and headers without cross-request leakage
-- [ ] Configure a custom Worker entrypoint that delegates `fetch` to TanStack Start and exposes `queue` and `scheduled` handlers
+- [x] Initialize pnpm, TypeScript strict mode, TanStack Start, React 19, Elysia, Wrangler, Drizzle, and Vitest
+- [x] Pin `better-auth` and every `@better-auth/*` package to `1.7.0-rc.5` without caret ranges
+- [x] Configure current Workers compatibility date and `nodejs_compat`
+- [x] Configure `@cloudflare/vite-plugin` for the TanStack Start SSR environment
+- [x] Mount Elysia in a TanStack Start `/api/$` server route and dispatch every supported HTTP method through `app.fetch(request)`
+- [x] Configure Eden Treaty for direct SSR calls and browser HTTP calls while preserving request-scoped cookies and headers without cross-request leakage
+- [x] Configure a custom Worker entrypoint that delegates `fetch` to TanStack Start and exposes `queue` and `scheduled` handlers
 - [x] Initialize Tailwind CSS v4, Kumo UI, TanStack Form, TanStack Query, and Vite+
-- [ ] Generate binding types with `wrangler types`
-- [ ] Configure local and remote D1 migrations
-- [ ] Mount the Better Auth handler without breaking issuer-path or root `/.well-known` routes
-- [ ] Verify `/api/auth/ok`
-- [ ] Verify OpenID discovery and OAuth Authorization Server metadata
-- [ ] Verify JWKS generation and JWT signature validation
-- [ ] Verify Authorization Code + PKCE against a test client
-- [ ] Verify Client Credentials against a test Resource
-- [ ] Verify Application-specific async custom claims from D1
-- [ ] Verify authorization code single-use behavior under concurrent redemption
-- [ ] Run integration tests inside the Workers runtime
+- [x] Generate binding types with `wrangler types`
+- [x] Configure local and remote D1 migrations
+- [x] Mount the Better Auth handler without breaking issuer-path or root `/.well-known` routes
+- [x] Verify `/api/auth/ok`
+- [x] Verify OpenID discovery and OAuth Authorization Server metadata
+- [x] Verify JWKS generation and JWT signature validation
+- [x] Verify Authorization Code + PKCE against a test client
+- [x] Verify Client Credentials against a test Resource
+- [x] Verify Application-specific async custom claims from D1
+- [x] Verify authorization code single-use behavior under concurrent redemption
+- [x] Run integration tests inside the Workers runtime
+- [x] Verify the deployed Staging Worker with remote D1, human sign-in, PKCE, Client Credentials, JWT claims, and concurrent redemption
 
 Exit criteria:
 
-- A real Worker runtime can complete human and M2M token flows
-- Access Token `aud`, ID Token `aud`, issuer, subject, and claims match the contract
-- D1 migrations and Better Auth generated schema work locally and remotely
+- [x] A real Worker runtime can complete human and M2M token flows
+- [x] Access Token `aud`, ID Token `aud`, issuer, subject, and claims match the contract
+- [x] D1 migrations and Better Auth generated schema work locally and remotely
 - SSR, browser navigation, API requests, Queue handlers, and scheduled handlers coexist in one Worker
 - No Node-only or TanStack Start/Elysia integration incompatibility remains unexplained
 
@@ -673,4 +674,4 @@ These decisions do not block M0 and must be fixed before the listed milestone be
 - [x] Independent Assignment model selected
 - [x] Service Account Client Credentials strategy selected
 - [x] Outbound SCIM direction selected
-- [ ] M0 compatibility spike started
+- [x] M0 compatibility spike implemented and locally verified

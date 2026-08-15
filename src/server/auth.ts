@@ -41,12 +41,12 @@ export function createAuth(environment: AuthEnvironment) {
         resources: [
           {
             accessTokenTtl: 3600,
-            allowedScopes: ["openid", "profile", "email"],
+            allowedScopes: ["openid", "profile", "email", "api:read"],
             identifier: resourceIdentifier,
             name: "Shui API",
           },
         ],
-        scopes: ["openid", "profile", "email"],
+        scopes: ["openid", "profile", "email", "api:read"],
       }),
     ],
     secret: environment.BETTER_AUTH_SECRET,

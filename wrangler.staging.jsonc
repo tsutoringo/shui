@@ -1,35 +1,39 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "shui",
+  "name": "shui-staging",
   "main": "src/server.ts",
   "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "BETTER_AUTH_URL": "https://shui-staging.tsutoringo.workers.dev",
+  },
   "assets": {
-    "directory": ".output/public",
+    "directory": "dist/client",
     "binding": "ASSETS",
   },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "shui-db",
-      "database_id": "00000000000000000000000000000000",
-      "migrations_dir": "../../migrations",
+      "database_name": "shui-db-staging",
+      // Replace this placeholder with the staging D1 database ID.
+      "database_id": "d5979c8a-fa82-481a-a89f-e506e2225951",
+      "migrations_dir": "./migrations",
     },
   ],
   "queues": {
     "producers": [
       {
         "binding": "PROVISIONING_QUEUE",
-        "queue": "shui-provisioning",
+        "queue": "shui-provisioning-staging",
       },
     ],
     "consumers": [
       {
-        "queue": "shui-provisioning",
+        "queue": "shui-provisioning-staging",
         "max_batch_size": 10,
         "max_batch_timeout": 5,
         "max_retries": 3,
-        "dead_letter_queue": "shui-provisioning-dlq",
+        "dead_letter_queue": "shui-provisioning-staging-dlq",
       },
     ],
   },

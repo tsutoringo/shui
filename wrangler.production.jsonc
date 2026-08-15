@@ -4,16 +4,20 @@
   "main": "src/server.ts",
   "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "BETTER_AUTH_URL": "https://replace-with-production-url.example",
+  },
   "assets": {
-    "directory": ".output/public",
+    "directory": "dist/client",
     "binding": "ASSETS",
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "shui-db",
+      // Replace this placeholder with the production D1 database ID.
       "database_id": "00000000000000000000000000000000",
-      "migrations_dir": "../../migrations",
+      "migrations_dir": "./migrations",
     },
   ],
   "queues": {

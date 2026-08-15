@@ -22,5 +22,8 @@ export const Route = createFileRoute("/api/$")({
 });
 
 export const getTreaty = createIsomorphicFn()
-  .server(() => treaty(createApiApp(env)).api)
+  .server(
+    (request?: Request) =>
+      treaty(createApiApp(env), request ? { headers: request.headers } : {}).api,
+  )
   .client(() => treaty<ApiApp>(window.location.origin).api);
