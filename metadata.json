@@ -3,7 +3,7 @@
   "checkpoint_id": "01M02KNEMF622FRHG4BZQYF0CC",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 15,
+  "checkpoints_count": 16,
   "files_touched": [
     ".agents/skills/better-accessibility/SKILL.md",
     ".agents/skills/better-accessibility/agents/openai.yaml",
@@ -154,13 +154,20 @@
       "compact_transcript": "/8/transcript.jsonl",
       "content_hash": "/8/content_hash.txt",
       "prompt": "/8/prompt.txt"
+    },
+    {
+      "metadata": "/9/metadata.json",
+      "transcript": "/9/full.jsonl",
+      "compact_transcript": "/9/transcript.jsonl",
+      "content_hash": "/9/content_hash.txt",
+      "prompt": "/9/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 3693205,
+    "input_tokens": 7756886,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 28589056,
-    "output_tokens": 82411,
-    "api_call_count": 315
+    "cache_read_tokens": 58401280,
+    "output_tokens": 115921,
+    "api_call_count": 476
   }
 }

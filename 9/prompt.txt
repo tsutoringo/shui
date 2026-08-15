@@ -1,0 +1,18 @@
+Continue the interrupted M0 implementation in /Users/tsutoringo/Documents/workspaces/private/project/mikan. Directly modify files and verify. Current state: package.json and pnpm-lock.yaml now exist with pinned dependencies, node_modules installed, but no src/config/test files exist. Preserve ROADMAP.md and pnpm-workspace.yaml. Do not commit/deploy.
+
+Implement a minimal working scaffold now:
+1. TanStack Start React 19 with Vite and Cloudflare plugin, strict tsconfig, root/index/sign-in/consent routes, responsive intentional M0 page, Tailwind v4, minimal shadcn components/config, router.
+2. Elysia app embedded through src/routes/api.$.ts with handlers for GET/POST/PUT/PATCH/DELETE/OPTIONS/HEAD and /api/health. Eden typed browser probe where current APIs support it. No CloudflareAdapter/.compile.
+3. src/server.ts custom Worker entry delegates fetch to @tanstack/react-start/server-entry, intercepts root Better Auth RFC8414 alias if needed, and has minimal correctly typed queue/scheduled handlers with no floating promises.
+4. wrangler.jsonc date 2026-08-15, nodejs_compat, local D1 binding DB (database id may use a local placeholder accepted by tests), observability; avoid remote queue config if it blocks local M0.
+5. Drizzle D1 client and schema. Better Auth exactly rc.5 using minimal entry, D1 drizzle adapter provider sqlite transaction false, jwt + oauthProvider, email/password; all secrets from Env. Generate actual auth schema with auth CLI and a Drizzle SQL migration if possible. Never invent plugin schema.
+6. Reachable /api/auth/ok, jwks, issuer-path discoveries, and root RFC8414 alias.
+7. Worker-runtime tests via @cloudflare/vitest-pool-workers for health, D1, and auth metadata/JWKS where feasible. Tests must apply D1 migrations. If TanStack virtual modules block worker tests, split pure Elysia app tests but still run in workerd.
+8. Add biome.json, components.json, drizzle.config.ts, vitest config, .dev.vars.example and extend .gitignore. Update scripts only if needed.
+9. Run cf-typegen, migrations/schema generation, typecheck, Biome, tests, build. Fix issues. Do not mark ROADMAP items complete; parent will do that based on evidence.
+
+Use apply_patch for manual edits. Return concise summary, commands/results, and exact unresolved blockers. Do not claim full PKCE/client_credentials/concurrency or remote D1 unless executed.
+
+---
+
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
