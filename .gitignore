@@ -1,1 +1,8 @@
 .direnv
+.dev.vars
+.wrangler
+.output
+dist
+node_modules
+coverage
+*.tsbuildinfo

@@ -1,0 +1,31 @@
+@source "../../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx,ts,tsx}";
+@import "@cloudflare/kumo/styles/tailwind";
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --ink: #101316;
+  --paper: #f4f0e9;
+  --tangerine: #ff7a42;
+}
+
+@layer base {
+  * {
+    border-color: color-mix(in srgb, currentColor 12%, transparent);
+  }
+
+  html {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-sans);
+  }
+
+  body {
+    background: var(--ink);
+    margin: 0;
+  }
+}

@@ -1,10 +1,10 @@
-# Mikan Roadmap
+# Shui Roadmap
 
 Last updated: 2026-08-14
 
 ## Goal
 
-Mikan is a central identity platform that manages who can use each Application and which roles they have there. It communicates that state to Applications through OIDC/OAuth 2.1 and outbound SCIM 2.0 provisioning.
+Shui is a central identity platform that manages who can use each Application and which roles they have there. It communicates that state to Applications through OIDC/OAuth 2.1 and outbound SCIM 2.0 provisioning.
 
 ```text
 Identity Platform
@@ -33,7 +33,7 @@ Identity Platform
 - Human Users and non-human Service Accounts
 - Service Account credentials using the OAuth `client_credentials` grant
 - User and Team ownership for Applications and Service Accounts
-- System Roles for operating Mikan
+- System Roles for operating Shui
 - Flat Teams containing Users
 - Application Assignments independent from Application Roles
 - Direct User and Service Account Application Role grants
@@ -52,13 +52,21 @@ Identity Platform
 - Nested Teams or Team DAGs
 - Deny roles or deny grants
 - General-purpose policy language
-- Inbound SCIM into Mikan
+- Inbound SCIM into Shui
 
 ## Fixed Decisions
 
-- Runtime: Elysia on Cloudflare Workers
+- Runtime and deployment: one Cloudflare Worker with a custom module entrypoint
+- Web framework: TanStack Start with React 19
+- API framework: Elysia mounted inside a TanStack Start server route under `/api/*`
+- Elysia integration: dispatch standard `Request` objects through `app.fetch(request)` instead of exporting Elysia's experimental Cloudflare adapter directly
+- Typed API client: Eden Treaty, using direct in-process calls during SSR and HTTP in the browser
 - Database: Cloudflare D1 with Drizzle ORM
-- Frontend delivery: Workers Static Assets
+- Build and frontend delivery: Vite, `@cloudflare/vite-plugin`, and Workers Static Assets
+- UI: Kumo UI with Tailwind CSS v4
+- Forms and server state: TanStack Form and TanStack Query
+- API validation: Elysia `t` / TypeBox
+- Formatting and linting: Vite+ with Oxlint, Oxfmt, and TypeScript strict mode
 - Async provisioning: Cloudflare Queues with a dead-letter queue
 - Authentication: Better Auth
 - Provider: `@better-auth/oauth-provider`, not the legacy `oidcProvider`
@@ -72,36 +80,39 @@ Identity Platform
 - Direct and Team-derived Role origins remain distinguishable
 - Service Account credentials are OAuth Clients, not a second custom API-key system
 - One Service Account can have multiple OAuth Client credentials for safe rotation
-- Better Auth owns authentication protocol data; Mikan owns authorization and provisioning data
-- Better Auth Organization roles are not used as Mikan System or Application Roles
-- Better Auth SCIM plugin is not used because it provides inbound SCIM, while Mikan needs outbound provisioning
+- Better Auth owns authentication protocol data; Shui owns authorization and provisioning data
+- Better Auth Organization roles are not used as Shui System or Application Roles
+- Better Auth SCIM plugin is not used because it provides inbound SCIM, while Shui needs outbound provisioning
+- TanStack Start Server Functions do not contain domain business logic; domain reads and mutations go through Elysia services and routes
 
 ## System Architecture
 
 ```text
 Browser
-  │
-  ├── React UI from Workers Static Assets
-  │
-  └── HTTPS
-       ▼
-Cloudflare Worker
-  ├── Elysia HTTP API
-  ├── Better Auth handler
-  │   ├── Email/password authentication
-  │   ├── Sessions
-  │   ├── OAuth 2.1 / OIDC Provider
-  │   └── JWT / JWKS
-  ├── Identity and authorization services
-  ├── Audit and outbox writer
-  └── Queue consumer
+  │ HTTPS
+  ▼
+Single Cloudflare Worker
+  ├── fetch
+  │   └── TanStack Start
+  │       ├── React 19 SSR and routing
+  │       ├── Workers Static Assets
+  │       └── /api/* -> Elysia app.fetch(request)
+  │                    ├── Better Auth handler
+  │                    │   ├── Email/password authentication
+  │                    │   ├── Sessions
+  │                    │   ├── OAuth 2.1 / OIDC Provider
+  │                    │   └── JWT / JWKS
+  │                    ├── Identity and authorization services
+  │                    └── Audit and outbox writer
+  ├── queue -> provisioning consumer
+  └── scheduled -> outbox dispatch and reconciliation
        │
        ├── D1 via Drizzle
        ├── Cloudflare Queues
        └── Application SCIM endpoints
 ```
 
-The Elysia Cloudflare Worker adapter is currently experimental. The Worker must use the Cloudflare adapter, call `.compile()`, and be tested in the actual Workers runtime rather than only in Node.js.
+Elysia's direct Cloudflare Worker adapter is currently experimental, so Shui does not export it as the Worker entrypoint. Elysia runs through its documented TanStack Start integration and receives requests through `app.fetch(request)`. This combined path must still be tested in the actual Workers runtime rather than only in Node.js. The custom Worker entrypoint delegates `fetch` to TanStack Start and also exposes `queue` and `scheduled` handlers.
 
 ## Domain Semantics
 
@@ -123,7 +134,7 @@ Initial built-in System Roles:
 
 | Role | Purpose |
 | --- | --- |
-| `root` | Full control of Mikan and recovery-critical operations |
+| `root` | Full control of Shui and recovery-critical operations |
 | `user-admin` | Manage Users, invitations, Teams, and memberships |
 | `application-admin` | Manage Applications, Assignments, Roles, OIDC Clients, and provisioning |
 
@@ -133,7 +144,7 @@ The last active `root` User cannot be disabled, deleted, or stripped of `root`.
 
 ### Applications
 
-An Application is a service that trusts Mikan. Each Application has:
+An Application is a service that trusts Shui. Each Application has:
 
 - One OAuth Resource identifier used as the Access Token audience
 - One or more OIDC/OAuth Clients
@@ -168,7 +179,7 @@ The following states are intentionally different:
 
 ### Application Roles
 
-Application Roles describe what a Principal is inside one Application. They do not define concrete permissions inside Mikan or the downstream Application.
+Application Roles describe what a Principal is inside one Application. They do not define concrete permissions inside Shui or the downstream Application.
 
 ```text
 effective User Roles
@@ -216,7 +227,7 @@ Refresh tokens remain disabled until Better Auth 1.7 is stable or D1 concurrency
 
 - Access Token `aud`: the target Application's OAuth Resource identifier
 - ID Token `aud`: the authenticating OIDC `client_id`, as required by OIDC
-- `iss`: Mikan's canonical public issuer URL
+- `iss`: Shui's canonical public issuer URL
 - `azp` / `client_id`: the authenticated OAuth Client
 
 Clients must be linked to allowed Resources. Managed Clients request exactly one Application Resource per flow. Tokens requesting no Resource, an unknown Resource, multiple Resources, or a Resource owned by another Application are rejected.
@@ -230,7 +241,7 @@ Standard OIDC claims are exposed according to scopes through ID Token and UserIn
 - `email`
 - `email_verified`
 
-Mikan-specific claims use a URI namespace based on the final issuer domain:
+Shui-specific claims use a URI namespace based on the final issuer domain:
 
 - `application_id`
 - `principal_id`
@@ -249,7 +260,7 @@ Team claims contain only Teams relevant to the target Application. Claim keys an
 
 Better Auth generated tables remain isolated as authentication infrastructure. Domain migrations reference Better Auth Users but do not modify generated tables manually unless required by a documented plugin extension.
 
-Core Mikan tables:
+Core Shui tables:
 
 - `principals`
 - `human_principals`
@@ -287,7 +298,7 @@ Use:
 - Conditional updates for compare-and-swap behavior
 - `INSERT ... ON CONFLICT` for idempotency
 - `D1Database.batch()` for atomic groups of prepared statements
-- State machines when Better Auth writes and Mikan domain writes cannot share one transaction
+- State machines when Better Auth writes and Shui domain writes cannot share one transaction
 - Reconciliation jobs for cross-system convergence
 
 Every administrative domain mutation writes its audit event and outbox event in the same D1 atomic batch.
@@ -328,7 +339,7 @@ Invitation requirements:
 
 ## Outbound Provisioning
 
-Provisioning converges each Application toward Mikan's desired state. Events are notifications to reconcile current state, not commands that must be applied blindly in event order.
+Provisioning converges each Application toward Shui's desired state. Events are notifications to reconcile current state, not commands that must be applied blindly in event order.
 
 ### Initial SCIM Coverage
 
@@ -366,6 +377,8 @@ Provisioning credentials are encrypted with AES-GCM using a versioned key stored
 
 The UI is a focused identity control plane rather than a generic admin template.
 
+TanStack Start owns routing, SSR, and route-level loading. TanStack Query owns cached server state and mutations, while TanStack Form owns form state. Eden Treaty calls Elysia directly during SSR and over HTTP in the browser. Kumo UI provides accessible, source-tested primitives and semantic tokens, while Shui keeps its own page composition and brand treatment rather than using a generic dashboard template.
+
 Required routes:
 
 - `/setup`
@@ -399,13 +412,17 @@ Required quality:
 
 Purpose: prove the riskiest framework and protocol combination before building domain features.
 
-- [ ] Initialize pnpm, TypeScript strict mode, Elysia, Wrangler, Drizzle, and Vitest
+- [ ] Initialize pnpm, TypeScript strict mode, TanStack Start, React 19, Elysia, Wrangler, Drizzle, and Vitest
 - [ ] Pin `better-auth` and every `@better-auth/*` package to `1.7.0-rc.5` without caret ranges
 - [ ] Configure current Workers compatibility date and `nodejs_compat`
-- [ ] Configure Elysia's Cloudflare adapter and `.compile()`
+- [ ] Configure `@cloudflare/vite-plugin` for the TanStack Start SSR environment
+- [ ] Mount Elysia in a TanStack Start `/api/$` server route and dispatch every supported HTTP method through `app.fetch(request)`
+- [ ] Configure Eden Treaty for direct SSR calls and browser HTTP calls while preserving request-scoped cookies and headers without cross-request leakage
+- [ ] Configure a custom Worker entrypoint that delegates `fetch` to TanStack Start and exposes `queue` and `scheduled` handlers
+- [x] Initialize Tailwind CSS v4, Kumo UI, TanStack Form, TanStack Query, and Vite+
 - [ ] Generate binding types with `wrangler types`
 - [ ] Configure local and remote D1 migrations
-- [ ] Mount the Better Auth handler without breaking `/.well-known` routes
+- [ ] Mount the Better Auth handler without breaking issuer-path or root `/.well-known` routes
 - [ ] Verify `/api/auth/ok`
 - [ ] Verify OpenID discovery and OAuth Authorization Server metadata
 - [ ] Verify JWKS generation and JWT signature validation
@@ -420,7 +437,8 @@ Exit criteria:
 - A real Worker runtime can complete human and M2M token flows
 - Access Token `aud`, ID Token `aud`, issuer, subject, and claims match the contract
 - D1 migrations and Better Auth generated schema work locally and remotely
-- No Node-only or Elysia adapter incompatibility remains unexplained
+- SSR, browser navigation, API requests, Queue handlers, and scheduled handlers coexist in one Worker
+- No Node-only or TanStack Start/Elysia integration incompatibility remains unexplained
 
 ### M1: Authentication, Setup, And Invitation
 
@@ -523,7 +541,7 @@ Exit criteria:
 
 - Duplicate and reversed messages converge to the latest desired state
 - `429`, timeout, `5xx`, conflict, missing resource, and permanent `4xx` behavior is tested
-- Assignment removal deactivates the downstream User without deleting Mikan identity data
+- Assignment removal deactivates the downstream User without deleting Shui identity data
 - Team membership and Role changes converge after transient failures
 - No provisioning credential or sensitive response body appears in logs
 
@@ -621,7 +639,8 @@ Use `@cloudflare/vitest-pool-workers` with real D1 and Queue bindings where poss
 | Risk | Mitigation |
 | --- | --- |
 | Better Auth 1.7 is an RC | Exact version pinning, schema snapshots, compatibility spike, reviewed upgrades only |
-| Elysia Workers adapter is experimental | Runtime integration tests, thin Elysia boundary, avoid adapter-specific business logic |
+| Elysia's direct Workers adapter is experimental | Embed Elysia through the documented TanStack Start route integration, keep a standard Fetch boundary, and run workerd integration tests |
+| TanStack Start and Elysia add two server abstractions | Keep all domain APIs and business logic in Elysia, use Start only for web delivery and SSR orchestration, and test route ownership explicitly |
 | Better Auth and domain writes cannot always share one transaction | Idempotent state machines, fail-closed authorization, reconciliation |
 | D1 has limited transaction patterns and per-database serial throughput | Atomic batches, indexed short queries, no long transactions, production-like load tests |
 | Queue delivery is at least once | Transactional outbox, idempotency keys, desired-state reconciliation |
@@ -647,7 +666,8 @@ These decisions do not block M0 and must be fixed before the listed milestone be
 ## Current Status
 
 - [x] Requirements and out-of-scope boundary defined
-- [x] Elysia on Workers selected
+- [x] Single-Worker TanStack Start and embedded Elysia architecture selected
+- [x] Eden Treaty, Kumo UI, Tailwind CSS v4, TanStack Form, and TanStack Query selected
 - [x] D1 and Drizzle selected
 - [x] Better Auth OAuth Provider 1.7 RC strategy selected
 - [x] Independent Assignment model selected
