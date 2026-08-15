@@ -1,0 +1,3 @@
+こういうヤツtanstack queryのuseMutationに置き換えたいよね
+
+他にuseQueryやuseMutationが使えるところを探して置き換えプランを提示して

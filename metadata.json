@@ -3,7 +3,7 @@
   "checkpoint_id": "01M02KNEMF622FRHG4BZQYF0CC",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 3,
+  "checkpoints_count": 5,
   "files_touched": [
     ".agents/skills/better-accessibility/SKILL.md",
     ".agents/skills/better-accessibility/agents/openai.yaml",
@@ -64,6 +64,9 @@
     "src/db/auth-schema.ts",
     "src/db/index.ts",
     "src/env.d.ts",
+    "src/lib/auth-client.ts",
+    "src/lib/auth-queries.ts",
+    "src/lib/health-query.ts",
     "src/routeTree.gen.ts",
     "src/router.tsx",
     "src/routes/__root.tsx",
@@ -78,6 +81,7 @@
     "src/styles/app.css",
     "src/test-worker.ts",
     "src/worker-events.ts",
+    "test/query-options.test.ts",
     "test/setup.ts",
     "test/worker-events.test.ts",
     "test/worker-runtime.test.ts",
@@ -108,13 +112,20 @@
       "compact_transcript": "/2/transcript.jsonl",
       "content_hash": "/2/content_hash.txt",
       "prompt": "/2/prompt.txt"
+    },
+    {
+      "metadata": "/3/metadata.json",
+      "transcript": "/3/full.jsonl",
+      "compact_transcript": "/3/transcript.jsonl",
+      "content_hash": "/3/content_hash.txt",
+      "prompt": "/3/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 697941,
+    "input_tokens": 1304607,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 4903936,
-    "output_tokens": 16549,
-    "api_call_count": 76
+    "cache_read_tokens": 10129408,
+    "output_tokens": 30372,
+    "api_call_count": 127
   }
 }
