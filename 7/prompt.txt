@@ -1,0 +1,1 @@
+このリポジトリを読み取り専用で調査し、BiomeからVite+への移行計画に必要な情報だけを返してください。特に、vite.config.ts、vitest.config.ts、package.json、pnpm-workspace.yaml、@cloudflare/vite-plugin、@cloudflare/vitest-pool-workers、TanStack Startとの互換性、vp migrateが変更しそうな点を確認してください。ファイルは変更せず、実行コマンドも実行しないでください。最終回答は日本語で、(1)変更対象ファイル、(2)想定される依存関係/Import変更、(3)注意点と検証項目を簡潔にまとめてください。
