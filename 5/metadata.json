@@ -1,0 +1,106 @@
+{
+  "cli_version": "0.9.0",
+  "checkpoint_id": "01M02KNEMF622FRHG4BZQYF0CC",
+  "session_id": "ses_ffbb58dbbffef6UZjZ3ti2ugTm",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-15T11:42:21.633711Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    ".gitignore",
+    "ROADMAP.md"
+  ],
+  "agent": "OpenCode",
+  "model": "gpt-5.6-luna",
+  "turn_id": "4495593e218a",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 287860,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 1656320,
+    "output_tokens": 5506,
+    "api_call_count": 16
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-15T11:42:21.572856Z",
+    "agent_lines": 0,
+    "agent_removed": 16,
+    "human_added": 4352,
+    "human_modified": 24,
+    "human_removed": 0,
+    "total_committed": 4368,
+    "total_lines_changed": 4392,
+    "agent_percentage": 0.36429872495446264,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 24470,
+      "user_lines_removed": 24,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".dev.vars.example": 2,
+        ".gitignore": 7,
+        ".npmrc": 2,
+        ".vite-hooks/pre-commit": 1,
+        "AGENTS.md": 27,
+        "ROADMAP.md": 44,
+        "auth.config.ts": 36,
+        "components.json": 20,
+        "drizzle.config.ts": 7,
+        "migrations/0000_initial.sql": 217,
+        "migrations/meta/0000_snapshot.json": 1521,
+        "migrations/meta/_journal.json": 13,
+        "package.json": 65,
+        "pnpm-lock.yaml": 5942,
+        "pnpm-workspace.yaml": 27,
+        "src/components/ui/badge.tsx": 15,
+        "src/components/ui/button.tsx": 26,
+        "src/components/ui/card.tsx": 23,
+        "src/components/ui/input.tsx": 15,
+        "src/db/auth-schema.ts": 393,
+        "src/db/index.ts": 9,
+        "src/env.d.ts": 11,
+        "src/lib/utils.ts": 6,
+        "src/routeTree.gen.ts": 122,
+        "src/router.tsx": 19,
+        "src/routes/__root.tsx": 76,
+        "src/routes/api.$.ts": 26,
+        "src/routes/consent.tsx": 42,
+        "src/routes/index.tsx": 76,
+        "src/routes/sign-in.tsx": 88,
+        "src/server.ts": 21,
+        "src/server/api.ts": 36,
+        "src/server/auth.ts": 58,
+        "src/server/metadata.ts": 15,
+        "src/styles/app.css": 28,
+        "src/test-worker.ts": 11,
+        "src/worker-events.ts": 7,
+        "test/setup.ts": 9,
+        "test/worker-events.test.ts": 33,
+        "test/worker-runtime.test.ts": 50,
+        "tsconfig.json": 25,
+        "vite.config.ts": 50,
+        "vitest.config.ts": 28,
+        "worker-configuration.d.ts": 15178,
+        "wrangler.jsonc": 43
+      },
+      "user_removed_per_file": {
+        "ROADMAP.md": 24
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 24470,
+      "agent_lines_removed": 24
+    }
+  ]
+}
