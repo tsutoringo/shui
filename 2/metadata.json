@@ -1,0 +1,241 @@
+{
+  "cli_version": "0.9.0",
+  "checkpoint_id": "01M03EXH7A59HMF1NJECQTSN9J",
+  "session_id": "ses_ff9e976c7ffeVW4pmrzEQvsEyz",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-15T19:38:39.753241Z",
+  "branch": "main",
+  "checkpoints_count": 21,
+  "save_step_count": 20,
+  "files_touched": [
+    "ROADMAP.md",
+    "auth.config.ts",
+    "package.json",
+    "pnpm-lock.yaml",
+    "src/routes/api.$.ts",
+    "src/server/auth.ts",
+    "test/worker-runtime.test.ts",
+    "worker-configuration.d.ts",
+    "wrangler.jsonc",
+    "wrangler.production.jsonc",
+    "wrangler.staging.jsonc"
+  ],
+  "agent": "OpenCode",
+  "model": "gpt-5.6-luna",
+  "turn_id": "5f4813106e1a",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 3051513,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 18059776,
+    "output_tokens": 44501,
+    "api_call_count": 182
+  },
+  "session_metrics": {
+    "turn_count": 21
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-15T19:38:39.64397Z",
+    "agent_lines": 318,
+    "agent_removed": 0,
+    "human_added": 12,
+    "human_modified": 59,
+    "human_removed": 0,
+    "total_committed": 387,
+    "total_lines_changed": 389,
+    "agent_percentage": 81.74807197943444,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 326,
+      "agent_lines_removed": 23
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 326,
+      "agent_lines_removed": 23
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 326,
+      "agent_lines_removed": 23
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 326,
+      "agent_lines_removed": 23
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 326,
+      "agent_lines_removed": 23
+    },
+    {
+      "checkpoint_number": 7,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 326,
+      "agent_lines_removed": 23
+    },
+    {
+      "checkpoint_number": 8,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 326,
+      "agent_lines_removed": 23
+    },
+    {
+      "checkpoint_number": 9,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 326,
+      "agent_lines_removed": 23
+    },
+    {
+      "checkpoint_number": 10,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 326,
+      "agent_lines_removed": 23
+    },
+    {
+      "checkpoint_number": 11,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 326,
+      "agent_lines_removed": 23
+    },
+    {
+      "checkpoint_number": 12,
+      "user_lines_added": 55,
+      "user_lines_removed": 43,
+      "agent_lines_added": 326,
+      "agent_lines_removed": 23,
+      "user_added_per_file": {
+        "worker-configuration.d.ts": 9,
+        "wrangler.jsonc": 46
+      },
+      "user_removed_per_file": {
+        "worker-configuration.d.ts": 1,
+        "wrangler.jsonc": 42
+      }
+    },
+    {
+      "checkpoint_number": 13,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 381,
+      "agent_lines_removed": 66
+    },
+    {
+      "checkpoint_number": 14,
+      "user_lines_added": 2,
+      "user_lines_removed": 2,
+      "agent_lines_added": 440,
+      "agent_lines_removed": 28,
+      "user_added_per_file": {
+        "wrangler.staging.jsonc": 2
+      },
+      "user_removed_per_file": {
+        "wrangler.staging.jsonc": 2
+      }
+    },
+    {
+      "checkpoint_number": 15,
+      "user_lines_added": 2,
+      "user_lines_removed": 2,
+      "agent_lines_added": 440,
+      "agent_lines_removed": 28,
+      "user_added_per_file": {
+        "wrangler.staging.jsonc": 2
+      },
+      "user_removed_per_file": {
+        "wrangler.staging.jsonc": 2
+      }
+    },
+    {
+      "checkpoint_number": 16,
+      "user_lines_added": 2,
+      "user_lines_removed": 2,
+      "agent_lines_added": 440,
+      "agent_lines_removed": 28,
+      "user_added_per_file": {
+        "wrangler.staging.jsonc": 2
+      },
+      "user_removed_per_file": {
+        "wrangler.staging.jsonc": 2
+      }
+    },
+    {
+      "checkpoint_number": 17,
+      "user_lines_added": 2,
+      "user_lines_removed": 2,
+      "agent_lines_added": 440,
+      "agent_lines_removed": 28,
+      "user_added_per_file": {
+        "wrangler.staging.jsonc": 2
+      },
+      "user_removed_per_file": {
+        "wrangler.staging.jsonc": 2
+      }
+    },
+    {
+      "checkpoint_number": 18,
+      "user_lines_added": 2,
+      "user_lines_removed": 2,
+      "agent_lines_added": 440,
+      "agent_lines_removed": 28,
+      "user_added_per_file": {
+        "wrangler.staging.jsonc": 2
+      },
+      "user_removed_per_file": {
+        "wrangler.staging.jsonc": 2
+      }
+    },
+    {
+      "checkpoint_number": 19,
+      "user_lines_added": 2,
+      "user_lines_removed": 2,
+      "agent_lines_added": 440,
+      "agent_lines_removed": 28,
+      "user_added_per_file": {
+        "wrangler.staging.jsonc": 2
+      },
+      "user_removed_per_file": {
+        "wrangler.staging.jsonc": 2
+      }
+    },
+    {
+      "checkpoint_number": 20,
+      "user_lines_added": 2,
+      "user_lines_removed": 2,
+      "agent_lines_added": 440,
+      "agent_lines_removed": 28,
+      "user_added_per_file": {
+        "wrangler.staging.jsonc": 2
+      },
+      "user_removed_per_file": {
+        "wrangler.staging.jsonc": 2
+      }
+    }
+  ]
+}

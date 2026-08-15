@@ -3,7 +3,7 @@
   "checkpoint_id": "01M03EXH7A59HMF1NJECQTSN9J",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 2,
+  "checkpoints_count": 23,
   "files_touched": [
     "ROADMAP.md",
     "auth.config.ts",
@@ -31,13 +31,20 @@
       "compact_transcript": "/1/transcript.jsonl",
       "content_hash": "/1/content_hash.txt",
       "prompt": ""
+    },
+    {
+      "metadata": "/2/metadata.json",
+      "transcript": "/2/full.jsonl",
+      "compact_transcript": "/2/transcript.jsonl",
+      "content_hash": "/2/content_hash.txt",
+      "prompt": "/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 4617676,
+    "input_tokens": 7669189,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 18929664,
-    "output_tokens": 38976,
-    "api_call_count": 189
+    "cache_read_tokens": 36989440,
+    "output_tokens": 83477,
+    "api_call_count": 371
   }
 }
