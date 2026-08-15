@@ -1,0 +1,63 @@
+ROADMAPの進捗度確認して
+
+---
+
+M0やってー
+
+---
+
+どうやって試せる？
+
+---
+
+curl -X POST http://localhost:5173/api/auth/sign-up/email \
+  -H 'content-type: application/json' \
+  -d '{"name":"Test User","email":"test@example.com","password":"correct-horse-battery-staple"}'
+Invalid URL string.%
+
+---
+
+igrations to be applied:
+┌──────────────────┐
+│ name             │
+├──────────────────┤
+│ 0000_initial.sql │
+└──────────────────┘
+✔ About to apply 1 migration(s)
+Your database may not be available to serve requests during the migration, continue? … yes
+🌀 Executing on local database shui-db (00000000000000000000000000000000) from .wrangler/state/v3/d1:
+🌀 To execute on your remote database, add a --remote flag to your wrangler command.
+
+✘ [ERROR] table `account` already exists at offset 13: SQLITE_ERROR
+
+
+🪵  Logs were written to "/Users/tsutoringo/Library/Preferences/.wrangler/logs/wrangler-2026-08-15_16-39-15_464.log"
+ ELIFECYCLE  Command failed with exit code 1.
+
+---
+
+確認内容まとめて
+
+---
+
+確認方法まとめて
+
+---
+
+実現可能なのは保証できたのかな？
+
+---
+
+ここで動くなら試さなくても良いかな
+
+---
+
+じゃあ次から一旦書き直すの？
+
+---
+
+じゃあ手順教えて
+
+---
+
+Queueは何に使ってるの？
