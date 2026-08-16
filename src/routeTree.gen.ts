@@ -11,8 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConsentRouteImport } from './routes/consent'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as InviteRouteImport } from './routes/invite'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SetupRouteImport } from './routes/setup'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as ApiSplatRouteImport } from './routes/api.$'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as ResetPasswordTokenRouteImport } from './routes/reset-password.$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -24,9 +31,34 @@ const ConsentRoute = ConsentRouteImport.update({
   path: '/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteRoute = InviteRouteImport.update({
+  id: '/invite',
+  path: '/invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupRoute = SetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSplatRoute = ApiSplatRouteImport.update({
@@ -34,38 +66,108 @@ const ApiSplatRoute = ApiSplatRouteImport.update({
   path: '/api/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/$token',
+  path: '/$token',
+  getParentRoute: () => InviteRoute,
+} as any)
+const ResetPasswordTokenRoute = ResetPasswordTokenRouteImport.update({
+  id: '/$token',
+  path: '/$token',
+  getParentRoute: () => ResetPasswordRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/consent': typeof ConsentRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/invite': typeof InviteRouteWithChildren
+  '/reset-password': typeof ResetPasswordRouteWithChildren
+  '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/api/$': typeof ApiSplatRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/reset-password/$token': typeof ResetPasswordTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/consent': typeof ConsentRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/invite': typeof InviteRouteWithChildren
+  '/reset-password': typeof ResetPasswordRouteWithChildren
+  '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/api/$': typeof ApiSplatRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/reset-password/$token': typeof ResetPasswordTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/consent': typeof ConsentRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/invite': typeof InviteRouteWithChildren
+  '/reset-password': typeof ResetPasswordRouteWithChildren
+  '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/api/$': typeof ApiSplatRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/reset-password/$token': typeof ResetPasswordTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/consent' | '/sign-in' | '/api/$'
+  fullPaths:
+    | '/'
+    | '/consent'
+    | '/forgot-password'
+    | '/invite'
+    | '/reset-password'
+    | '/setup'
+    | '/sign-in'
+    | '/verify-email'
+    | '/api/$'
+    | '/invite/$token'
+    | '/reset-password/$token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/consent' | '/sign-in' | '/api/$'
-  id: '__root__' | '/' | '/consent' | '/sign-in' | '/api/$'
+  to:
+    | '/'
+    | '/consent'
+    | '/forgot-password'
+    | '/invite'
+    | '/reset-password'
+    | '/setup'
+    | '/sign-in'
+    | '/verify-email'
+    | '/api/$'
+    | '/invite/$token'
+    | '/reset-password/$token'
+  id:
+    | '__root__'
+    | '/'
+    | '/consent'
+    | '/forgot-password'
+    | '/invite'
+    | '/reset-password'
+    | '/setup'
+    | '/sign-in'
+    | '/verify-email'
+    | '/api/$'
+    | '/invite/$token'
+    | '/reset-password/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConsentRoute: typeof ConsentRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  InviteRoute: typeof InviteRouteWithChildren
+  ResetPasswordRoute: typeof ResetPasswordRouteWithChildren
+  SetupRoute: typeof SetupRoute
   SignInRoute: typeof SignInRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   ApiSplatRoute: typeof ApiSplatRoute
 }
 
@@ -85,11 +187,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite': {
+      id: '/invite'
+      path: '/invite'
+      fullPath: '/invite'
+      preLoaderRoute: typeof InviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup': {
+      id: '/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof SetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sign-in': {
       id: '/sign-in'
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/$': {
@@ -99,13 +236,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof InviteRoute
+    }
+    '/reset-password/$token': {
+      id: '/reset-password/$token'
+      path: '/$token'
+      fullPath: '/reset-password/$token'
+      preLoaderRoute: typeof ResetPasswordTokenRouteImport
+      parentRoute: typeof ResetPasswordRoute
+    }
   }
 }
+
+interface InviteRouteChildren {
+  InviteTokenRoute: typeof InviteTokenRoute
+}
+
+const InviteRouteChildren: InviteRouteChildren = {
+  InviteTokenRoute: InviteTokenRoute,
+}
+
+const InviteRouteWithChildren =
+  InviteRoute._addFileChildren(InviteRouteChildren)
+
+interface ResetPasswordRouteChildren {
+  ResetPasswordTokenRoute: typeof ResetPasswordTokenRoute
+}
+
+const ResetPasswordRouteChildren: ResetPasswordRouteChildren = {
+  ResetPasswordTokenRoute: ResetPasswordTokenRoute,
+}
+
+const ResetPasswordRouteWithChildren = ResetPasswordRoute._addFileChildren(
+  ResetPasswordRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConsentRoute: ConsentRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  InviteRoute: InviteRouteWithChildren,
+  ResetPasswordRoute: ResetPasswordRouteWithChildren,
+  SetupRoute: SetupRoute,
   SignInRoute: SignInRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   ApiSplatRoute: ApiSplatRoute,
 }
 export const routeTree = rootRouteImport

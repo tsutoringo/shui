@@ -13,6 +13,9 @@ export default defineConfig({
         bindings: {
           BETTER_AUTH_SECRET: "test-secret-for-shui-worker-runtime-32-chars",
           BETTER_AUTH_URL: "http://localhost:8787",
+          BOOTSTRAP_TOKEN: "test-bootstrap-token-for-shui-m1",
+          DEV_EMAIL_SINK: "true",
+          EMAIL_WEBHOOK_URL: "",
           TEST_MIGRATIONS: await readD1Migrations(path.resolve("migrations")),
         },
       },

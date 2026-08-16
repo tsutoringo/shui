@@ -13,7 +13,7 @@
       "binding": "DB",
       "database_name": "shui-db",
       "database_id": "00000000000000000000000000000000",
-      "migrations_dir": "../../migrations",
+      "migrations_dir": "./migrations",
     },
   ],
   "queues": {

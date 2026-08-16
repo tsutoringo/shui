@@ -7,6 +7,10 @@ const origin = "http://localhost:8787";
 const issuer = `${origin}/api/auth`;
 const resourceIdentifier = `${origin}/api`;
 const resourceScopes = ["openid", "profile", "email", "api:read"];
+const bootstrapToken = "test-bootstrap-token-for-shui-m1";
+
+let rootFixturePromise: Promise<{ cookie: string; userId: string }> | undefined;
+let testClientIp = 1;
 
 type TokenResponse = {
   access_token: string;
@@ -101,24 +105,119 @@ async function createOAuthClient(options: {
   ]);
 }
 
-async function signUpUser() {
+async function ensureRoot() {
+  if (rootFixturePromise) return rootFixturePromise;
+
+  rootFixturePromise = (async () => {
+    const email = "m1-root@example.com";
+    const password = "correct-horse-battery-staple";
+    const reserveResponse = await SELF.fetch(`${origin}/api/setup/reserve`, {
+      body: JSON.stringify({ bootstrapToken }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+    expect(reserveResponse.status).toBe(200);
+    const reservation = (await reserveResponse.json()) as { reservationId: string };
+
+    const completeResponse = await SELF.fetch(`${origin}/api/setup/complete`, {
+      body: JSON.stringify({
+        bootstrapToken,
+        email,
+        name: "M1 Root",
+        password,
+        reservationId: reservation.reservationId,
+      }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+    expect(completeResponse.status).toBe(200);
+
+    await env.DB.prepare("UPDATE user SET email_verified = 1 WHERE email = ?").bind(email).run();
+
+    const signInResponse = await SELF.fetch(`${origin}/api/auth/sign-in/email`, {
+      body: JSON.stringify({ email, password }),
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": `10.0.0.${testClientIp++}`,
+      },
+      method: "POST",
+    });
+    expect(signInResponse.status).toBe(200);
+
+    return {
+      cookie: signInResponse.headers.get("set-cookie")?.split(";", 1)[0] ?? "",
+      userId: ((await completeResponse.json()) as { userId: string }).userId,
+    };
+  })();
+
+  return rootFixturePromise;
+}
+
+async function signUpUser(name = "OAuth Test") {
   const email = `oauth-${crypto.randomUUID()}@example.com`;
   const password = "correct-horse-battery-staple";
-  const response = await SELF.fetch(`${origin}/api/auth/sign-up/email`, {
-    body: JSON.stringify({ email, name: "OAuth Test", password }),
+  const root = await ensureRoot();
+  const invitationResponse = await SELF.fetch(`${origin}/api/invitations`, {
+    body: JSON.stringify({ email }),
+    headers: {
+      "content-type": "application/json",
+      cookie: root.cookie,
+    },
+    method: "POST",
+  });
+  expect(invitationResponse.status).toBe(200);
+  const invitation = (await invitationResponse.json()) as { token: string };
+
+  const response = await SELF.fetch(`${origin}/api/invitations/${invitation.token}/accept`, {
+    body: JSON.stringify({ email, name, password }),
     headers: { "content-type": "application/json" },
     method: "POST",
   });
-  const body = (await response.json()) as { user: { id: string } };
-  const setCookie = response.headers.get("set-cookie");
 
   expect(response.status).toBe(200);
+  const user = await env.DB.prepare("SELECT id FROM user WHERE email = ?")
+    .bind(email)
+    .first<{ id: string }>();
+  expect(user?.id).toBeTruthy();
+  await env.DB.prepare("UPDATE user SET email_verified = 1 WHERE email = ?").bind(email).run();
+
+  const signInResponse = await SELF.fetch(`${origin}/api/auth/sign-in/email`, {
+    body: JSON.stringify({ email, password }),
+    headers: {
+      "content-type": "application/json",
+      "x-forwarded-for": `10.0.0.${testClientIp++}`,
+    },
+    method: "POST",
+  });
+  const setCookie = signInResponse.headers.get("set-cookie");
+
+  expect(signInResponse.status).toBe(200);
   expect(setCookie).toContain("better-auth.session_token=");
 
   return {
     cookie: setCookie?.split(";", 1)[0] ?? "",
-    userId: body.user.id,
+    email,
+    password,
+    userId: user?.id ?? "",
   };
+}
+
+async function createPendingInvitation(
+  options: { email?: string; expiresInSeconds?: number } = {},
+) {
+  const root = await ensureRoot();
+  const email = options.email ?? `pending-${crypto.randomUUID()}@example.com`;
+  const response = await SELF.fetch(`${origin}/api/invitations`, {
+    body: JSON.stringify({ email, expiresInSeconds: options.expiresInSeconds }),
+    headers: {
+      "content-type": "application/json",
+      cookie: root.cookie,
+    },
+    method: "POST",
+  });
+  const invitation = (await response.json()) as { id: string; token: string };
+  expect(response.status).toBe(200);
+  return { ...invitation, email };
 }
 
 async function authorizeWithPkce(clientId: string, cookie: string) {
@@ -203,18 +302,10 @@ describe("Shui worker runtime", () => {
   });
 
   it("signs in with email/password and preserves the session cookie", async () => {
-    const email = `sign-in-${crypto.randomUUID()}@example.com`;
-    const password = "correct-horse-battery-staple";
-    const signUpResponse = await SELF.fetch(`${origin}/api/auth/sign-up/email`, {
-      body: JSON.stringify({ email, name: "Sign-in Test", password }),
-      headers: { "content-type": "application/json" },
-      method: "POST",
-    });
-
-    expect(signUpResponse.status).toBe(200);
+    const user = await signUpUser("Sign-in Test");
 
     const signInResponse = await SELF.fetch(`${origin}/api/auth/sign-in/email`, {
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: user.email, password: user.password }),
       headers: { "content-type": "application/json" },
       method: "POST",
     });
@@ -229,16 +320,267 @@ describe("Shui worker runtime", () => {
 
     expect(sessionResponse.status).toBe(200);
     await expect(sessionResponse.json()).resolves.toMatchObject({
-      user: { email },
+      user: { email: user.email },
     });
 
     const invalidSignInResponse = await SELF.fetch(`${origin}/api/auth/sign-in/email`, {
-      body: JSON.stringify({ email, password: "wrong-password" }),
+      body: JSON.stringify({ email: user.email, password: "wrong-password" }),
       headers: { "content-type": "application/json" },
       method: "POST",
     });
 
     expect(invalidSignInResponse.status).toBe(401);
+  });
+
+  it("rejects unrestricted public sign-up", async () => {
+    const response = await SELF.fetch(`${origin}/api/auth/sign-up/email`, {
+      body: JSON.stringify({
+        email: `public-${crypto.randomUUID()}@example.com`,
+        name: "Public Sign-up",
+        password: "correct-horse-battery-staple",
+      }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      code: "EMAIL_PASSWORD_SIGN_UP_DISABLED",
+    });
+  });
+
+  it("binds invitations to one email and consumes them once", async () => {
+    const invitation = await createPendingInvitation();
+    const wrongEmailResponse = await SELF.fetch(
+      `${origin}/api/invitations/${invitation.token}/accept`,
+      {
+        body: JSON.stringify({
+          email: `wrong-${crypto.randomUUID()}@example.com`,
+          name: "Wrong User",
+          password: "correct-horse-battery-staple",
+        }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      },
+    );
+    expect(wrongEmailResponse.status).toBe(400);
+
+    const acceptResponse = await SELF.fetch(
+      `${origin}/api/invitations/${invitation.token}/accept`,
+      {
+        body: JSON.stringify({
+          email: invitation.email,
+          name: "Invited User",
+          password: "correct-horse-battery-staple",
+        }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      },
+    );
+    expect(acceptResponse.status).toBe(200);
+
+    const replayResponse = await SELF.fetch(
+      `${origin}/api/invitations/${invitation.token}/accept`,
+      {
+        body: JSON.stringify({
+          email: invitation.email,
+          name: "Invited User",
+          password: "correct-horse-battery-staple",
+        }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      },
+    );
+    expect(replayResponse.status).toBe(409);
+  });
+
+  it("revokes and expires invitations", async () => {
+    const revoked = await createPendingInvitation();
+    const root = await ensureRoot();
+    const revokeResponse = await SELF.fetch(`${origin}/api/invitations/${revoked.id}/revoke`, {
+      headers: { cookie: root.cookie },
+      method: "POST",
+    });
+    expect(revokeResponse.status).toBe(200);
+
+    const expired = await createPendingInvitation({ expiresInSeconds: 1 });
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+    const expiredResponse = await SELF.fetch(`${origin}/api/invitations/${expired.token}`);
+    expect(expiredResponse.status).toBe(404);
+  });
+
+  it("disables a claimed invitation that expires before completion", async () => {
+    const invitation = await createPendingInvitation();
+    const acceptResponse = await SELF.fetch(
+      `${origin}/api/invitations/${invitation.token}/accept`,
+      {
+        body: JSON.stringify({
+          email: invitation.email,
+          name: "Expiring User",
+          password: "correct-horse-battery-staple",
+        }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      },
+    );
+    expect(acceptResponse.status).toBe(200);
+
+    const invitedUser = await env.DB.prepare("SELECT id FROM user WHERE email = ?")
+      .bind(invitation.email)
+      .first<{ id: string }>();
+    expect(invitedUser?.id).toBeTruthy();
+    await env.DB.prepare(
+      `UPDATE invitations
+          SET status = 'claimed', expires_at = ?, claimed_principal_id = NULL
+        WHERE id = ?`,
+    )
+      .bind(Date.now() - 1, invitation.id)
+      .run();
+
+    const expiredResponse = await SELF.fetch(`${origin}/api/invitations/${invitation.token}`);
+    expect(expiredResponse.status).toBe(404);
+
+    const principal = await env.DB.prepare(
+      `SELECT p.status, hp.status AS human_status, hp.disabled
+         FROM principals p
+         JOIN human_principals hp ON hp.principal_id = p.id
+        WHERE hp.user_id = ?`,
+    )
+      .bind(invitedUser?.id)
+      .first<{ status: string; human_status: string; disabled: number }>();
+    expect(principal).toEqual({ disabled: 1, human_status: "disabled", status: "disabled" });
+
+    await env.DB.prepare("UPDATE user SET email_verified = 1 WHERE id = ?")
+      .bind(invitedUser?.id)
+      .run();
+    const signInResponse = await SELF.fetch(`${origin}/api/auth/sign-in/email`, {
+      body: JSON.stringify({
+        email: invitation.email,
+        password: "correct-horse-battery-staple",
+      }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+    expect(signInResponse.status).not.toBe(200);
+
+    const root = await ensureRoot();
+    const reinviteResponse = await SELF.fetch(`${origin}/api/invitations`, {
+      body: JSON.stringify({ email: invitation.email }),
+      headers: {
+        "content-type": "application/json",
+        cookie: root.cookie,
+      },
+      method: "POST",
+    });
+    expect(reinviteResponse.status).toBe(200);
+    const reinvitation = (await reinviteResponse.json()) as { token: string };
+    const newPassword = "another-correct-horse-battery";
+    const reacceptResponse = await SELF.fetch(
+      `${origin}/api/invitations/${reinvitation.token}/accept`,
+      {
+        body: JSON.stringify({
+          email: invitation.email,
+          name: "Reinvited User",
+          password: newPassword,
+        }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      },
+    );
+    expect(reacceptResponse.status).toBe(200);
+    await env.DB.prepare("UPDATE user SET email_verified = 1 WHERE id = ?")
+      .bind(invitedUser?.id)
+      .run();
+    const reSignInResponse = await SELF.fetch(`${origin}/api/auth/sign-in/email`, {
+      body: JSON.stringify({ email: invitation.email, password: newPassword }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+    expect(reSignInResponse.status).toBe(200);
+  });
+
+  it("revokes claimed invitations and disables their principal", async () => {
+    const invitation = await createPendingInvitation();
+    const acceptResponse = await SELF.fetch(
+      `${origin}/api/invitations/${invitation.token}/accept`,
+      {
+        body: JSON.stringify({
+          email: invitation.email,
+          name: "Revoked User",
+          password: "correct-horse-battery-staple",
+        }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      },
+    );
+    expect(acceptResponse.status).toBe(200);
+    const invitedUser = await env.DB.prepare("SELECT id FROM user WHERE email = ?")
+      .bind(invitation.email)
+      .first<{ id: string }>();
+    await env.DB.prepare(
+      "UPDATE invitations SET status = 'claimed', claimed_principal_id = NULL WHERE id = ?",
+    )
+      .bind(invitation.id)
+      .run();
+
+    const root = await ensureRoot();
+    const revokeResponse = await SELF.fetch(`${origin}/api/invitations/${invitation.id}/revoke`, {
+      headers: { cookie: root.cookie },
+      method: "POST",
+    });
+    expect(revokeResponse.status).toBe(200);
+
+    const principal = await env.DB.prepare(
+      `SELECT p.status, hp.status AS human_status, hp.disabled
+         FROM principals p
+         JOIN human_principals hp ON hp.principal_id = p.id
+        WHERE hp.user_id = ?`,
+    )
+      .bind(invitedUser?.id)
+      .first<{ status: string; human_status: string; disabled: number }>();
+    expect(principal).toEqual({ disabled: 1, human_status: "disabled", status: "disabled" });
+
+    const replayResponse = await SELF.fetch(
+      `${origin}/api/invitations/${invitation.token}/accept`,
+      {
+        body: JSON.stringify({
+          email: invitation.email,
+          name: "Revoked User",
+          password: "correct-horse-battery-staple",
+        }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      },
+    );
+    expect(replayResponse.status).toBe(409);
+  });
+
+  it("revokes disabled-user sessions and protects the last root", async () => {
+    const root = await ensureRoot();
+    const user = await signUpUser("Disable Test");
+    const disableResponse = await SELF.fetch(`${origin}/api/users/${user.userId}/disable`, {
+      headers: { cookie: root.cookie },
+      method: "POST",
+    });
+    expect(disableResponse.status).toBe(200);
+
+    const sessionResponse = await SELF.fetch(`${origin}/api/auth/get-session`, {
+      headers: { cookie: user.cookie },
+    });
+    expect(sessionResponse.status).toBe(200);
+    await expect(sessionResponse.json()).resolves.toBeNull();
+
+    const rootDisableResponse = await SELF.fetch(`${origin}/api/users/${root.userId}/disable`, {
+      headers: { cookie: root.cookie },
+      method: "POST",
+    });
+    expect(rootDisableResponse.status).toBe(409);
+
+    const enableResponse = await SELF.fetch(`${origin}/api/users/${user.userId}/enable`, {
+      headers: { cookie: root.cookie },
+      method: "POST",
+    });
+    expect(enableResponse.status).toBe(200);
   });
 
   it("completes Authorization Code + PKCE and validates the JWT and ID Token", async () => {
@@ -327,6 +669,42 @@ describe("Shui worker runtime", () => {
     expect(accessToken.payload.client_id).toBe(clientId);
     expect(accessToken.payload.azp).toBe(clientId);
     expect(accessToken.payload["https://shui.example/m0"]).toBe("from-d1");
+  });
+
+  it("rejects resource-less API token requests", async () => {
+    await prepareOAuthResource();
+    const clientId = `m0-resource-required-${crypto.randomUUID()}`;
+    const clientSecret = `secret-${crypto.randomUUID()}-${crypto.randomUUID()}`;
+    await createOAuthClient({
+      authMethod: "client_secret_basic",
+      clientCredentialsScopes: ["api:read"],
+      clientId,
+      clientSecret,
+      grantTypes: ["client_credentials"],
+      redirectUris: [],
+      requirePKCE: false,
+      responseTypes: [],
+      scopes: ["api:read"],
+    });
+
+    const response = await SELF.fetch(`${origin}/api/auth/oauth2/token`, {
+      body: new URLSearchParams({ grant_type: "client_credentials", scope: "api:read" }).toString(),
+      headers: {
+        authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      method: "POST",
+    });
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({ error: "invalid_target" });
+
+    const authorizeResponse = await SELF.fetch(`${origin}/api/auth/oauth2/authorize`, {
+      body: new URLSearchParams({ scope: "api:read" }).toString(),
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      method: "POST",
+    });
+    expect(authorizeResponse.status).toBe(400);
+    await expect(authorizeResponse.json()).resolves.toMatchObject({ error: "invalid_target" });
   });
 
   it("allows only one concurrent authorization-code redemption", async () => {

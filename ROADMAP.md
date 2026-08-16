@@ -1,6 +1,6 @@
 # Shui Roadmap
 
-Last updated: 2026-08-14
+Last updated: 2026-08-16
 
 ## Goal
 
@@ -443,16 +443,22 @@ Exit criteria:
 
 ### M1: Authentication, Setup, And Invitation
 
-- [ ] Implement the first-run bootstrap state machine
-- [ ] Require and timing-safely validate `BOOTSTRAP_TOKEN`
-- [ ] Create the first Human Principal and `root` grant
-- [ ] Disable all unrestricted sign-up paths
-- [ ] Implement invitation creation, revocation, expiration, and atomic consumption
-- [ ] Implement password reset and email verification
-- [ ] Implement User disablement and session revocation
-- [ ] Add authentication and bootstrap audit events
-- [ ] Build setup, sign-in, invitation, and password recovery screens
-- [ ] Add rate limits for setup, sign-in, invitations, and password reset
+- [x] Implement the first-run bootstrap state machine
+- [x] Require and timing-safely validate `BOOTSTRAP_TOKEN`
+- [x] Create the first Human Principal and `root` grant
+- [x] Disable all unrestricted sign-up paths
+- [x] Implement invitation creation, revocation, expiration, and atomic consumption
+- [x] Implement password reset and email verification
+- [x] Implement User disablement and session revocation
+- [x] Add authentication and bootstrap audit events
+- [x] Build setup, sign-in, invitation, and password recovery screens
+- [x] Add rate limits for setup, sign-in, invitations, and password reset
+
+M1 follow-up hardening:
+
+- [ ] Make concurrent invitation acceptance claim the invitation before mutating credentials, so a losing request cannot overwrite the user's password
+- [ ] Prevent an interrupted or expired invitation from leaving an active principal until the scheduled cleanup runs
+- [ ] Equalize password-reset behavior for existing and unknown accounts to prevent timing-based account enumeration
 
 Exit criteria:
 
@@ -631,6 +637,9 @@ Use `@cloudflare/vitest-pool-workers` with real D1 and Queue bindings where poss
 - Wrong issuer and audience rejection
 - Cross-Application Role leakage
 - Setup and invitation races
+- Concurrent invitation acceptance cannot change the credential of the losing request
+- An expired or interrupted invitation cannot leave an active principal or session
+- Password-reset responses and processing time do not reveal whether an account exists
 - Secret redaction
 - SCIM SSRF and redirect rejection
 - JWT behavior after Principal, Assignment, Role, Client, or Application disablement
@@ -649,6 +658,9 @@ Use `@cloudflare/vitest-pool-workers` with real D1 and Queue bindings where poss
 | OAuth Client secret rotation invalidates the old secret immediately | Overlapping multiple Client credentials per Service Account |
 | SCIM Role representation differs by Application | Explicit versioned mapping per provisioning connection |
 | First public deployment can be claimed before the owner arrives | Required Worker-secret bootstrap token and atomic singleton reservation |
+| Concurrent invitation acceptance can mutate one user's credential before the losing request is rejected | Claim the invitation atomically before credential mutation, or make credential updates conditional and idempotent; cover the race in Workers integration tests |
+| An interrupted or expired invitation can leave an active principal until scheduled cleanup | Re-check invitation state immediately before activation and token/session issuance; reconcile invalid claims synchronously and in the scheduled job |
+| Password-reset processing can reveal account existence through timing differences | Use the same externally visible response and a bounded timing floor or equivalent asynchronous path for known and unknown accounts |
 
 ## Deferred Decisions
 

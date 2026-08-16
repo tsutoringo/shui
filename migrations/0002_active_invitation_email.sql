@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `invitations_active_email_unique` ON `invitations` (`email`) WHERE "invitations"."status" IN ('pending', 'claimed');

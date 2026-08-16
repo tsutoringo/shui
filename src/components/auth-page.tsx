@@ -1,11 +1,11 @@
-import { Button, Input, LayerCard } from "@cloudflare/kumo";
+import { Button, Input, LayerCard, LinkButton } from "@cloudflare/kumo";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { authClient } from "../lib/auth-client";
 import { authQueryKeys } from "../lib/auth-queries";
 
-export function AuthPage() {
+export function AuthPage({ redirectTo = "/" }: Readonly<{ redirectTo?: string }>) {
   const queryClient = useQueryClient();
   const signIn = useMutation({
     mutationFn: async (value: { email: string; password: string }) => {
@@ -18,8 +18,10 @@ export function AuthPage() {
       return data;
     },
     mutationKey: ["auth", "sign-in"],
-    onSuccess: async () => {
+    onSuccess: async (data) => {
       await queryClient.invalidateQueries({ queryKey: authQueryKeys.session });
+      if (data?.redirect) return;
+      if (typeof window !== "undefined") window.location.assign(redirectTo);
     },
     retry: false,
   });
@@ -92,6 +94,11 @@ export function AuthPage() {
               {message}
             </p>
           ) : null}
+          <p className="text-sm text-kumo-subtle">
+            <LinkButton href="/forgot-password" variant="ghost">
+              Forgot your password?
+            </LinkButton>
+          </p>
         </form>
       </LayerCard>
     </section>

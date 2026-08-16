@@ -13,8 +13,8 @@ const worker = {
     handleQueue(batch);
   },
 
-  scheduled(controller: ScheduledController) {
-    handleScheduled(controller);
+  async scheduled(controller: ScheduledController, env: Env) {
+    await handleScheduled(controller, env);
   },
 };
 

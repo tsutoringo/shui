@@ -8,6 +8,27 @@
       "when": 1786772637314,
       "tag": "0000_initial",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1786861744308,
+      "tag": "0001_m1",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1786864561659,
+      "tag": "0002_active_invitation_email",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1786867007317,
+      "tag": "0003_invitation_expiry_tracking",
+      "breakpoints": true
     }
   ]
 }

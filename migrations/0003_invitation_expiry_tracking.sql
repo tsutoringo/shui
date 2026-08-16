@@ -1,0 +1,1 @@
+ALTER TABLE `invitations` ADD `expired_at` integer;
