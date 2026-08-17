@@ -1,0 +1,23 @@
+現在の共有ワークスペースで、M1 の service/controller 分離をさらに feature-based に整理してください。対象は `src/server/m1/service.ts`（約1700行）です。既存の `src/server/m1/routes.ts`、`models.ts`、`errors.ts`、`src/server/m1.ts` facade と既存の未コミット変更は保持してください。
+
+目的:
+- Elysia best practice の feature-based 構成に近づける。
+- 既存の API path/alias、入力/出力、エラー status、D1 SQL、batch の単位、audit/outbox の dedupe key、scheduler の挙動を変えない。
+- HTTP Context は service に渡さず、現在の `environment/auth/body/request/actor` の引数契約を維持する。
+- 動的 import や `any` は追加しない。
+
+推奨構成（必要なら調整可）:
+```
+src/server/m1/
+  service.ts              # 既存外部 export の facade/re-export
+  shared/infrastructure.ts # rate limit、audit/outbox、crypto、共通型
+  authorization/service.ts  # getActor/requireRole、Actor
+  auth/service.ts         # controlled user、メール、human principal 補助
+  bootstrap/service.ts    # bootstrap state/reserve/complete/status/setup
+  invitations/service.ts  # invitation create/read/accept/revoke/expire
+  users/service.ts        # human principal resolve、root count、enable/disable
+```
+
+循環依存を避け、feature service から routes や facade を import しないでください。`worker-events.ts` と `api.ts` が既存の `./server/m1` を使い続けられるよう、facade の公開 export は少なくとも `createM1Routes`、`expireStaleInvitations`、`normalizeEmail`、`sha256Base64Url` を維持してください。routes から必要な feature service を直接 import して構いません。
+
+作業後に `vp fmt`（変更対象）、`pnpm exec tsc --noEmit --pretty false`、`vp test run`、`vp check` を実行し、失敗があれば修正してください。git commit はしないでください。最後に変更ファイル、検証結果、互換性上の注意点だけを報告してください。
