@@ -7,19 +7,17 @@ import {
   apiQueryKeys,
   createServiceAccountMutationOptions,
   serviceAccountsQueryOptions,
+  serviceAccountOwnersQueryOptions,
   setServiceAccountStatusMutationOptions,
-  teamsQueryOptions,
   transferServiceAccountMutationOptions,
   updateServiceAccountMutationOptions,
-  usersQueryOptions,
 } from "../lib/api-query-options";
 import { AdminError, AdminLayout, AdminStatus, StatusPill } from "./admin-layout";
 
 export function ServiceAccountsAdminPage() {
   const queryClient = useQueryClient();
   const accountsQuery = useQuery(serviceAccountsQueryOptions);
-  const usersQuery = useQuery(usersQueryOptions);
-  const teamsQuery = useQuery(teamsQueryOptions);
+  const ownersQuery = useQuery(serviceAccountOwnersQueryOptions);
   const createMutation = useMutation(createServiceAccountMutationOptions());
   const updateMutation = useMutation(updateServiceAccountMutationOptions());
   const transferMutation = useMutation(transferServiceAccountMutationOptions());
@@ -74,15 +72,13 @@ export function ServiceAccountsAdminPage() {
     }
   }
 
-  const users = (usersQuery.data?.users ?? []).filter(
-    (user) => user.principalId && user.status === "active",
-  );
-  const teams = (teamsQuery.data?.teams ?? []).filter((team) => team.status === "active");
+  const users = ownersQuery.data?.users ?? [];
+  const teams = ownersQuery.data?.teams ?? [];
   const accounts = accountsQuery.data?.serviceAccounts ?? [];
 
   return (
     <AdminLayout
-      activePath="/service-accounts"
+      activePath="/admin/service-accounts"
       description="Service Accounts represent non-human principals. This screen covers their lifecycle and ownership; OAuth credentials are handled separately."
       eyebrow="Principals / Non-human"
       title="Give automation a responsible owner."
@@ -122,7 +118,7 @@ export function ServiceAccountsAdminPage() {
                 ownerType === "user"
                   ? users.map((user) => ({
                       label: user.name,
-                      value: user.principalId ?? "",
+                      value: user.id,
                     }))
                   : teams.map((team) => ({ label: team.name, value: team.id }))
               }
@@ -144,10 +140,13 @@ export function ServiceAccountsAdminPage() {
             </div>
           </form>
         </LayerCard>
-        {accountsQuery.isLoading ? <AdminStatus>Loading service accounts...</AdminStatus> : null}
+        {accountsQuery.isLoading || ownersQuery.isLoading ? (
+          <AdminStatus>Loading service accounts...</AdminStatus>
+        ) : null}
         {accountsQuery.isError ? (
           <AdminError>{formatApiError(accountsQuery.error)}</AdminError>
         ) : null}
+        {ownersQuery.isError ? <AdminError>{formatApiError(ownersQuery.error)}</AdminError> : null}
         {error ? <AdminError>{error}</AdminError> : null}
         {status ? <AdminStatus>{status}</AdminStatus> : null}
         <Grid gap="sm" variant="2up">
@@ -205,7 +204,7 @@ function ServiceAccountCard({
   onTransfer: (body: { ownerId: string; ownerType: "user" | "team" }) => void;
   onUpdate: (body: { description?: string | null; name?: string }) => void;
   teams: Array<{ id: string; name: string }>;
-  users: Array<{ id: string; name: string; principalId: string | null }>;
+  users: Array<{ id: string; name: string }>;
 }>) {
   const [name, setName] = useState(account.name);
   const [description, setDescription] = useState(account.description ?? "");
@@ -279,7 +278,7 @@ function ServiceAccountCard({
               ownerType === "user"
                 ? users.map((user) => ({
                     label: user.name,
-                    value: user.principalId ?? "",
+                    value: user.id,
                   }))
                 : teams.map((team) => ({ label: team.name, value: team.id }))
             }

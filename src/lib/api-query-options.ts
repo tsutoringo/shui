@@ -9,7 +9,9 @@ import {
   createTeam,
   deleteTeam,
   getInvitation,
+  getAdminAccess,
   getServiceAccounts,
+  getServiceAccountOwners,
   getSystemRoles,
   getTeams,
   getUsers,
@@ -33,11 +35,20 @@ import type {
 } from "../server/modules/models";
 
 export const apiQueryKeys = {
+  adminAccess: ["admin-access"] as const,
   serviceAccounts: ["service-accounts"] as const,
+  serviceAccountOwners: ["service-account-owners"] as const,
   systemRoles: ["system-roles"] as const,
   teams: ["teams"] as const,
   users: ["users"] as const,
 };
+
+export const adminAccessQueryOptions = queryOptions({
+  queryFn: getAdminAccess,
+  queryKey: apiQueryKeys.adminAccess,
+  retry: false,
+  staleTime: 60_000,
+});
 
 export const usersQueryOptions = queryOptions({
   queryFn: getUsers,
@@ -55,6 +66,13 @@ export const serviceAccountsQueryOptions = queryOptions({
   queryFn: getServiceAccounts,
   queryKey: apiQueryKeys.serviceAccounts,
   retry: false,
+});
+
+export const serviceAccountOwnersQueryOptions = queryOptions({
+  queryFn: getServiceAccountOwners,
+  queryKey: apiQueryKeys.serviceAccountOwners,
+  retry: false,
+  staleTime: 60_000,
 });
 
 export const systemRolesQueryOptions = queryOptions({

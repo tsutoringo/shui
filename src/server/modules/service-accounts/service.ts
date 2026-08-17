@@ -89,6 +89,33 @@ export async function listServiceAccounts(environment: AuthEnvironment) {
   }));
 }
 
+export async function listServiceAccountOwners(environment: AuthEnvironment) {
+  const db = createDb(environment.DB);
+  const users = await db
+    .select({ id: humanPrincipals.principalId, name: user.name })
+    .from(humanPrincipals)
+    .innerJoin(principals, eq(principals.id, humanPrincipals.principalId))
+    .innerJoin(user, eq(user.id, humanPrincipals.userId))
+    .where(
+      and(
+        eq(principals.type, "human"),
+        eq(principals.status, "active"),
+        eq(humanPrincipals.status, "active"),
+        eq(humanPrincipals.disabled, false),
+      ),
+    )
+    .orderBy(asc(user.name))
+    .all();
+  const teamRows = await db
+    .select({ id: teams.id, name: teams.name })
+    .from(teams)
+    .where(eq(teams.status, "active"))
+    .orderBy(asc(teams.name))
+    .all();
+
+  return { teams: teamRows, users };
+}
+
 export async function createServiceAccount(
   environment: AuthEnvironment,
   actor: Actor,

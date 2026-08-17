@@ -6,6 +6,7 @@ import { formatApiError, type SystemRole, type User } from "../lib/api-client";
 import {
   apiQueryKeys,
   grantUserRoleMutationOptions,
+  adminAccessQueryOptions,
   revokeUserRoleMutationOptions,
   systemRolesQueryOptions,
   usersQueryOptions,
@@ -16,6 +17,7 @@ export function SystemRolesAdminPage() {
   const queryClient = useQueryClient();
   const rolesQuery = useQuery(systemRolesQueryOptions);
   const usersQuery = useQuery(usersQueryOptions);
+  const accessQuery = useQuery(adminAccessQueryOptions);
   const grantMutation = useMutation(grantUserRoleMutationOptions());
   const revokeMutation = useMutation(revokeUserRoleMutationOptions());
   const [userId, setUserId] = useState("");
@@ -65,53 +67,59 @@ export function SystemRolesAdminPage() {
     (user) => user.principalId && user.status !== "unmanaged",
   );
   const selectedRole = roles.find((role) => role.key === roleKey);
+  const canManageRoles = accessQuery.data?.permissions.includes("*") ?? false;
 
   return (
     <AdminLayout
-      activePath="/system-roles"
+      activePath="/admin/system-roles"
       description="System Roles operate Shui itself. The root role is recovery-critical; the API refuses to remove or disable the last active root User."
       eyebrow="Authorization"
       title="Make responsibility explicit."
     >
       <div className="space-y-8">
-        <LayerCard className="bg-kumo-elevated p-5 ring ring-kumo-line sm:p-6">
-          <h2 className="text-xl font-semibold text-kumo-strong">Grant a system role</h2>
-          <form
-            className="mt-5 grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end"
-            onSubmit={grant}
-          >
-            <Select
-              items={users.map((user) => ({
-                label: `${user.name} · ${user.email}`,
-                value: user.id,
-              }))}
-              label="User"
-              onValueChange={(value) => setUserId(value ?? "")}
-              placeholder="Choose a user"
-              required
-              value={userId || null}
-            />
-            <Select
-              items={roles.map((role) => ({ label: role.name, value: role.key }))}
-              label="System role"
-              onValueChange={(value) => setRoleKey(value ?? "")}
-              placeholder="Choose a role"
-              required
-              value={roleKey || null}
-            />
-            <Button
-              aria-busy={busyId === userId}
-              disabled={!userId || !roleKey || busyId !== undefined}
-              type="submit"
-              variant="primary"
+        {canManageRoles ? (
+          <LayerCard className="bg-kumo-elevated p-5 ring ring-kumo-line sm:p-6">
+            <h2 className="text-xl font-semibold text-kumo-strong">Grant a system role</h2>
+            <form
+              className="mt-5 grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end"
+              onSubmit={grant}
             >
-              Grant role
-            </Button>
-          </form>
-          {selectedRole ? (
-            <p className="mt-4 text-sm leading-6 text-kumo-subtle">{selectedRole.description}</p>
-          ) : null}
-        </LayerCard>
+              <Select
+                items={users.map((user) => ({
+                  label: `${user.name} · ${user.email}`,
+                  value: user.id,
+                }))}
+                label="User"
+                onValueChange={(value) => setUserId(value ?? "")}
+                placeholder="Choose a user"
+                required
+                value={userId || null}
+              />
+              <Select
+                items={roles.map((role) => ({ label: role.name, value: role.key }))}
+                label="System role"
+                onValueChange={(value) => setRoleKey(value ?? "")}
+                placeholder="Choose a role"
+                required
+                value={roleKey || null}
+              />
+              <Button
+                aria-busy={busyId === userId}
+                disabled={!userId || !roleKey || busyId !== undefined}
+                type="submit"
+                variant="primary"
+              >
+                Grant role
+              </Button>
+            </form>
+            {selectedRole ? (
+              <p className="mt-4 text-sm leading-6 text-kumo-subtle">{selectedRole.description}</p>
+            ) : null}
+          </LayerCard>
+        ) : null}
+        {!canManageRoles ? (
+          <AdminStatus>You can review role assignments, but only root can change them.</AdminStatus>
+        ) : null}
         {rolesQuery.isLoading || usersQuery.isLoading ? (
           <AdminStatus>Loading role assignments...</AdminStatus>
         ) : null}
@@ -121,7 +129,14 @@ export function SystemRolesAdminPage() {
         {status ? <AdminStatus>{status}</AdminStatus> : null}
         <Grid gap="sm" variant="3up">
           {roles.map((role) => (
-            <RoleCard key={role.key} role={role} users={users} busyId={busyId} onRevoke={revoke} />
+            <RoleCard
+              busyId={busyId}
+              canManageRoles={canManageRoles}
+              key={role.key}
+              onRevoke={revoke}
+              role={role}
+              users={users}
+            />
           ))}
         </Grid>
       </div>
@@ -131,11 +146,13 @@ export function SystemRolesAdminPage() {
 
 function RoleCard({
   busyId,
+  canManageRoles,
   onRevoke,
   role,
   users,
 }: Readonly<{
   busyId: string | undefined;
+  canManageRoles: boolean;
   onRevoke: (user: User, role: string) => void;
   role: SystemRole;
   users: User[];
@@ -158,22 +175,24 @@ function RoleCard({
             {holders.map((user) => (
               <li className="flex items-center justify-between gap-3 text-sm" key={user.id}>
                 <span className="min-w-0 truncate text-kumo-subtle">{user.name}</span>
-                <AdminConfirmDialog
-                  confirmLabel="Revoke role"
-                  description="The user will immediately lose this system role."
-                  onConfirm={() => onRevoke(user, role.key)}
-                  title={`Revoke ${role.name} from ${user.name}?`}
-                  trigger={
-                    <Button
-                      aria-label={"Revoke " + role.name + " from " + user.name}
-                      disabled={busyId === user.id}
-                      type="button"
-                      variant="secondary-destructive"
-                    >
-                      Revoke
-                    </Button>
-                  }
-                />
+                {canManageRoles ? (
+                  <AdminConfirmDialog
+                    confirmLabel="Revoke role"
+                    description="The user will immediately lose this system role."
+                    onConfirm={() => onRevoke(user, role.key)}
+                    title={`Revoke ${role.name} from ${user.name}?`}
+                    trigger={
+                      <Button
+                        aria-label={"Revoke " + role.name + " from " + user.name}
+                        disabled={busyId === user.id}
+                        type="button"
+                        variant="secondary-destructive"
+                      >
+                        Revoke
+                      </Button>
+                    }
+                  />
+                ) : null}
               </li>
             ))}
           </ul>

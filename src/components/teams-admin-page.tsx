@@ -80,7 +80,7 @@ export function TeamsAdminPage() {
 
   return (
     <AdminLayout
-      activePath="/teams"
+      activePath="/admin/teams"
       description="Teams contain human Users only. Membership is explicit, flat, and easy to audit; a disabled team no longer represents an active group."
       eyebrow="Principals / Teams"
       title="Put people in useful groups."

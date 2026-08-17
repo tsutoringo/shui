@@ -99,6 +99,7 @@ export const ApiModels = {
     status: t.Union([t.Literal("active"), t.Literal("disabled")]),
     userId: idSchema,
   }),
+  AdminAccess: t.Object({ permissions: t.Array(t.String()) }),
 
   IdentifierParams: t.Object({ id: idSchema }),
   TeamMemberParams: t.Object({ id: idSchema, userId: idSchema }),
@@ -143,6 +144,7 @@ export const ApiModels = {
     userId: idSchema,
   }),
   Owner: t.Object({ id: idSchema, label: t.String(), type: ownerTypeSchema }),
+  OwnerCandidate: t.Object({ id: idSchema, name: t.String() }),
   OwnershipBody: t.Object({ ownerId: idSchema, ownerType: ownerTypeSchema }),
   ServiceAccountCreateBody: t.Object({
     name: t.String({ maxLength: 160, minLength: 1 }),
@@ -167,6 +169,10 @@ export const ApiModels = {
     updatedAt: t.Number(),
   }),
   ServiceAccounts: t.Object({ serviceAccounts: t.Array(t.Ref("ServiceAccount")) }),
+  ServiceAccountOwners: t.Object({
+    teams: t.Array(t.Ref("OwnerCandidate")),
+    users: t.Array(t.Ref("OwnerCandidate")),
+  }),
   ServiceAccountStatus: t.Object({
     id: idSchema,
     principalId: idSchema,
@@ -227,12 +233,15 @@ export type BootstrapComplete = typeof ApiModels.BootstrapComplete.static;
 export type InvitationCreated = typeof ApiModels.InvitationCreated.static;
 export type InvitationPublic = typeof ApiModels.InvitationPublic.static;
 export type InvitationAccepted = typeof ApiModels.InvitationAccepted.static;
+export type AdminAccess = typeof ApiModels.AdminAccess.static;
 export type User = typeof ApiModels.User.static;
 export type SystemRole = typeof ApiModels.SystemRole.static;
 export type Owner = typeof ApiModels.Owner.static;
 export type ServiceAccount = Omit<typeof ApiModels.ServiceAccount.static, "owner"> & {
   owner: Owner;
 };
+export type OwnerCandidate = typeof ApiModels.OwnerCandidate.static;
+export type ServiceAccountOwners = typeof ApiModels.ServiceAccountOwners.static;
 export type Team = typeof ApiModels.Team.static;
 export type ServiceAccountCreateBody = typeof ApiModels.ServiceAccountCreateBody.static;
 export type ServiceAccountUpdateBody = typeof ApiModels.ServiceAccountUpdateBody.static;

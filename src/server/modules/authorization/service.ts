@@ -25,11 +25,17 @@ export const SYSTEM_ROLE_PERMISSIONS = {
     "teams:write",
     "system-roles:read",
   ] as const,
-  "application-admin": ["service-accounts:read", "service-accounts:write"] as const,
+  "application-admin": ["owners:read", "service-accounts:read", "service-accounts:write"] as const,
 };
 
 export type SystemPermission =
   (typeof SYSTEM_ROLE_PERMISSIONS)[keyof typeof SYSTEM_ROLE_PERMISSIONS][number];
+
+export const ADMINISTRATOR_ROLE_KEYS = ["root", "user-admin", "application-admin"] as const;
+
+export type AdminAccess = {
+  permissions: SystemPermission[];
+};
 
 export async function getActor(auth: AuthInstance, environment: AuthEnvironment, request: Request) {
   const session = await auth.api.getSession({
@@ -85,6 +91,18 @@ export async function requireRole(
   return actor;
 }
 
+export async function requireAdminAccess(
+  auth: AuthInstance,
+  environment: AuthEnvironment,
+  request: Request,
+): Promise<AdminAccess> {
+  const actor = await getActor(auth, environment, request);
+  const hasAdminRole = ADMINISTRATOR_ROLE_KEYS.some((roleKey) => actor.roleKeys.has(roleKey));
+  if (!hasAdminRole) throw new ApiError(403);
+  const permissions = resolvePermissions(actor.roleKeys);
+  return { permissions };
+}
+
 export async function requirePermission(
   auth: AuthInstance,
   environment: AuthEnvironment,
@@ -92,11 +110,19 @@ export async function requirePermission(
   permission: SystemPermission,
 ) {
   const actor = await getActor(auth, environment, request);
-  const allowed = [...actor.roleKeys].some((roleKey) => {
-    const permissions: readonly string[] =
-      SYSTEM_ROLE_PERMISSIONS[roleKey as keyof typeof SYSTEM_ROLE_PERMISSIONS] ?? [];
-    return permissions.includes("*") || permissions.includes(permission);
-  });
-  if (!allowed) throw new ApiError(403);
+  if (!resolvePermissions(actor.roleKeys).some((value) => value === "*" || value === permission)) {
+    throw new ApiError(403);
+  }
   return actor;
+}
+
+export function resolvePermissions(roleKeys: Iterable<string>) {
+  const permissions = new Set<SystemPermission>();
+  for (const roleKey of roleKeys) {
+    const rolePermissions =
+      SYSTEM_ROLE_PERMISSIONS[roleKey as keyof typeof SYSTEM_ROLE_PERMISSIONS];
+    if (!rolePermissions) continue;
+    for (const permission of rolePermissions) permissions.add(permission);
+  }
+  return [...permissions].sort();
 }

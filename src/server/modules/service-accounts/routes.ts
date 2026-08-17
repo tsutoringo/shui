@@ -3,6 +3,7 @@ import { createDomainApiRoutes } from "../api-plugin";
 import {
   createServiceAccount,
   listServiceAccounts,
+  listServiceAccountOwners,
   setServiceAccountDisabled,
   transferServiceAccountOwnership,
   updateServiceAccount,
@@ -15,6 +16,10 @@ export function createServiceAccountRoutes(environment: AuthEnvironment, auth: A
       async () => ({ serviceAccounts: await listServiceAccounts(environment) }),
       { requirePermission: "service-accounts:read", response: "ServiceAccounts" },
     )
+    .get("/service-accounts/owners", () => listServiceAccountOwners(environment), {
+      requirePermission: "owners:read",
+      response: "ServiceAccountOwners",
+    })
     .post(
       "/service-accounts",
       async ({ actor, body, request }) => createServiceAccount(environment, actor, body, request),

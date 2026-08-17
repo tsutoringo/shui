@@ -15,12 +15,14 @@ import { getApiFetch } from "../routes/api.$";
 const emptyRequest = { body: {}, headers: {} } as const;
 
 export type {
+  AdminAccess,
   BootstrapComplete,
   BootstrapReservation,
   InvitationAccepted,
   InvitationCreated,
   InvitationPublic,
   ServiceAccount,
+  ServiceAccountOwners,
   SystemRole,
   Team,
   User,
@@ -39,6 +41,12 @@ export class ApiClientError extends Error {
 export async function reserveBootstrap(body: BootstrapTokenBody) {
   return unwrapApiResponse(
     await getApiFetch()("/api/setup/reserve", { body, headers: {}, method: "POST" }),
+  );
+}
+
+export async function getAdminAccess() {
+  return unwrapApiResponse(
+    await getApiFetch()("/api/admin/access", { ...emptyRequest, method: "GET" }),
   );
 }
 
@@ -205,6 +213,12 @@ export async function removeTeamMember(teamId: string, userId: string) {
 export async function getServiceAccounts() {
   return unwrapApiResponse(
     await getApiFetch()("/api/service-accounts", { ...emptyRequest, method: "GET" }),
+  );
+}
+
+export async function getServiceAccountOwners() {
+  return unwrapApiResponse(
+    await getApiFetch()("/api/service-accounts/owners", { ...emptyRequest, method: "GET" }),
   );
 }
 

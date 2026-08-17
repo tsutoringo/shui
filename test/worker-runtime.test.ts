@@ -915,6 +915,93 @@ describe("Shui worker runtime", () => {
     expect(lastRootResponse.status).toBe(409);
   });
 
+  it("enforces administrator access and returns minimal owner candidates", async () => {
+    const root = await ensureRoot();
+
+    const unauthenticatedResponse = await SELF.fetch(`${origin}/api/admin/access`);
+    expect(unauthenticatedResponse.status).toBe(401);
+
+    const rootAccessResponse = await SELF.fetch(`${origin}/api/admin/access`, {
+      headers: { cookie: root.cookie },
+    });
+    expect(rootAccessResponse.status).toBe(200);
+    await expect(rootAccessResponse.json()).resolves.toEqual({ permissions: ["*"] });
+
+    const standardUser = await signUpUser("Standard Policy User");
+    const standardAccessResponse = await SELF.fetch(`${origin}/api/admin/access`, {
+      headers: { cookie: standardUser.cookie },
+    });
+    expect(standardAccessResponse.status).toBe(403);
+
+    const userAdmin = await signUpUser("Admin Policy User");
+    const userAdminGrantResponse = await SELF.fetch(
+      `${origin}/api/users/${userAdmin.userId}/system-roles`,
+      {
+        body: JSON.stringify({ roleKey: "user-admin" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(userAdminGrantResponse.status).toBe(200);
+
+    const userAdminAccessResponse = await SELF.fetch(`${origin}/api/admin/access`, {
+      headers: { cookie: userAdmin.cookie },
+    });
+    expect(userAdminAccessResponse.status).toBe(200);
+    const userAdminAccess = (await userAdminAccessResponse.json()) as { permissions: string[] };
+    expect(userAdminAccess.permissions).toEqual(
+      expect.arrayContaining([
+        "system-roles:read",
+        "teams:read",
+        "teams:write",
+        "users:read",
+        "users:write",
+      ]),
+    );
+    expect(userAdminAccess.permissions).not.toContain("*");
+    expect(userAdminAccess.permissions).not.toContain("service-accounts:read");
+
+    const userAdminOwnersResponse = await SELF.fetch(`${origin}/api/service-accounts/owners`, {
+      headers: { cookie: userAdmin.cookie },
+    });
+    expect(userAdminOwnersResponse.status).toBe(403);
+
+    const applicationAdmin = await signUpUser("Application Policy User");
+    const applicationAdminGrantResponse = await SELF.fetch(
+      `${origin}/api/users/${applicationAdmin.userId}/system-roles`,
+      {
+        body: JSON.stringify({ roleKey: "application-admin" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(applicationAdminGrantResponse.status).toBe(200);
+
+    const applicationAdminAccessResponse = await SELF.fetch(`${origin}/api/admin/access`, {
+      headers: { cookie: applicationAdmin.cookie },
+    });
+    expect(applicationAdminAccessResponse.status).toBe(200);
+    await expect(applicationAdminAccessResponse.json()).resolves.toEqual({
+      permissions: ["owners:read", "service-accounts:read", "service-accounts:write"],
+    });
+
+    const ownersResponse = await SELF.fetch(`${origin}/api/service-accounts/owners`, {
+      headers: { cookie: applicationAdmin.cookie },
+    });
+    expect(ownersResponse.status).toBe(200);
+    await expect(ownersResponse.json()).resolves.toMatchObject({
+      teams: expect.any(Array),
+      users: expect.arrayContaining([
+        { id: `human_${applicationAdmin.userId}`, name: "Application Policy User" },
+      ]),
+    });
+
+    const applicationUsersResponse = await SELF.fetch(`${origin}/api/users`, {
+      headers: { cookie: applicationAdmin.cookie },
+    });
+    expect(applicationUsersResponse.status).toBe(403);
+  });
+
   it("repairs a Better Auth user that has no human principal mapping", async () => {
     const root = await ensureRoot();
     const userId = `legacy-${crypto.randomUUID()}`;

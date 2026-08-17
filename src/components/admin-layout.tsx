@@ -4,12 +4,24 @@ import { useState, type ReactElement, type ReactNode } from "react";
 
 import { authClient } from "../lib/auth-client";
 import { authQueryKeys, sessionQueryOptions } from "../lib/auth-queries";
+import { adminAccessQueryOptions } from "../lib/api-query-options";
+import { hasAdminPermission } from "../lib/admin-routing";
 
 const navigation = [
-  { href: "/users", label: "Users", icon: "users" },
-  { href: "/teams", label: "Teams", icon: "teams" },
-  { href: "/service-accounts", label: "Service accounts", icon: "service-accounts" },
-  { href: "/system-roles", label: "System roles", icon: "system-roles" },
+  { href: "/admin/users", label: "Users", icon: "users", permission: "users:read" },
+  { href: "/admin/teams", label: "Teams", icon: "teams", permission: "teams:read" },
+  {
+    href: "/admin/service-accounts",
+    label: "Service accounts",
+    icon: "service-accounts",
+    permission: "service-accounts:read",
+  },
+  {
+    href: "/admin/system-roles",
+    label: "System roles",
+    icon: "system-roles",
+    permission: "system-roles:read",
+  },
 ] as const;
 
 type AdminIconName = (typeof navigation)[number]["icon"] | "sign-out";
@@ -29,6 +41,10 @@ export function AdminLayout({
 }>) {
   const queryClient = useQueryClient();
   const sessionQuery = useQuery(sessionQueryOptions);
+  const accessQuery = useQuery(adminAccessQueryOptions);
+  const visibleNavigation = navigation.filter((item) =>
+    hasAdminPermission(accessQuery.data, item.permission),
+  );
 
   async function signOut() {
     await authClient.signOut();
@@ -39,7 +55,7 @@ export function AdminLayout({
   return (
     <div className="min-h-screen bg-kumo-canvas">
       <a
-        className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-kumo-strong focus:px-4 focus:py-3 focus:text-base focus:text-kumo-canvas"
+        className="sr-only focus:not-sr-only focus:fixed focus:inset-s-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-kumo-strong focus:px-4 focus:py-3 focus:text-base focus:text-kumo-canvas"
         href="#admin-content"
       >
         Skip to content
@@ -58,7 +74,7 @@ export function AdminLayout({
             <Sidebar.Group>
               <Sidebar.GroupLabel>Administration</Sidebar.GroupLabel>
               <Sidebar.Menu aria-label="Administration">
-                {navigation.map((item) => (
+                {visibleNavigation.map((item) => (
                   <Sidebar.MenuButton
                     active={item.href === activePath}
                     aria-current={item.href === activePath ? "page" : undefined}

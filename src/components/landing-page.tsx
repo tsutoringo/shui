@@ -10,7 +10,7 @@ export function LandingPage() {
           SHUI<span>/</span>
         </LinkButton>
         <div className="flex items-center gap-2">
-          <LinkButton className="text-sm" href="/users" variant="ghost">
+          <LinkButton className="text-sm" href="/admin" variant="ghost">
             Admin console
           </LinkButton>
           <LinkButton className="text-sm" href="/sign-in" variant="ghost">
@@ -34,7 +34,7 @@ export function LandingPage() {
             <LinkButton className="justify-center text-sm" href="/sign-in" variant="primary">
               Sign in to Shui
             </LinkButton>
-            <LinkButton className="justify-center text-sm" href="/invite" variant="ghost">
+            <LinkButton className="justify-center text-sm" href="/admin/users" variant="ghost">
               Invite a teammate
             </LinkButton>
             <LinkButton className="justify-center text-sm" href="/setup" variant="ghost">

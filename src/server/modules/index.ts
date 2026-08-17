@@ -3,6 +3,7 @@ import { Elysia } from "elysia";
 import { type AuthEnvironment, type AuthInstance } from "../auth";
 import { ApiError } from "./errors";
 import { assertMutationOrigin } from "./http";
+import { createAuthorizationRoutes } from "./authorization/routes";
 import { createBootstrapRoutes } from "./bootstrap/routes";
 import { createInvitationRoutes } from "./invitations/routes";
 import { createServiceAccountRoutes } from "./service-accounts/routes";
@@ -30,6 +31,7 @@ export function createApiRoutes(environment: AuthEnvironment, auth: AuthInstance
         error: statusCode >= 500 ? "Request failed." : "The request could not be completed.",
       };
     })
+    .use(createAuthorizationRoutes(environment, auth))
     .use(createBootstrapRoutes(environment, auth))
     .use(createInvitationRoutes(environment, auth))
     .use(createUserRoutes(environment, auth))
