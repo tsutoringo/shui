@@ -3,7 +3,7 @@
   "checkpoint_id": "01M08ZS7WTAACYAZA8BXRSTVWH",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 25,
+  "checkpoints_count": 26,
   "files_touched": [
     "ROADMAP.md",
     "docs/token-verification.md",
@@ -179,6 +179,13 @@
       "compact_transcript": "/14/transcript.jsonl",
       "content_hash": "/14/content_hash.txt",
       "prompt": "/14/prompt.txt"
+    },
+    {
+      "metadata": "/15/metadata.json",
+      "transcript": "/15/full.jsonl",
+      "compact_transcript": "/15/transcript.jsonl",
+      "content_hash": "/15/content_hash.txt",
+      "prompt": "/15/prompt.txt"
     }
   ],
   "token_usage": {
