@@ -1,7 +1,12 @@
 import { Button, Input, LinkButton } from "@cloudflare/kumo";
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { completeBootstrap, formatClientError, reserveBootstrap } from "../lib/m1-client";
+import { formatApiError } from "../lib/api-client";
+import {
+  completeBootstrapMutationOptions,
+  reserveBootstrapMutationOptions,
+} from "../lib/api-query-options";
 import { FormError, FormStatus, M1Layout } from "./m1-layout";
 
 export function SetupPage() {
@@ -9,18 +14,19 @@ export function SetupPage() {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [bootstrapToken, setBootstrapToken] = useState("");
-  const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string>();
   const [completed, setCompleted] = useState(false);
+  const reserveMutation = useMutation(reserveBootstrapMutationOptions());
+  const completeMutation = useMutation(completeBootstrapMutationOptions());
+  const isPending = reserveMutation.isPending || completeMutation.isPending;
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(undefined);
-    setIsPending(true);
 
     try {
-      const reservation = await reserveBootstrap({ bootstrapToken });
-      await completeBootstrap({
+      const reservation = await reserveMutation.mutateAsync({ bootstrapToken });
+      await completeMutation.mutateAsync({
         bootstrapToken,
         email,
         name,
@@ -29,20 +35,18 @@ export function SetupPage() {
       });
       setCompleted(true);
     } catch (submitError) {
-      setError(formatClientError(submitError));
-    } finally {
-      setIsPending(false);
+      setError(formatApiError(submitError));
     }
   }
 
   if (completed) {
     return (
       <M1Layout
-        description="The first administrator account is ready. Verify the address from the email, then sign in to start inviting your team."
+        description="The first administrator account is ready. Sign in to start inviting your team."
         eyebrow="Setup complete"
         title="Your control plane has an owner."
       >
-        <FormStatus>Verification email sent.</FormStatus>
+        <FormStatus>Account created. You can sign in now.</FormStatus>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <LinkButton
             className="w-full justify-center text-sm sm:w-auto"

@@ -3,7 +3,7 @@ import { lt, sql, type SQLWrapper } from "drizzle-orm";
 import { createDb, type AppDb } from "../../db";
 import { auditEvents, outboxEvents, rateLimitBuckets } from "../../db/domain-schema";
 import { type AuthEnvironment } from "../auth";
-import { M1Error } from "../modules/errors";
+import { ApiError } from "../modules/errors";
 
 export type BootstrapState = {
   status: "uninitialized" | "reserved" | "user-created" | "completed";
@@ -46,7 +46,7 @@ export function normalizeEmail(email: string) {
 
 export function normalizeName(name: string | undefined, fallback: string) {
   const value = name?.normalize("NFKC").trim() || fallback;
-  if (!value) throw new M1Error(400);
+  if (!value) throw new ApiError(400);
   return value;
 }
 
@@ -108,7 +108,7 @@ function requestAddress(request: Request) {
     : "unknown";
 }
 
-async function consumeM1RateLimit(
+async function consumeRateLimit(
   database: D1Database,
   key: string,
   max: number,
@@ -116,7 +116,7 @@ async function consumeM1RateLimit(
 ) {
   const bucket = await consumeRateLimitBucket(database, key, windowSeconds);
 
-  if (!bucket) throw new M1Error(500);
+  if (!bucket) throw new ApiError(500);
 
   return bucket.count <= max;
 }
@@ -177,13 +177,13 @@ export async function enforceRateLimit(
   max: number,
   windowSeconds: number,
 ) {
-  const allowed = await consumeM1RateLimit(
+  const allowed = await consumeRateLimit(
     environment.DB,
-    `m1:${bucket}:${requestAddress(request)}`,
+    `api:${bucket}:${requestAddress(request)}`,
     max,
     windowSeconds,
   );
-  if (!allowed) throw new M1Error(429);
+  if (!allowed) throw new ApiError(429);
 }
 
 export function auditStatement(

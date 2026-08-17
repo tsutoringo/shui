@@ -132,7 +132,10 @@ async function ensureRoot() {
     });
     expect(completeResponse.status).toBe(200);
 
-    await env.DB.prepare("UPDATE user SET email_verified = 1 WHERE email = ?").bind(email).run();
+    const rootUser = await env.DB.prepare("SELECT email_verified FROM user WHERE email = ?")
+      .bind(email)
+      .first<{ email_verified: number }>();
+    expect(rootUser?.email_verified).toBe(0);
 
     const signInResponse = await SELF.fetch(`${origin}/api/auth/sign-in/email`, {
       body: JSON.stringify({ email, password }),
@@ -175,11 +178,11 @@ async function signUpUser(name = "OAuth Test") {
   });
 
   expect(response.status).toBe(200);
-  const user = await env.DB.prepare("SELECT id FROM user WHERE email = ?")
+  const user = await env.DB.prepare("SELECT id, email_verified FROM user WHERE email = ?")
     .bind(email)
-    .first<{ id: string }>();
+    .first<{ email_verified: number; id: string }>();
   expect(user?.id).toBeTruthy();
-  await env.DB.prepare("UPDATE user SET email_verified = 1 WHERE email = ?").bind(email).run();
+  expect(user?.email_verified).toBe(0);
 
   const signInResponse = await SELF.fetch(`${origin}/api/auth/sign-in/email`, {
     body: JSON.stringify({ email, password }),
@@ -450,9 +453,6 @@ describe("Shui worker runtime", () => {
       .first<{ status: string; human_status: string; disabled: number }>();
     expect(principal).toEqual({ disabled: 1, human_status: "disabled", status: "disabled" });
 
-    await env.DB.prepare("UPDATE user SET email_verified = 1 WHERE id = ?")
-      .bind(invitedUser?.id)
-      .run();
     const signInResponse = await SELF.fetch(`${origin}/api/auth/sign-in/email`, {
       body: JSON.stringify({
         email: invitation.email,
@@ -488,9 +488,6 @@ describe("Shui worker runtime", () => {
       },
     );
     expect(reacceptResponse.status).toBe(200);
-    await env.DB.prepare("UPDATE user SET email_verified = 1 WHERE id = ?")
-      .bind(invitedUser?.id)
-      .run();
     const reSignInResponse = await SELF.fetch(`${origin}/api/auth/sign-in/email`, {
       body: JSON.stringify({ email: invitation.email, password: newPassword }),
       headers: { "content-type": "application/json" },
@@ -758,6 +755,197 @@ describe("Shui worker runtime", () => {
     expect(rootAliasResponse.status).toBe(200);
     await expect(rootAliasResponse.json()).resolves.toMatchObject({
       issuer: `${origin}/api/auth`,
+    });
+  });
+
+  it("manages human principals, flat teams, and team membership", async () => {
+    const root = await ensureRoot();
+    const member = await signUpUser("M2 Team Member");
+
+    const usersResponse = await SELF.fetch(`${origin}/api/users`, {
+      headers: { cookie: root.cookie },
+    });
+    expect(usersResponse.status).toBe(200);
+    const usersBody = (await usersResponse.json()) as {
+      users: Array<{ id: string; principalId: string | null; email: string }>;
+    };
+    const listedMember = usersBody.users.find((user) => user.id === member.userId);
+    expect(listedMember?.principalId).toBe(`human_${member.userId}`);
+
+    const createTeamResponse = await SELF.fetch(`${origin}/api/teams`, {
+      body: JSON.stringify({ description: "Platform operators", name: "Platform" }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(createTeamResponse.status).toBe(200);
+    const team = (await createTeamResponse.json()) as { id: string };
+
+    const addMemberResponse = await SELF.fetch(`${origin}/api/teams/${team.id}/members`, {
+      body: JSON.stringify({ userId: member.userId }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(addMemberResponse.status).toBe(200);
+
+    const teamsResponse = await SELF.fetch(`${origin}/api/teams`, {
+      headers: { cookie: root.cookie },
+    });
+    expect(teamsResponse.status).toBe(200);
+    await expect(teamsResponse.json()).resolves.toMatchObject({
+      teams: expect.arrayContaining([
+        expect.objectContaining({
+          id: team.id,
+          memberCount: 1,
+          members: expect.arrayContaining([expect.objectContaining({ id: member.userId })]),
+        }),
+      ]),
+    });
+
+    const removeMemberResponse = await SELF.fetch(
+      `${origin}/api/teams/${team.id}/members/${member.userId}`,
+      { headers: { cookie: root.cookie }, method: "DELETE" },
+    );
+    expect(removeMemberResponse.status).toBe(200);
+  });
+
+  it("requires ownership transfer before disabling a user or team owner", async () => {
+    const root = await ensureRoot();
+    const owner = await signUpUser("M2 Owner");
+
+    const teamResponse = await SELF.fetch(`${origin}/api/teams`, {
+      body: JSON.stringify({ name: "M2 Ownership Team" }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(teamResponse.status).toBe(200);
+    const team = (await teamResponse.json()) as { id: string };
+
+    const accountResponse = await SELF.fetch(`${origin}/api/service-accounts`, {
+      body: JSON.stringify({
+        name: "M2 Provisioner",
+        ownerId: `human_${owner.userId}`,
+        ownerType: "user",
+      }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(accountResponse.status).toBe(200);
+    const account = (await accountResponse.json()) as { id: string };
+
+    const addServiceMemberResponse = await SELF.fetch(`${origin}/api/teams/${team.id}/members`, {
+      body: JSON.stringify({ userId: account.id }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(addServiceMemberResponse.status).toBe(409);
+
+    const disableOwnerResponse = await SELF.fetch(`${origin}/api/users/${owner.userId}/disable`, {
+      headers: { cookie: root.cookie },
+      method: "POST",
+    });
+    expect(disableOwnerResponse.status).toBe(409);
+
+    const transferResponse = await SELF.fetch(
+      `${origin}/api/service-accounts/${account.id}/transfer-ownership`,
+      {
+        body: JSON.stringify({ ownerId: team.id, ownerType: "team" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(transferResponse.status).toBe(200);
+
+    const disableOwnerAfterTransferResponse = await SELF.fetch(
+      `${origin}/api/users/${owner.userId}/disable`,
+      { headers: { cookie: root.cookie }, method: "POST" },
+    );
+    expect(disableOwnerAfterTransferResponse.status).toBe(200);
+
+    const disableTeamResponse = await SELF.fetch(`${origin}/api/teams/${team.id}/disable`, {
+      headers: { cookie: root.cookie },
+      method: "POST",
+    });
+    expect(disableTeamResponse.status).toBe(409);
+  });
+
+  it("enforces system-role grants and protects the last active root", async () => {
+    const root = await ensureRoot();
+    const user = await signUpUser("M2 Role Subject");
+
+    const grantResponse = await SELF.fetch(`${origin}/api/users/${user.userId}/system-roles`, {
+      body: JSON.stringify({ roleKey: "user-admin" }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(grantResponse.status).toBe(200);
+    await expect(grantResponse.json()).resolves.toMatchObject({
+      roleKey: "user-admin",
+      status: "granted",
+    });
+
+    const delegatedUsersResponse = await SELF.fetch(`${origin}/api/users`, {
+      headers: { cookie: user.cookie },
+    });
+    expect(delegatedUsersResponse.status).toBe(200);
+    const delegatedServiceAccountsResponse = await SELF.fetch(`${origin}/api/service-accounts`, {
+      headers: { cookie: user.cookie },
+    });
+    expect(delegatedServiceAccountsResponse.status).toBe(403);
+
+    const usersResponse = await SELF.fetch(`${origin}/api/users`, {
+      headers: { cookie: root.cookie },
+    });
+    const usersBody = (await usersResponse.json()) as {
+      users: Array<{ id: string; roles: string[] }>;
+    };
+    expect(usersBody.users.find((candidate) => candidate.id === user.userId)?.roles).toContain(
+      "user-admin",
+    );
+
+    const revokeResponse = await SELF.fetch(
+      `${origin}/api/users/${user.userId}/system-roles/user-admin`,
+      { headers: { cookie: root.cookie }, method: "DELETE" },
+    );
+    expect(revokeResponse.status).toBe(200);
+
+    const lastRootResponse = await SELF.fetch(
+      `${origin}/api/users/${root.userId}/system-roles/root`,
+      { headers: { cookie: root.cookie }, method: "DELETE" },
+    );
+    expect(lastRootResponse.status).toBe(409);
+  });
+
+  it("repairs a Better Auth user that has no human principal mapping", async () => {
+    const root = await ensureRoot();
+    const userId = `legacy-${crypto.randomUUID()}`;
+    const now = Date.now();
+    await env.DB.prepare(
+      `INSERT INTO user (id, name, email, email_verified, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+    )
+      .bind(userId, "Legacy User", `${userId}@example.com`, 0, now, now)
+      .run();
+
+    const beforeResponse = await SELF.fetch(`${origin}/api/users`, {
+      headers: { cookie: root.cookie },
+    });
+    const before = (await beforeResponse.json()) as {
+      users: Array<{ id: string; status: string; principalId: string | null }>;
+    };
+    expect(before.users.find((user) => user.id === userId)).toMatchObject({
+      principalId: null,
+      status: "unmanaged",
+    });
+
+    const repairResponse = await SELF.fetch(`${origin}/api/users/${userId}/repair`, {
+      headers: { cookie: root.cookie },
+      method: "POST",
+    });
+    expect(repairResponse.status).toBe(200);
+    await expect(repairResponse.json()).resolves.toMatchObject({
+      principalId: `human_${userId}`,
+      status: "repaired",
+      userId,
     });
   });
 });

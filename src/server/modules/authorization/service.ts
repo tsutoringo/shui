@@ -8,7 +8,7 @@ import {
   systemRoles,
 } from "../../../db/domain-schema";
 import { type AuthEnvironment, type AuthInstance } from "../../auth";
-import { M1Error } from "../errors";
+import { ApiError } from "../errors";
 
 export type Actor = {
   principalId: string;
@@ -16,12 +16,27 @@ export type Actor = {
   roleKeys: Set<string>;
 };
 
+export const SYSTEM_ROLE_PERMISSIONS = {
+  root: ["*"] as const,
+  "user-admin": [
+    "users:read",
+    "users:write",
+    "teams:read",
+    "teams:write",
+    "system-roles:read",
+  ] as const,
+  "application-admin": ["service-accounts:read", "service-accounts:write"] as const,
+};
+
+export type SystemPermission =
+  (typeof SYSTEM_ROLE_PERMISSIONS)[keyof typeof SYSTEM_ROLE_PERMISSIONS][number];
+
 export async function getActor(auth: AuthInstance, environment: AuthEnvironment, request: Request) {
   const session = await auth.api.getSession({
     headers: request.headers,
     query: { disableCookieCache: true, disableRefresh: true },
   });
-  if (!session?.user || !session.user.emailVerified) throw new M1Error(401);
+  if (!session?.user) throw new ApiError(401);
 
   const db = createDb(environment.DB);
   const principal = await db
@@ -38,7 +53,7 @@ export async function getActor(auth: AuthInstance, environment: AuthEnvironment,
       ),
     )
     .get();
-  if (!principal || principal.userId !== session.user.id) throw new M1Error(401);
+  if (!principal || principal.userId !== session.user.id) throw new ApiError(401);
 
   const roleRows = await db
     .select({ key: systemRoles.key })
@@ -66,6 +81,22 @@ export async function requireRole(
   roles: readonly string[],
 ) {
   const actor = await getActor(auth, environment, request);
-  if (!roles.some((role) => actor.roleKeys.has(role))) throw new M1Error(403);
+  if (!roles.some((role) => actor.roleKeys.has(role))) throw new ApiError(403);
+  return actor;
+}
+
+export async function requirePermission(
+  auth: AuthInstance,
+  environment: AuthEnvironment,
+  request: Request,
+  permission: SystemPermission,
+) {
+  const actor = await getActor(auth, environment, request);
+  const allowed = [...actor.roleKeys].some((roleKey) => {
+    const permissions: readonly string[] =
+      SYSTEM_ROLE_PERMISSIONS[roleKey as keyof typeof SYSTEM_ROLE_PERMISSIONS] ?? [];
+    return permissions.includes("*") || permissions.includes(permission);
+  });
+  if (!allowed) throw new ApiError(403);
   return actor;
 }

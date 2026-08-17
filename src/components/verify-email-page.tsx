@@ -1,7 +1,7 @@
 import { LinkButton } from "@cloudflare/kumo";
 import { useEffect, useState } from "react";
 
-import { formatClientError, m1Fetch } from "../lib/m1-client";
+import { formatAuthError, authFetch } from "../lib/auth-api";
 import { FormError, FormStatus, M1Layout } from "./m1-layout";
 
 export function VerifyEmailPage({ token }: Readonly<{ token?: string }>) {
@@ -16,13 +16,13 @@ export function VerifyEmailPage({ token }: Readonly<{ token?: string }>) {
     }
 
     let active = true;
-    void m1Fetch("/auth/verify-email?token=" + encodeURIComponent(token), { method: "GET" }).then(
+    void authFetch("/auth/verify-email?token=" + encodeURIComponent(token), { method: "GET" }).then(
       () => {
         if (active) setIsPending(false);
       },
       (verifyError) => {
         if (!active) return;
-        setError(formatClientError(verifyError));
+        setError(formatAuthError(verifyError));
         setIsPending(false);
       },
     );

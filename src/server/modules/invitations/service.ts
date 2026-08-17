@@ -12,13 +12,8 @@ import {
 } from "../../../db/domain-schema";
 import { type AuthEnvironment, type AuthInstance, deliverEmail } from "../../auth";
 import { type Actor } from "../authorization/service";
-import {
-  ensureControlledUser,
-  ensureHumanPrincipal,
-  readHumanMapping,
-  sendVerificationEmail,
-} from "../identity/service";
-import { M1Error } from "../errors";
+import { ensureControlledUser, ensureHumanPrincipal, readHumanMapping } from "../identity/service";
+import { ApiError } from "../errors";
 import { type InvitationAcceptBody, type InvitationCreateBody } from "../models";
 import {
   auditStatement,
@@ -181,17 +176,17 @@ function roleKeysFromStorage(value: string) {
   try {
     parsed = JSON.parse(value);
   } catch {
-    throw new M1Error(500);
+    throw new ApiError(500);
   }
   if (!Array.isArray(parsed) || !parsed.every((key) => typeof key === "string")) {
-    throw new M1Error(500);
+    throw new ApiError(500);
   }
   return [...new Set(parsed)];
 }
 
 async function validateRoleKeys(database: AppDb, requested: readonly string[]) {
   const unique = [...new Set(requested)];
-  if (unique.length > 3) throw new M1Error(400);
+  if (unique.length > 3) throw new ApiError(400);
   if (unique.length === 0) return unique;
 
   const roles = await database
@@ -199,7 +194,7 @@ async function validateRoleKeys(database: AppDb, requested: readonly string[]) {
     .from(systemRoles)
     .where(inArray(systemRoles.key, unique))
     .all();
-  if (roles.length !== unique.length) throw new M1Error(400);
+  if (roles.length !== unique.length) throw new ApiError(400);
 
   return unique;
 }
@@ -286,13 +281,13 @@ export async function createInvitation(
       ),
     )
     .get();
-  if (existingMapping) throw new M1Error(409);
+  if (existingMapping) throw new ApiError(409);
   const existingInvitation = await database
     .select({ id: invitations.id })
     .from(invitations)
     .where(and(eq(invitations.email, email), inArray(invitations.status, ["pending", "claimed"])))
     .get();
-  if (existingInvitation) throw new M1Error(409);
+  if (existingInvitation) throw new ApiError(409);
 
   const token = randomToken();
   const tokenHash = await sha256Base64Url(token);
@@ -340,7 +335,7 @@ export async function createInvitation(
       .from(invitations)
       .where(and(eq(invitations.email, email), inArray(invitations.status, ["pending", "claimed"])))
       .get();
-    if (conflictingInvitation) throw new M1Error(409);
+    if (conflictingInvitation) throw new ApiError(409);
     throw error;
   }
 
@@ -371,20 +366,20 @@ export async function getPublicInvitation(
   await enforceRateLimit(environment, request, "invitation-read", 60, 60);
   const database = createDb(environment.DB);
   const invitation = await readInvitation(database, await sha256Base64Url(token));
-  if (!invitation) throw new M1Error(404);
+  if (!invitation) throw new ApiError(404);
   const now = Date.now();
   if (
     (invitation.status === "pending" || invitation.status === "claimed") &&
     invitation.expires_at <= now
   ) {
     await expireInvitation(database, invitation, now);
-    throw new M1Error(404);
+    throw new ApiError(404);
   }
   if (invitation.status === "expired") {
     await expireInvitation(database, invitation, now);
-    throw new M1Error(404);
+    throw new ApiError(404);
   }
-  if (invitation.status !== "pending" && invitation.status !== "claimed") throw new M1Error(404);
+  if (invitation.status !== "pending" && invitation.status !== "claimed") throw new ApiError(404);
   return {
     email: invitation.email,
     expiresAt: invitation.expires_at,
@@ -403,23 +398,23 @@ export async function claimInvitationWithAuth(
   await enforceRateLimit(environment, request, "invitation-accept", 30, 60);
   const database = createDb(environment.DB);
   const invitation = await readInvitation(database, await sha256Base64Url(token));
-  if (!invitation) throw new M1Error(404);
+  if (!invitation) throw new ApiError(404);
   const now = Date.now();
   const suppliedEmail = body.email ? normalizeEmail(body.email) : invitation.email;
-  if (suppliedEmail !== invitation.email) throw new M1Error(400);
+  if (suppliedEmail !== invitation.email) throw new ApiError(400);
   const context = await auth.$context;
   if (
     body.password.length < context.password.config.minPasswordLength ||
     body.password.length > context.password.config.maxPasswordLength
   ) {
-    throw new M1Error(400);
+    throw new ApiError(400);
   }
 
   let current = invitation;
   if (current.status === "pending") {
     if (current.expires_at <= now) {
       await expireInvitation(database, current, now);
-      throw new M1Error(404);
+      throw new ApiError(404);
     }
     const claimed = await database
       .update(invitations)
@@ -438,17 +433,17 @@ export async function claimInvitationWithAuth(
       : ((await readInvitation(database, current.token_hash)) ?? current);
   }
   if (current.status === "pending" || current.status === "revoked") {
-    throw new M1Error(409);
+    throw new ApiError(409);
   }
   if (current.status === "expired") {
     await expireInvitation(database, current, now);
-    throw new M1Error(409);
+    throw new ApiError(409);
   }
   if (current.expires_at <= now) {
     await expireInvitation(database, current, now);
-    throw new M1Error(409);
+    throw new ApiError(409);
   }
-  if (current.status === "completed") throw new M1Error(409);
+  if (current.status === "completed") throw new ApiError(409);
 
   const existingUser = await database
     .select({ id: user.id })
@@ -486,15 +481,14 @@ export async function claimInvitationWithAuth(
   if (!marked) {
     const racedInvitation = await readInvitation(database, current.token_hash);
     if (!racedInvitation || racedInvitation.claimed_user_id !== managedUser.id)
-      throw new M1Error(409);
+      throw new ApiError(409);
     current = racedInvitation;
   } else {
     current = (await readInvitation(database, current.token_hash)) ?? current;
   }
-  if (current.status !== "claimed") throw new M1Error(409);
+  if (current.status !== "claimed") throw new ApiError(409);
 
   const roleKeys = await validateRoleKeys(database, roleKeysFromStorage(current.system_role_keys));
-  await sendVerificationEmail(auth, managedUser);
   const principalId = await ensureHumanPrincipal(
     database,
     managedUser.id,
@@ -575,7 +569,7 @@ export async function claimInvitationWithAuth(
   const completionResult = results[0];
   if (!Array.isArray(completionResult) || !completionResult.length) {
     await expireInvitation(database, current, completedAt);
-    throw new M1Error(409);
+    throw new ApiError(409);
   }
   return {
     email: managedUser.email,
@@ -609,7 +603,7 @@ export async function revokeInvitation(
   await enforceRateLimit(environment, request, "invitation-revoke", 30, 60);
   const database = createDb(environment.DB);
   const invitation = await resolveInvitationForRevoke(database, identifier);
-  if (!invitation) throw new M1Error(404);
+  if (!invitation) throw new ApiError(404);
   const now = Date.now();
   const revokedInvitation = database
     .select({ value: sql<number>`1` })
@@ -685,7 +679,7 @@ export async function revokeInvitation(
   ]);
   if (!results[0]?.length) {
     const current = await resolveInvitationForRevoke(database, identifier);
-    if (current?.status !== "revoked") throw new M1Error(409);
+    if (current?.status !== "revoked") throw new ApiError(409);
   }
   return { id: invitation.id, status: "revoked" as const };
 }

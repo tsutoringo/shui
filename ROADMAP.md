@@ -69,6 +69,8 @@ Identity Platform
 - Formatting and linting: Vite+ with Oxlint, Oxfmt, and TypeScript strict mode
 - Async provisioning: Cloudflare Queues with a dead-letter queue
 - Authentication: Better Auth
+- Human email/password sign-in, session, authorization, and OAuth access do not require `email_verified`; email verification remains an optional compatibility flow
+- Transactional email delivery is optional; setup and invitation completion must work without a paid email provider, while invitation links can be shared manually
 - Provider: `@better-auth/oauth-provider`, not the legacy `oidcProvider`
 - Better Auth version: pin all Better Auth packages to `1.7.0-rc.5`
 - Teams remain separate from Principals; Principals are Users and Service Accounts
@@ -309,7 +311,7 @@ Sending to Cloudflare Queues is not atomic with D1. An outbox dispatcher sends p
 
 ### Bootstrap
 
-The first-run setup page is available only while `bootstrap_state` is incomplete. Production setup additionally requires a high-entropy `BOOTSTRAP_TOKEN` stored as a Worker secret. The token is submitted in a POST body and never placed in a URL or log.
+The first-run setup page is available only while `bootstrap_state` is incomplete. Any UI route visited before initialization automatically redirects to `/setup`, except `/setup` itself. Production setup additionally requires a high-entropy `BOOTSTRAP_TOKEN` stored as a Worker secret. The token is submitted in a POST body and never placed in a URL or log.
 
 Bootstrap is an idempotent state machine:
 
@@ -319,7 +321,7 @@ uninitialized -> reserved -> user-created -> completed
 
 A singleton unique constraint and conditional writes ensure only one setup request can reserve initialization. Concurrent attempts lose safely. A failed reservation can be resumed only with the bootstrap secret; it is never automatically released to an anonymous caller.
 
-Completion creates the Better Auth User, Human Principal, `root` grant, audit event, and required repair markers. After completion, setup endpoints return not found or redirect to sign-in.
+Completion creates the Better Auth User, Human Principal, `root` grant, audit event, and required repair markers. After completion, setup endpoints return not found or redirect to sign-in, and direct `/setup` navigation redirects to `/sign-in`.
 
 ### Invitations
 
@@ -448,7 +450,8 @@ Exit criteria:
 - [x] Create the first Human Principal and `root` grant
 - [x] Disable all unrestricted sign-up paths
 - [x] Implement invitation creation, revocation, expiration, and atomic consumption
-- [x] Implement password reset and email verification
+- [x] Implement password reset and optional email verification
+- [x] Allow authentication and authorization without transactional email delivery or email verification
 - [x] Implement User disablement and session revocation
 - [x] Add authentication and bootstrap audit events
 - [x] Build setup, sign-in, invitation, and password recovery screens
@@ -466,26 +469,28 @@ Exit criteria:
 - Direct calls to public sign-up fail after and before bootstrap unless they use the controlled setup/invitation flow
 - An invitation cannot be reused, accepted by another email, or accepted after expiration
 - Interrupted setup and invitation flows can safely resume or reconcile
+- Incomplete bootstrap automatically redirects UI navigation to `/setup`
+- An unverified root or invited User can sign in and use authorized routes
 - The last active `root` invariant is enforced
 
 ### M2: Principals, Teams, And System Roles
 
-- [ ] Implement Principal lifecycle and Human Principal repair
-- [ ] Implement Service Account lifecycle and User/Team ownership
-- [ ] Implement flat Teams and User membership
-- [ ] Seed built-in System Roles
-- [ ] Implement System Role authorization guards in Elysia
-- [ ] Implement ownership transfer before owner deletion or disablement
-- [ ] Add audit events for all mutations
-- [ ] Build Users, Service Accounts, Teams, and System Roles administration
+- [x] Implement Principal lifecycle and Human Principal repair
+- [x] Implement Service Account lifecycle and User/Team ownership
+- [x] Implement flat Teams and User membership
+- [x] Seed built-in System Roles
+- [x] Implement System Role authorization guards in Elysia
+- [x] Implement ownership transfer before owner deletion or disablement
+- [x] Add audit events for all mutations
+- [x] Build Users, Service Accounts, Teams, and System Roles administration
 
 Exit criteria:
 
-- Service Accounts cannot authenticate as human Users
-- Service Accounts cannot become Team members
-- Teams cannot contain Teams
-- User and Team owners are enforced by foreign keys and application validation
-- Every protected management operation maps to a documented System Role permission
+- [x] Service Accounts cannot authenticate as human Users
+- [x] Service Accounts cannot become Team members
+- [x] Teams cannot contain Teams
+- [x] User and Team owners are enforced by foreign keys and application validation
+- [x] Every protected management operation maps to a documented System Role permission
 
 ### M3: Applications, Assignments, And Roles
 
@@ -669,7 +674,7 @@ These decisions do not block M0 and must be fixed before the listed milestone be
 | Decision | Deadline |
 | --- | --- |
 | Product name, issuer domain, and custom claim namespace | Before M3 |
-| Transactional email provider and sender domain | Before M1 completion |
+| Transactional email provider and sender domain | Before enabling transactional email delivery |
 | Default access-token lifetime | Before M4 |
 | Pairwise or public OIDC subject policy | Before M4 |
 | Provisioning credential encryption key storage | Before M5 |
@@ -687,3 +692,4 @@ These decisions do not block M0 and must be fixed before the listed milestone be
 - [x] Service Account Client Credentials strategy selected
 - [x] Outbound SCIM direction selected
 - [x] M0 compatibility spike implemented and locally verified
+- [x] M2 principals, teams, system roles, ownership, and administration implemented and locally verified

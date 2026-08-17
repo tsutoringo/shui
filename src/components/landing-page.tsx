@@ -9,9 +9,14 @@ export function LandingPage() {
         <LinkButton className="m1-wordmark" href="/" variant="ghost">
           SHUI<span>/</span>
         </LinkButton>
-        <LinkButton className="text-sm" href="/sign-in" variant="ghost">
-          Sign in
-        </LinkButton>
+        <div className="flex items-center gap-2">
+          <LinkButton className="text-sm" href="/users" variant="ghost">
+            Admin console
+          </LinkButton>
+          <LinkButton className="text-sm" href="/sign-in" variant="ghost">
+            Sign in
+          </LinkButton>
+        </div>
       </header>
       <main className="relative mx-auto grid max-w-6xl gap-12 px-5 pb-20 pt-20 sm:px-8 lg:grid-cols-[1fr_0.75fr] lg:items-end lg:pt-32">
         <div>

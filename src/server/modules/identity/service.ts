@@ -1,5 +1,4 @@
 import { createLocalAccountIssuer } from "@better-auth/core/db";
-import { createEmailVerificationToken } from "better-auth/api";
 import { and, eq, isNull, sql } from "drizzle-orm";
 
 import { type AppDb } from "../../../db";
@@ -11,7 +10,7 @@ import {
   systemRoles,
 } from "../../../db/domain-schema";
 import { type AuthInstance } from "../../auth";
-import { M1Error } from "../errors";
+import { ApiError } from "../errors";
 import { normalizeEmail, type ManagedUser } from "../../shared/infrastructure";
 
 export type ExpireInvitation = (
@@ -43,10 +42,10 @@ export async function ensureControlledUser(
       existing?.accounts.some((account) => account.providerId === "credential")
     ) {
       const createdAt = new Date(user.createdAt).getTime();
-      if (!existingSince || createdAt < existingSince) throw new M1Error(409);
+      if (!existingSince || createdAt < existingSince) throw new ApiError(409);
     }
   }
-  if (user && normalizeEmail(user.email) !== email) throw new M1Error(409);
+  if (user && normalizeEmail(user.email) !== email) throw new ApiError(409);
 
   if (!user) {
     const passwordHash = await context.password.hash(password);
@@ -59,7 +58,7 @@ export async function ensureControlledUser(
       user =
         (await context.internalAdapter.findUserByEmail(email, { includeAccounts: true }))?.user ??
         null;
-      if (!user) throw new M1Error(500);
+      if (!user) throw new ApiError(500);
     }
 
     try {
@@ -71,7 +70,7 @@ export async function ensureControlledUser(
         userId: user.id,
       });
     } catch {
-      if (!(await context.internalAdapter.findCredentialAccount(user.id))) throw new M1Error(500);
+      if (!(await context.internalAdapter.findCredentialAccount(user.id))) throw new ApiError(500);
     }
   } else {
     const credential = await context.internalAdapter.findCredentialAccount(user.id);
@@ -86,7 +85,8 @@ export async function ensureControlledUser(
           userId: user.id,
         });
       } catch {
-        if (!(await context.internalAdapter.findCredentialAccount(user.id))) throw new M1Error(500);
+        if (!(await context.internalAdapter.findCredentialAccount(user.id)))
+          throw new ApiError(500);
       }
     } else if (allowExistingCredential) {
       const passwordHash = await context.password.hash(password);
@@ -95,18 +95,6 @@ export async function ensureControlledUser(
   }
 
   return user as ManagedUser;
-}
-
-export async function sendVerificationEmail(auth: AuthInstance, user: ManagedUser) {
-  if (user.emailVerified) return;
-  const context = await auth.$context;
-  const send = context.options.emailVerification?.sendVerificationEmail;
-  if (!send) return;
-
-  const token = await createEmailVerificationToken(context.secret, user.email);
-  const callbackURL = encodeURIComponent("/sign-in");
-  const url = `${context.baseURL}/verify-email?token=${token}&callbackURL=${callbackURL}`;
-  await send({ user, token, url });
 }
 
 export async function readHumanMapping(database: AppDb, userId: string) {
@@ -146,7 +134,7 @@ export async function ensureHumanPrincipal(
 ) {
   const principalId = `human_${userId}`;
   const existingMapping = await readHumanMapping(database, userId);
-  if (existingMapping && existingMapping.id !== principalId) throw new M1Error(409);
+  if (existingMapping && existingMapping.id !== principalId) throw new ApiError(409);
   if (
     existingMapping &&
     (existingMapping.type !== "human" ||
@@ -155,7 +143,7 @@ export async function ensureHumanPrincipal(
           existingMapping.human_status !== "active" ||
           existingMapping.disabled !== 0)))
   ) {
-    throw new M1Error(409);
+    throw new ApiError(409);
   }
 
   const existingPrincipal = await database
@@ -168,7 +156,7 @@ export async function ensureHumanPrincipal(
     (existingPrincipal.type !== "human" ||
       (!allowDisabled && existingPrincipal.status !== "active"))
   ) {
-    throw new M1Error(409);
+    throw new ApiError(409);
   }
   const needsReactivation =
     existingPrincipal?.status === "disabled" ||
@@ -189,7 +177,7 @@ export async function ensureHumanPrincipal(
         ),
       )
       .get();
-    if (existingRootGrant) throw new M1Error(409);
+    if (existingRootGrant) throw new ApiError(409);
   }
 
   if (invitationId) {
@@ -258,9 +246,9 @@ export async function ensureHumanPrincipal(
       )
       .get();
     if (activeClaimResult?.ok !== 1) {
-      if (!expireInvalidInvitation) throw new M1Error(500);
+      if (!expireInvalidInvitation) throw new ApiError(500);
       await expireInvalidInvitation(database, invitationId, Date.now());
-      throw new M1Error(409);
+      throw new ApiError(409);
     }
   } else {
     await database.batch([
@@ -304,7 +292,7 @@ export async function ensureHumanPrincipal(
     mapping.human_status !== "active" ||
     mapping.disabled !== 0
   ) {
-    throw new M1Error(500);
+    throw new ApiError(500);
   }
 
   return principalId;

@@ -9,13 +9,9 @@ import {
   systemRoles,
 } from "../../../db/domain-schema";
 import { type AuthEnvironment, type AuthInstance } from "../../auth";
-import { M1Error } from "../errors";
+import { ApiError } from "../errors";
 import { type BootstrapCompleteBody, type BootstrapTokenBody } from "../models";
-import {
-  ensureControlledUser,
-  ensureHumanPrincipal,
-  sendVerificationEmail,
-} from "../identity/service";
+import { ensureControlledUser, ensureHumanPrincipal } from "../identity/service";
 import {
   auditStatementWhen,
   enforceRateLimit,
@@ -29,7 +25,7 @@ import {
 async function getBootstrapState(database: AppDb) {
   const row = await database.select().from(bootstrapState).where(eq(bootstrapState.id, 1)).get();
 
-  if (!row) throw new M1Error(500);
+  if (!row) throw new ApiError(500);
   return {
     status: row.status,
     reservation_id: row.reservationId,
@@ -42,13 +38,13 @@ async function getBootstrapState(database: AppDb) {
 
 function tokenFromBody(body: BootstrapTokenBody) {
   const token = body.bootstrapToken ?? body.token;
-  if (!token) throw new M1Error(403);
+  if (!token) throw new ApiError(403);
   return token;
 }
 
 async function requireBootstrapToken(environment: AuthEnvironment, body: BootstrapTokenBody) {
   const token = tokenFromBody(body);
-  if (!(await validateBootstrapToken(environment, token))) throw new M1Error(403);
+  if (!(await validateBootstrapToken(environment, token))) throw new ApiError(403);
   return token;
 }
 
@@ -121,7 +117,7 @@ async function completeBootstrapDomain(
       ),
     )
     .get();
-  if (existingRoot && existingRoot.principalId !== principalId) throw new M1Error(409);
+  if (existingRoot && existingRoot.principalId !== principalId) throw new ApiError(409);
 
   const reservationId = state.reservation_id ?? "";
   const email = state.email ?? normalizeEmail(user.email);
@@ -179,7 +175,7 @@ async function completeBootstrapDomain(
       completedState,
     ),
   ]);
-  if (!results[0]?.length) throw new M1Error(409);
+  if (!results[0]?.length) throw new ApiError(409);
 }
 
 export async function reserveBootstrap(
@@ -191,9 +187,9 @@ export async function reserveBootstrap(
   await requireBootstrapToken(environment, body);
   const database = createDb(environment.DB);
   const state = await getBootstrapState(database);
-  if (state.status === "completed") throw new M1Error(404);
+  if (state.status === "completed") throw new ApiError(404);
   if (state.status !== "uninitialized") {
-    if (!state.reservation_id) throw new M1Error(500);
+    if (!state.reservation_id) throw new ApiError(500);
     return { reservationId: state.reservation_id, status: state.status };
   }
 
@@ -242,7 +238,7 @@ export async function reserveBootstrap(
 
   if (!reserved) {
     const racedState = await getBootstrapState(database);
-    if (racedState.status === "completed" || !racedState.reservation_id) throw new M1Error(409);
+    if (racedState.status === "completed" || !racedState.reservation_id) throw new ApiError(409);
     return { reservationId: racedState.reservation_id, status: racedState.status };
   }
 
@@ -260,21 +256,21 @@ export async function completeBootstrap(
   const database = createDb(environment.DB);
   const state = await getBootstrapState(database);
   if (state.status === "completed") {
-    if (state.email && normalizeEmail(body.email) !== state.email) throw new M1Error(409);
+    if (state.email && normalizeEmail(body.email) !== state.email) throw new ApiError(409);
     return { status: state.status, userId: state.user_id };
   }
-  if (state.status === "uninitialized" || !state.reservation_id) throw new M1Error(409);
-  if (body.reservationId && body.reservationId !== state.reservation_id) throw new M1Error(409);
+  if (state.status === "uninitialized" || !state.reservation_id) throw new ApiError(409);
+  if (body.reservationId && body.reservationId !== state.reservation_id) throw new ApiError(409);
 
   const email = normalizeEmail(body.email);
-  if (state.email && state.email !== email) throw new M1Error(409);
+  if (state.email && state.email !== email) throw new ApiError(409);
 
   const context = await auth.$context;
   if (
     body.password.length < context.password.config.minPasswordLength ||
     body.password.length > context.password.config.maxPasswordLength
   ) {
-    throw new M1Error(400);
+    throw new ApiError(400);
   }
 
   if (!state.email) {
@@ -293,7 +289,7 @@ export async function completeBootstrap(
       .get();
     if (!claimedEmail) {
       const racedState = await getBootstrapState(database);
-      if (racedState.email !== email) throw new M1Error(409);
+      if (racedState.email !== email) throw new ApiError(409);
     }
   }
 
@@ -328,11 +324,10 @@ export async function completeBootstrap(
     .get();
   if (!marked) {
     const racedState = await getBootstrapState(database);
-    if (racedState.user_id !== user.id) throw new M1Error(409);
+    if (racedState.user_id !== user.id) throw new ApiError(409);
   }
 
   const markedState = await getBootstrapState(database);
-  await sendVerificationEmail(auth, user);
   const principalId = await ensureHumanPrincipal(database, user.id, Date.now());
   await completeBootstrapDomain(database, markedState, user, principalId, Date.now());
 
@@ -356,6 +351,6 @@ export async function completeSetup(
 
 export async function getBootstrapStatus(environment: AuthEnvironment) {
   const state = await getBootstrapState(createDb(environment.DB));
-  if (state.status === "completed") throw new M1Error(404);
+  if (state.status === "completed") throw new ApiError(404);
   return { available: true as const, status: state.status };
 }

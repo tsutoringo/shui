@@ -1,14 +1,14 @@
 import { Elysia, t } from "elysia";
 
 import { type AuthEnvironment, createAuth } from "./auth";
-import { createM1Routes } from "./modules";
+import { createApiRoutes } from "./modules";
 
 export function createApiApp(environment: AuthEnvironment) {
   const auth = createAuth(environment);
 
   return new Elysia({ aot: false, prefix: "/api" })
     .onRequest(async ({ request }) => requireApiResource(request))
-    .use(createM1Routes(environment, auth))
+    .use(createApiRoutes(environment, auth))
     .get("/health", () => ({ service: "shui-api", status: "ok" as const }), {
       response: t.Object({
         service: t.String(),

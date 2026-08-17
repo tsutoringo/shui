@@ -14,8 +14,12 @@ import { Route as ConsentRouteImport } from './routes/consent'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as InviteRouteImport } from './routes/invite'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ServiceAccountsRouteImport } from './routes/service-accounts'
 import { Route as SetupRouteImport } from './routes/setup'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as SystemRolesRouteImport } from './routes/system-roles'
+import { Route as TeamsRouteImport } from './routes/teams'
+import { Route as UsersRouteImport } from './routes/users'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as ApiSplatRouteImport } from './routes/api.$'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
@@ -46,6 +50,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ServiceAccountsRoute = ServiceAccountsRouteImport.update({
+  id: '/service-accounts',
+  path: '/service-accounts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SetupRoute = SetupRouteImport.update({
   id: '/setup',
   path: '/setup',
@@ -54,6 +63,21 @@ const SetupRoute = SetupRouteImport.update({
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SystemRolesRoute = SystemRolesRouteImport.update({
+  id: '/system-roles',
+  path: '/system-roles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamsRoute = TeamsRouteImport.update({
+  id: '/teams',
+  path: '/teams',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UsersRoute = UsersRouteImport.update({
+  id: '/users',
+  path: '/users',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -83,8 +107,12 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/invite': typeof InviteRouteWithChildren
   '/reset-password': typeof ResetPasswordRouteWithChildren
+  '/service-accounts': typeof ServiceAccountsRoute
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
+  '/system-roles': typeof SystemRolesRoute
+  '/teams': typeof TeamsRoute
+  '/users': typeof UsersRoute
   '/verify-email': typeof VerifyEmailRoute
   '/api/$': typeof ApiSplatRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -96,8 +124,12 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/invite': typeof InviteRouteWithChildren
   '/reset-password': typeof ResetPasswordRouteWithChildren
+  '/service-accounts': typeof ServiceAccountsRoute
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
+  '/system-roles': typeof SystemRolesRoute
+  '/teams': typeof TeamsRoute
+  '/users': typeof UsersRoute
   '/verify-email': typeof VerifyEmailRoute
   '/api/$': typeof ApiSplatRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -110,8 +142,12 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/invite': typeof InviteRouteWithChildren
   '/reset-password': typeof ResetPasswordRouteWithChildren
+  '/service-accounts': typeof ServiceAccountsRoute
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
+  '/system-roles': typeof SystemRolesRoute
+  '/teams': typeof TeamsRoute
+  '/users': typeof UsersRoute
   '/verify-email': typeof VerifyEmailRoute
   '/api/$': typeof ApiSplatRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -125,8 +161,12 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/invite'
     | '/reset-password'
+    | '/service-accounts'
     | '/setup'
     | '/sign-in'
+    | '/system-roles'
+    | '/teams'
+    | '/users'
     | '/verify-email'
     | '/api/$'
     | '/invite/$token'
@@ -138,8 +178,12 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/invite'
     | '/reset-password'
+    | '/service-accounts'
     | '/setup'
     | '/sign-in'
+    | '/system-roles'
+    | '/teams'
+    | '/users'
     | '/verify-email'
     | '/api/$'
     | '/invite/$token'
@@ -151,8 +195,12 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/invite'
     | '/reset-password'
+    | '/service-accounts'
     | '/setup'
     | '/sign-in'
+    | '/system-roles'
+    | '/teams'
+    | '/users'
     | '/verify-email'
     | '/api/$'
     | '/invite/$token'
@@ -165,8 +213,12 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   InviteRoute: typeof InviteRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRouteWithChildren
+  ServiceAccountsRoute: typeof ServiceAccountsRoute
   SetupRoute: typeof SetupRoute
   SignInRoute: typeof SignInRoute
+  SystemRolesRoute: typeof SystemRolesRoute
+  TeamsRoute: typeof TeamsRoute
+  UsersRoute: typeof UsersRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   ApiSplatRoute: typeof ApiSplatRoute
 }
@@ -208,6 +260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/service-accounts': {
+      id: '/service-accounts'
+      path: '/service-accounts'
+      fullPath: '/service-accounts'
+      preLoaderRoute: typeof ServiceAccountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/setup': {
       id: '/setup'
       path: '/setup'
@@ -220,6 +279,27 @@ declare module '@tanstack/react-router' {
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/system-roles': {
+      id: '/system-roles'
+      path: '/system-roles'
+      fullPath: '/system-roles'
+      preLoaderRoute: typeof SystemRolesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teams': {
+      id: '/teams'
+      path: '/teams'
+      fullPath: '/teams'
+      preLoaderRoute: typeof TeamsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/users': {
+      id: '/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof UsersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verify-email': {
@@ -282,8 +362,12 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   InviteRoute: InviteRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRouteWithChildren,
+  ServiceAccountsRoute: ServiceAccountsRoute,
   SetupRoute: SetupRoute,
   SignInRoute: SignInRoute,
+  SystemRolesRoute: SystemRolesRoute,
+  TeamsRoute: TeamsRoute,
+  UsersRoute: UsersRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   ApiSplatRoute: ApiSplatRoute,
 }

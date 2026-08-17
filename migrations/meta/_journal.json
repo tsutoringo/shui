@@ -29,6 +29,13 @@
       "when": 1786867007317,
       "tag": "0003_invitation_expiry_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1786917732841,
+      "tag": "0004_awesome_thunderbolts",
+      "breakpoints": true
     }
   ]
 }

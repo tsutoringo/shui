@@ -1,10 +1,14 @@
 import { queryOptions } from "@tanstack/react-query";
 
-import { getTreaty } from "../routes/api.$";
+import { getApiFetch } from "../routes/api.$";
 
 export const healthQueryOptions = queryOptions({
   queryFn: async () => {
-    const response = await getTreaty().health.get();
+    const response = await getApiFetch()("/api/health", {
+      body: {},
+      headers: {},
+      method: "GET",
+    });
 
     if (response.error || !response.data) {
       throw new Error("Health check failed");

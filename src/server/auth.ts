@@ -96,7 +96,7 @@ export function createAuth(environment: AuthEnvironment) {
       enabled: true,
       autoSignIn: false,
       disableSignUp: true,
-      requireEmailVerification: true,
+      requireEmailVerification: false,
       revokeSessionsOnPasswordReset: true,
       sendResetPassword: async ({ user, url, token }) => {
         await deliverEmail(environment, {
@@ -110,8 +110,8 @@ export function createAuth(environment: AuthEnvironment) {
     },
     emailVerification: {
       autoSignInAfterVerification: false,
-      sendOnSignIn: true,
-      sendOnSignUp: true,
+      sendOnSignIn: false,
+      sendOnSignUp: false,
       sendVerificationEmail: async ({ user, url, token }) => {
         await deliverEmail(environment, {
           email: user.email,
@@ -143,15 +143,15 @@ export function createAuth(environment: AuthEnvironment) {
         ],
         scopes: ["openid", "profile", "email", "api:read"],
         customAccessTokenClaims: async ({ user }) => {
-          if (user) await requireActiveHuman(db, user.id, user.emailVerified);
+          if (user) await requireActiveHuman(db, user.id);
           return {};
         },
         customIdTokenClaims: async ({ user }) => {
-          await requireActiveHuman(db, user.id, user.emailVerified);
+          await requireActiveHuman(db, user.id);
           return {};
         },
         customUserInfoClaims: async ({ user }) => {
-          await requireActiveHuman(db, user.id, user.emailVerified);
+          await requireActiveHuman(db, user.id);
           return {};
         },
       }),
@@ -272,13 +272,7 @@ async function recordAuthAudit(
     .run();
 }
 
-async function requireActiveHuman(
-  database: ReturnType<typeof createDb>,
-  userId: string,
-  emailVerified: boolean,
-) {
-  if (!emailVerified) throw new Error("Verified human required.");
-
+async function requireActiveHuman(database: ReturnType<typeof createDb>, userId: string) {
   const activePrincipal = await database
     .select({ ok: sql<number>`1` })
     .from(humanPrincipals)

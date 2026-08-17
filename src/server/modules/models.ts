@@ -18,7 +18,14 @@ const emailMessageSchema = t.Object({
   url: t.String({ format: "uri" }),
 });
 
-export const M1Models = {
+const ownerTypeSchema = t.Union([t.Literal("user"), t.Literal("team")]);
+const principalStatusSchema = t.Union([
+  t.Literal("active"),
+  t.Literal("disabled"),
+  t.Literal("unmanaged"),
+]);
+
+export const ApiModels = {
   Error: t.Object({ error: t.String() }),
 
   BootstrapTokenBody: t.Object({
@@ -92,16 +99,144 @@ export const M1Models = {
     status: t.Union([t.Literal("active"), t.Literal("disabled")]),
     userId: idSchema,
   }),
+
+  IdentifierParams: t.Object({ id: idSchema }),
+  TeamMemberParams: t.Object({ id: idSchema, userId: idSchema }),
+  UserRoleParams: t.Object({ id: idSchema, roleKey: idSchema }),
+  User: t.Object({
+    id: idSchema,
+    principalId: t.Nullable(idSchema),
+    name: t.String(),
+    email: emailSchema,
+    emailVerified: t.Boolean(),
+    status: principalStatusSchema,
+    humanStatus: t.Nullable(t.Union([t.Literal("active"), t.Literal("disabled")])),
+    disabled: t.Boolean(),
+    roles: t.Array(t.String()),
+    teams: t.Array(
+      t.Object({
+        id: idSchema,
+        name: t.String(),
+        status: t.Union([t.Literal("active"), t.Literal("disabled")]),
+      }),
+    ),
+    createdAt: t.Number(),
+  }),
+  Users: t.Object({ users: t.Array(t.Ref("User")) }),
+  UserRepair: t.Object({
+    principalId: idSchema,
+    status: t.Union([t.Literal("active"), t.Literal("repaired")]),
+    userId: idSchema,
+  }),
+  SystemRole: t.Object({
+    key: idSchema,
+    name: t.String(),
+    description: t.String(),
+    activeGrantCount: t.Integer({ minimum: 0 }),
+  }),
+  SystemRoles: t.Object({ roles: t.Array(t.Ref("SystemRole")) }),
+  SystemRoleGrantBody: t.Object({ roleKey: idSchema }),
+  SystemRoleGrant: t.Object({
+    principalId: idSchema,
+    roleKey: idSchema,
+    status: t.Union([t.Literal("granted"), t.Literal("revoked")]),
+    userId: idSchema,
+  }),
+  Owner: t.Object({ id: idSchema, label: t.String(), type: ownerTypeSchema }),
+  OwnershipBody: t.Object({ ownerId: idSchema, ownerType: ownerTypeSchema }),
+  ServiceAccountCreateBody: t.Object({
+    name: t.String({ maxLength: 160, minLength: 1 }),
+    description: t.Optional(t.String({ maxLength: 1000 })),
+    ownerId: idSchema,
+    ownerType: ownerTypeSchema,
+  }),
+  ServiceAccountUpdateBody: t.Object({
+    name: t.Optional(t.String({ maxLength: 160, minLength: 1 })),
+    description: t.Optional(t.Nullable(t.String({ maxLength: 1000 }))),
+    ownerId: t.Optional(idSchema),
+    ownerType: t.Optional(ownerTypeSchema),
+  }),
+  ServiceAccount: t.Object({
+    id: idSchema,
+    principalId: idSchema,
+    name: t.String(),
+    description: t.Nullable(t.String()),
+    status: t.Union([t.Literal("active"), t.Literal("disabled")]),
+    owner: t.Ref("Owner"),
+    createdAt: t.Number(),
+    updatedAt: t.Number(),
+  }),
+  ServiceAccounts: t.Object({ serviceAccounts: t.Array(t.Ref("ServiceAccount")) }),
+  ServiceAccountStatus: t.Object({
+    id: idSchema,
+    principalId: idSchema,
+    status: t.Union([t.Literal("active"), t.Literal("disabled")]),
+  }),
+  TeamCreateBody: t.Object({
+    name: t.String({ maxLength: 160, minLength: 1 }),
+    description: t.Optional(t.String({ maxLength: 1000 })),
+  }),
+  TeamUpdateBody: t.Object({
+    name: t.Optional(t.String({ maxLength: 160, minLength: 1 })),
+    description: t.Optional(t.Nullable(t.String({ maxLength: 1000 }))),
+  }),
+  TeamMemberBody: t.Object({ userId: idSchema }),
+  Team: t.Object({
+    id: idSchema,
+    name: t.String(),
+    description: t.Nullable(t.String()),
+    status: t.Union([t.Literal("active"), t.Literal("disabled")]),
+    memberCount: t.Integer({ minimum: 0 }),
+    members: t.Array(
+      t.Object({
+        id: idSchema,
+        principalId: idSchema,
+        name: t.String(),
+        email: emailSchema,
+      }),
+    ),
+    createdAt: t.Number(),
+    updatedAt: t.Number(),
+  }),
+  Teams: t.Object({ teams: t.Array(t.Ref("Team")) }),
+  TeamCreated: t.Object({
+    id: idSchema,
+    name: t.String(),
+    description: t.Nullable(t.String()),
+    status: t.Literal("active"),
+  }),
+  TeamStatus: t.Object({
+    id: idSchema,
+    status: t.Union([t.Literal("active"), t.Literal("disabled"), t.Literal("deleted")]),
+  }),
+  TeamMember: t.Object({
+    teamId: idSchema,
+    principalId: idSchema,
+    status: t.Union([t.Literal("member"), t.Literal("removed")]),
+  }),
 } as const;
 
-export type BootstrapTokenBody = typeof M1Models.BootstrapTokenBody.static;
-export type BootstrapCompleteBody = typeof M1Models.BootstrapCompleteBody.static;
-export type InvitationCreateBody = typeof M1Models.InvitationCreateBody.static;
-export type InvitationAcceptBody = typeof M1Models.InvitationAcceptBody.static;
-export type BootstrapStatus = (typeof M1Models.BootstrapStatus.static)["status"];
-export type BootstrapStatusResponse = typeof M1Models.BootstrapStatus.static;
-export type BootstrapReservation = typeof M1Models.BootstrapReservation.static;
-export type BootstrapComplete = typeof M1Models.BootstrapComplete.static;
-export type InvitationCreated = typeof M1Models.InvitationCreated.static;
-export type InvitationPublic = typeof M1Models.InvitationPublic.static;
-export type InvitationAccepted = typeof M1Models.InvitationAccepted.static;
+export type BootstrapTokenBody = typeof ApiModels.BootstrapTokenBody.static;
+export type BootstrapCompleteBody = typeof ApiModels.BootstrapCompleteBody.static;
+export type InvitationCreateBody = typeof ApiModels.InvitationCreateBody.static;
+export type InvitationAcceptBody = typeof ApiModels.InvitationAcceptBody.static;
+export type BootstrapStatus = (typeof ApiModels.BootstrapStatus.static)["status"];
+export type BootstrapStatusResponse = typeof ApiModels.BootstrapStatus.static;
+export type BootstrapReservation = typeof ApiModels.BootstrapReservation.static;
+export type BootstrapComplete = typeof ApiModels.BootstrapComplete.static;
+export type InvitationCreated = typeof ApiModels.InvitationCreated.static;
+export type InvitationPublic = typeof ApiModels.InvitationPublic.static;
+export type InvitationAccepted = typeof ApiModels.InvitationAccepted.static;
+export type User = typeof ApiModels.User.static;
+export type SystemRole = typeof ApiModels.SystemRole.static;
+export type Owner = typeof ApiModels.Owner.static;
+export type ServiceAccount = Omit<typeof ApiModels.ServiceAccount.static, "owner"> & {
+  owner: Owner;
+};
+export type Team = typeof ApiModels.Team.static;
+export type ServiceAccountCreateBody = typeof ApiModels.ServiceAccountCreateBody.static;
+export type ServiceAccountUpdateBody = typeof ApiModels.ServiceAccountUpdateBody.static;
+export type OwnershipBody = typeof ApiModels.OwnershipBody.static;
+export type TeamCreateBody = typeof ApiModels.TeamCreateBody.static;
+export type TeamUpdateBody = typeof ApiModels.TeamUpdateBody.static;
+export type TeamMemberBody = typeof ApiModels.TeamMemberBody.static;

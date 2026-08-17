@@ -1,61 +1,40 @@
 import { Button, Input, LinkButton } from "@cloudflare/kumo";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-import {
-  acceptInvitation,
-  formatClientError,
-  getInvitation,
-  type InvitationPublic,
-} from "../lib/m1-client";
+import { formatApiError } from "../lib/api-client";
+import { acceptInvitationMutationOptions, invitationQueryOptions } from "../lib/api-query-options";
 import { FormError, FormStatus, M1Layout } from "./m1-layout";
 
 export function InvitationPage({ token }: Readonly<{ token: string }>) {
-  const [invitation, setInvitation] = useState<InvitationPublic>();
+  const invitationQuery = useQuery(invitationQueryOptions(token));
+  const acceptMutation = useMutation(acceptInvitationMutationOptions());
+  const invitation = invitationQuery.data;
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string>();
   const [accepted, setAccepted] = useState(false);
 
   useEffect(() => {
-    let active = true;
-    void getInvitation(token).then(
-      (details) => {
-        if (!active) return;
-        setInvitation(details);
-        setEmail(details.email);
-        setName(details.name ?? "");
-        setIsLoading(false);
-      },
-      (loadError) => {
-        if (!active) return;
-        setError(formatClientError(loadError));
-        setIsLoading(false);
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, [token]);
+    if (!invitation) return;
+    setEmail(invitation.email);
+    setName(invitation.name ?? "");
+  }, [invitation]);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!invitation) return;
     setError(undefined);
-    setIsPending(true);
     try {
-      await acceptInvitation(token, { email, name, password });
+      await acceptMutation.mutateAsync({ body: { email, name, password }, token });
       setAccepted(true);
     } catch (submitError) {
-      setError(formatClientError(submitError));
-    } finally {
-      setIsPending(false);
+      setError(formatApiError(submitError));
     }
   }
 
-  if (isLoading) {
+  if (invitationQuery.isLoading) {
     return (
       <M1Layout
         description="Checking the invitation and its expiry before showing the account form."
@@ -69,14 +48,14 @@ export function InvitationPage({ token }: Readonly<{ token: string }>) {
     );
   }
 
-  if (error && !invitation) {
+  if (invitationQuery.isError && !invitation) {
     return (
       <M1Layout
         description="This invitation may be expired, revoked, or already used. Ask a Shui administrator for a new link."
         eyebrow="Invitation unavailable"
         title="This link is no longer active."
       >
-        <FormError>{error}</FormError>
+        <FormError>{formatApiError(invitationQuery.error)}</FormError>
         <LinkButton className="mt-6 justify-center text-sm" href="/sign-in" variant="ghost">
           Go to sign in
         </LinkButton>
@@ -87,11 +66,11 @@ export function InvitationPage({ token }: Readonly<{ token: string }>) {
   if (accepted) {
     return (
       <M1Layout
-        description="Verify your email from the message we sent, then sign in with the password you chose."
+        description="Your account is ready. Sign in with the password you chose."
         eyebrow="You are invited"
         title="Your seat is ready."
       >
-        <FormStatus>Verification email sent to {email}.</FormStatus>
+        <FormStatus>Account created for {email}.</FormStatus>
         <LinkButton className="mt-6 justify-center text-sm" href="/sign-in" variant="primary">
           Continue to sign in
         </LinkButton>
@@ -144,13 +123,13 @@ export function InvitationPage({ token }: Readonly<{ token: string }>) {
         />
         {error ? <FormError>{error}</FormError> : null}
         <Button
-          aria-busy={isPending}
+          aria-busy={acceptMutation.isPending}
           className="w-full justify-center text-sm transition-none"
-          disabled={isPending}
+          disabled={acceptMutation.isPending}
           type="submit"
           variant="primary"
         >
-          {isPending ? "Creating account..." : "Accept invitation"}
+          {acceptMutation.isPending ? "Creating account..." : "Accept invitation"}
         </Button>
       </form>
     </M1Layout>

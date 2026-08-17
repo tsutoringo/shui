@@ -1,27 +1,26 @@
 import { Button, Input, LinkButton } from "@cloudflare/kumo";
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { createInvitation, formatClientError, type InvitationCreated } from "../lib/m1-client";
+import { formatApiError, type InvitationCreated } from "../lib/api-client";
+import { createInvitationMutationOptions } from "../lib/api-query-options";
 import { FormError, FormStatus, M1Layout } from "./m1-layout";
 
 export function InviteAdminPage() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
-  const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string>();
   const [created, setCreated] = useState<InvitationCreated>();
+  const invitationMutation = useMutation(createInvitationMutationOptions());
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(undefined);
-    setIsPending(true);
     try {
-      const invitation = await createInvitation({ email, name: name || undefined });
+      const invitation = await invitationMutation.mutateAsync({ email, name: name || undefined });
       setCreated(invitation);
     } catch (submitError) {
-      setError(formatClientError(submitError));
-    } finally {
-      setIsPending(false);
+      setError(formatApiError(submitError));
     }
   }
 
@@ -112,13 +111,13 @@ export function InviteAdminPage() {
           />
           {error ? <FormError>{error}</FormError> : null}
           <Button
-            aria-busy={isPending}
+            aria-busy={invitationMutation.isPending}
             className="w-full justify-center text-sm transition-none"
-            disabled={isPending}
+            disabled={invitationMutation.isPending}
             type="submit"
             variant="primary"
           >
-            {isPending ? "Creating invitation..." : "Create invitation"}
+            {invitationMutation.isPending ? "Creating invitation..." : "Create invitation"}
           </Button>
           <FormStatus>Invitations expire after seven days.</FormStatus>
         </form>

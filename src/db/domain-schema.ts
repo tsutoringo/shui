@@ -1,4 +1,4 @@
-import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { check, index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 
 import { user } from "./auth-schema";
@@ -33,6 +33,66 @@ export const humanPrincipals = sqliteTable(
     updatedAt: integer("updated_at").notNull(),
   },
   (table) => [index("human_principals_user_id_idx").on(table.userId)],
+);
+
+export const teams = sqliteTable(
+  "teams",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    description: text("description"),
+    status: text("status", { enum: ["active", "disabled"] }).notNull(),
+    disabledAt: integer("disabled_at"),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [index("teams_status_idx").on(table.status)],
+);
+
+export const teamMemberships = sqliteTable(
+  "team_memberships",
+  {
+    id: text("id").primaryKey(),
+    teamId: text("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    userPrincipalId: text("user_principal_id")
+      .notNull()
+      .references(() => principals.id, { onDelete: "cascade" }),
+    addedByPrincipalId: text("added_by_principal_id").references(() => principals.id, {
+      onDelete: "set null",
+    }),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("team_memberships_team_user_uidx").on(table.teamId, table.userPrincipalId),
+    index("team_memberships_user_idx").on(table.userPrincipalId),
+  ],
+);
+
+export const serviceAccounts = sqliteTable(
+  "service_accounts",
+  {
+    principalId: text("principal_id")
+      .primaryKey()
+      .references(() => principals.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    ownerUserPrincipalId: text("owner_user_principal_id").references(() => principals.id, {
+      onDelete: "restrict",
+    }),
+    ownerTeamId: text("owner_team_id").references(() => teams.id, { onDelete: "restrict" }),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    check(
+      "service_accounts_one_owner",
+      sql`(${table.ownerUserPrincipalId} IS NOT NULL AND ${table.ownerTeamId} IS NULL) OR (${table.ownerUserPrincipalId} IS NULL AND ${table.ownerTeamId} IS NOT NULL)`,
+    ),
+    index("service_accounts_owner_user_idx").on(table.ownerUserPrincipalId),
+    index("service_accounts_owner_team_idx").on(table.ownerTeamId),
+  ],
 );
 
 export const systemRoles = sqliteTable("system_roles", {

@@ -1,7 +1,7 @@
 import { Button, Input, LinkButton } from "@cloudflare/kumo";
 import { useState } from "react";
 
-import { formatClientError, m1Fetch } from "../lib/m1-client";
+import { formatAuthError, authFetch } from "../lib/auth-api";
 import { FormError, FormStatus, M1Layout } from "./m1-layout";
 
 export function ForgotPasswordPage() {
@@ -15,13 +15,13 @@ export function ForgotPasswordPage() {
     setError(undefined);
     setIsPending(true);
     try {
-      await m1Fetch("/auth/request-password-reset", {
+      await authFetch("/auth/request-password-reset", {
         body: JSON.stringify({ email, redirectTo: "/reset-password" }),
         method: "POST",
       });
       setSent(true);
     } catch (submitError) {
-      setError(formatClientError(submitError));
+      setError(formatAuthError(submitError));
     } finally {
       setIsPending(false);
     }
@@ -85,13 +85,13 @@ export function ResetPasswordPage({ token }: Readonly<{ token?: string }>) {
     setError(undefined);
     setIsPending(true);
     try {
-      await m1Fetch("/auth/reset-password", {
+      await authFetch("/auth/reset-password", {
         body: JSON.stringify({ newPassword: password, token }),
         method: "POST",
       });
       setCompleted(true);
     } catch (submitError) {
-      setError(formatClientError(submitError));
+      setError(formatAuthError(submitError));
     } finally {
       setIsPending(false);
     }
