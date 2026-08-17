@@ -3,9 +3,21 @@
   "checkpoint_id": "01M077MS1YFTSW5KZ1BG8KXZ77",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 5,
+  "checkpoints_count": 8,
   "files_touched": [
-    "package.json"
+    "ROADMAP.md",
+    "package.json",
+    "src/components/invitation-page.tsx",
+    "src/components/setup-page.tsx",
+    "src/lib/setup-routing.ts",
+    "src/routes/__root.tsx",
+    "src/server/auth.ts",
+    "src/server/modules/authorization/service.ts",
+    "src/server/modules/bootstrap/service.ts",
+    "src/server/modules/identity/service.ts",
+    "src/server/modules/invitations/service.ts",
+    "test/setup-routing.test.ts",
+    "test/worker-runtime.test.ts"
   ],
   "sessions": [
     {
@@ -21,13 +33,20 @@
       "compact_transcript": "/1/transcript.jsonl",
       "content_hash": "/1/content_hash.txt",
       "prompt": "/1/prompt.txt"
+    },
+    {
+      "metadata": "/2/metadata.json",
+      "transcript": "/2/full.jsonl",
+      "compact_transcript": "/2/transcript.jsonl",
+      "content_hash": "/2/content_hash.txt",
+      "prompt": "/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 279013,
+    "input_tokens": 673786,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 5588992,
-    "output_tokens": 33507,
-    "api_call_count": 66
+    "cache_read_tokens": 10700544,
+    "output_tokens": 64526,
+    "api_call_count": 118
   }
 }
