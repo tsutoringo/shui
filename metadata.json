@@ -3,7 +3,7 @@
   "checkpoint_id": "01M0924QTKQ84ESV0WCJ7MMB12",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 27,
+  "checkpoints_count": 33,
   "files_touched": [
     "src/components/admin/admin-layout.tsx",
     "src/components/admin/applications-admin-page.tsx",
@@ -224,6 +224,13 @@
       "compact_transcript": "/14/transcript.jsonl",
       "content_hash": "/14/content_hash.txt",
       "prompt": "/14/prompt.txt"
+    },
+    {
+      "metadata": "/15/metadata.json",
+      "transcript": "/15/full.jsonl",
+      "compact_transcript": "/15/transcript.jsonl",
+      "content_hash": "/15/content_hash.txt",
+      "prompt": "/15/prompt.txt"
     }
   ],
   "token_usage": {
