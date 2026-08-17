@@ -3,7 +3,7 @@
   "checkpoint_id": "01M077MS1YFTSW5KZ1BG8KXZ77",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 32,
+  "checkpoints_count": 33,
   "files_touched": [
     "ROADMAP.md",
     "migrations/0004_awesome_thunderbolts.sql",
@@ -144,13 +144,20 @@
       "compact_transcript": "/11/transcript.jsonl",
       "content_hash": "/11/content_hash.txt",
       "prompt": "/11/prompt.txt"
+    },
+    {
+      "metadata": "/12/metadata.json",
+      "transcript": "/12/full.jsonl",
+      "compact_transcript": "/12/transcript.jsonl",
+      "content_hash": "/12/content_hash.txt",
+      "prompt": "/12/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 6968171,
+    "input_tokens": 7271302,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 136467968,
-    "output_tokens": 415588,
-    "api_call_count": 1096
+    "cache_read_tokens": 146912768,
+    "output_tokens": 422714,
+    "api_call_count": 1163
   }
 }
