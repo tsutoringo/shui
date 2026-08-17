@@ -1,14 +1,14 @@
 {
   "cli_version": "0.9.0",
   "checkpoint_id": "01M08ZS7WTAACYAZA8BXRSTVWH",
+  "session_id": "01a011ed-845f-7bb0-8b27-c4b5dbef38f6",
   "strategy": "manual-commit",
+  "created_at": "2026-08-17T23:09:28.974795Z",
   "branch": "main",
-  "checkpoints_count": 2,
+  "checkpoints_count": 1,
+  "save_step_count": 1,
   "files_touched": [
     "ROADMAP.md",
-    "docs/token-verification.md",
-    "migrations/0006_wandering_mordo.sql",
-    "migrations/meta/0006_snapshot.json",
     "migrations/meta/_journal.json",
     "src/components/admin-layout.tsx",
     "src/components/admin/admin-layout.tsx",
@@ -67,34 +67,68 @@
     "src/routes/sign-in.tsx",
     "src/routes/verify-email.tsx",
     "src/server/auth.ts",
-    "src/server/modules/applications/claims.ts",
     "src/server/modules/applications/service.ts",
     "src/server/modules/models.ts",
-    "src/server/modules/service-accounts/credentials.ts",
     "src/server/modules/service-accounts/routes.ts",
     "test/worker-runtime.test.ts"
   ],
-  "sessions": [
-    {
-      "metadata": "/0/metadata.json",
-      "transcript": "/0/full.jsonl",
-      "compact_transcript": "/0/transcript.jsonl",
-      "content_hash": "/0/content_hash.txt",
-      "prompt": "/0/prompt.txt"
-    },
-    {
-      "metadata": "/1/metadata.json",
-      "transcript": "/1/full.jsonl",
-      "compact_transcript": "/1/transcript.jsonl",
-      "content_hash": "/1/content_hash.txt",
-      "prompt": "/1/prompt.txt"
-    }
-  ],
+  "agent": "Codex",
+  "model": "gpt-5.6-luna",
+  "turn_id": "729167ab147b",
+  "compact_transcript_start": 0,
   "token_usage": {
-    "input_tokens": 595987,
+    "input_tokens": 63831,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 23481856,
-    "output_tokens": 91411,
-    "api_call_count": 197
-  }
+    "cache_read_tokens": 1035520,
+    "output_tokens": 15073,
+    "api_call_count": 24
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-17T23:09:28.958105Z",
+    "agent_lines": 3789,
+    "agent_removed": 3862,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 80,
+    "total_committed": 3789,
+    "total_lines_changed": 7731,
+    "agent_percentage": 98.96520501875567,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 5751,
+      "user_lines_removed": 80,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "ROADMAP.md": 15,
+        "docs/token-verification.md": 99,
+        "migrations/0006_wandering_mordo.sql": 13,
+        "migrations/meta/0006_snapshot.json": 3861,
+        "migrations/meta/_journal.json": 7,
+        "src/components/service-accounts-admin-page.tsx": 210,
+        "src/db/domain-schema.ts": 21,
+        "src/lib/api-client.ts": 73,
+        "src/lib/api-query-options.ts": 56,
+        "src/server/auth.ts": 30,
+        "src/server/modules/applications/claims.ts": 362,
+        "src/server/modules/applications/service.ts": 92,
+        "src/server/modules/models.ts": 37,
+        "src/server/modules/service-accounts/credentials.ts": 422,
+        "src/server/modules/service-accounts/routes.ts": 91,
+        "test/worker-runtime.test.ts": 362
+      },
+      "user_removed_per_file": {
+        "ROADMAP.md": 15,
+        "src/components/service-accounts-admin-page.tsx": 5,
+        "src/server/modules/applications/service.ts": 56,
+        "test/worker-runtime.test.ts": 4
+      }
+    }
+  ]
 }
