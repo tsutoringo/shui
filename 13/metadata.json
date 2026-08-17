@@ -1,0 +1,101 @@
+{
+  "cli_version": "0.9.0",
+  "checkpoint_id": "01M077MS1YFTSW5KZ1BG8KXZ77",
+  "session_id": "ses_ff85139d5ffeTHIvoMrlvPcxuQ",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-17T06:48:48.321251Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "ROADMAP.md",
+    "src/routeTree.gen.ts",
+    "src/server/api.ts",
+    "src/server/auth.ts",
+    "test/worker-runtime.test.ts"
+  ],
+  "agent": "OpenCode",
+  "model": "gpt-5.6-luna",
+  "turn_id": "11e0964a1293",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 935615,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 13171712,
+    "output_tokens": 16630,
+    "api_call_count": 126
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-17T06:48:48.21253Z",
+    "agent_lines": 195,
+    "agent_removed": 1,
+    "human_added": 6332,
+    "human_modified": 74,
+    "human_removed": 0,
+    "total_committed": 6566,
+    "total_lines_changed": 7044,
+    "agent_percentage": 2.782509937535491,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 3578,
+      "user_lines_removed": 38,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "ROADMAP.md": 10,
+        "drizzle.config.ts": 1,
+        "migrations/0001_m1.sql": 155,
+        "src/components/auth-page.tsx": 8,
+        "src/components/invitation-page.tsx": 163,
+        "src/components/invite-admin-page.tsx": 132,
+        "src/components/landing-page.tsx": 56,
+        "src/components/m1-layout.tsx": 65,
+        "src/components/password-recovery-page.tsx": 141,
+        "src/components/setup-page.tsx": 151,
+        "src/components/verify-email-page.tsx": 56,
+        "src/db/domain-schema.ts": 164,
+        "src/db/index.ts": 4,
+        "src/env.d.ts": 6,
+        "src/lib/m1-client.ts": 46,
+        "src/routeTree.gen.ts": 182,
+        "src/routes/forgot-password.tsx": 5,
+        "src/routes/index.tsx": 2,
+        "src/routes/invite.$token.tsx": 12,
+        "src/routes/invite.tsx": 5,
+        "src/routes/reset-password.$token.tsx": 12,
+        "src/routes/reset-password.tsx": 15,
+        "src/routes/setup.tsx": 5,
+        "src/routes/verify-email.tsx": 15,
+        "src/server/api.ts": 2,
+        "src/server/auth.ts": 260,
+        "src/server/m1.ts": 1631,
+        "src/styles/app.css": 57,
+        "test/worker-runtime.test.ts": 214,
+        "vitest.config.ts": 3
+      },
+      "user_removed_per_file": {
+        "ROADMAP.md": 10,
+        "drizzle.config.ts": 1,
+        "src/components/auth-page.tsx": 2,
+        "src/db/index.ts": 1,
+        "src/routeTree.gen.ts": 3,
+        "src/routes/index.tsx": 2,
+        "src/server/auth.ts": 1,
+        "test/worker-runtime.test.ts": 18
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 3578,
+      "agent_lines_removed": 38
+    }
+  ]
+}

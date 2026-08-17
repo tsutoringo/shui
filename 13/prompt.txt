@@ -1,0 +1,7 @@
+Review the current uncommitted M1 implementation in the repository at /Users/tsutoringo/Documents/workspaces/private/project/mikan. Focus on correctness/security regressions in bootstrap, invitation, Better Auth integration, session/principal checks, email delivery, and D1 transactional behavior. Inspect modified and untracked files plus relevant tests. Do not edit files. Report only concrete findings with severity and file/line references, plus residual testing gaps. Note that pnpm check:write and pnpm test currently pass, and a final build is pending.
+
+---
+
+The previous request exceeded the provider's size limit due to large media attachments. The conversation was compacted and media files were removed from context. If the user was asking about attached images or files, explain that the attachments were too large to process and suggest they try again with smaller or fewer files.
+
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
