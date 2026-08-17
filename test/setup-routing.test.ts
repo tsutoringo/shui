@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { getSetupRedirect } from "../src/lib/setup-routing";
+import { getSetupRedirect } from "../src/features/bootstrap/routing";
 
 describe("setup routing", () => {
   it("redirects every non-setup UI route while bootstrap is incomplete", () => {

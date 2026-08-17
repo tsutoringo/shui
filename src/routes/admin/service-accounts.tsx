@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ServiceAccountsAdminPage } from "../../components/admin/service-accounts-admin-page";
-import { adminRoutePermissions, requireAdminPermission } from "../../lib/admin-routing";
+import { ServiceAccountsAdminPage } from "~/features/service-accounts";
+import { adminRoutePermissions, requireAdminPermission } from "~/features/admin";
 
 export const Route = createFileRoute("/admin/service-accounts")({
   beforeLoad: ({ context, location }) =>

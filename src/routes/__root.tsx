@@ -3,10 +3,10 @@ import type { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createRootRouteWithContext, Outlet, redirect } from "@tanstack/react-router";
 
-import { AppLink } from "../components/shared/app-link";
-import { RootDocument } from "../components/shared/root-document";
-import { getSetupRedirect } from "../lib/setup-routing";
-import { getApiFetch } from "./api.$";
+import { AppLink } from "~/components/routing/app-link";
+import { RootDocument } from "~/components/layouts/root-document";
+import { getSetupRedirect } from "~/features/bootstrap/routing";
+import { getApiFetch } from "~/shared/api/eden-fetch";
 import "../styles/app.css";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({

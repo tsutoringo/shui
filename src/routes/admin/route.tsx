@@ -1,6 +1,6 @@
 import { Outlet, createFileRoute } from "@tanstack/react-router";
 
-import { requireAdminAccess } from "../../lib/admin-routing";
+import { requireAdminAccess } from "~/features/admin";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async ({ context, location }) => ({

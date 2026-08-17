@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { firstAdminPath, hasAdminPermission } from "../src/lib/admin-policy";
+import { firstAdminPath, hasAdminPermission } from "../src/features/admin/routing/policy";
 import type { AdminAccess } from "../src/server/modules/models";
 
 function access(permissions: string[]): AdminAccess {

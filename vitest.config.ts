@@ -4,6 +4,9 @@ import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-pool-worker
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
     cloudflareTest(async () => ({
       main: "./src/test-worker.ts",

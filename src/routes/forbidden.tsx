@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ForbiddenPage } from "../components/pages/forbidden-page";
+import { ForbiddenPage } from "~/features/access-denied";
 
 export const Route = createFileRoute("/forbidden")({
   validateSearch: (search) => ({

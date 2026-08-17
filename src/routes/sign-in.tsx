@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { AuthPage } from "../components/auth/auth-page";
-import { safeRedirect } from "../lib/auth-api";
+import { AuthPage, safeRedirect } from "~/features/auth";
 
 export const Route = createFileRoute("/sign-in")({
   validateSearch: (search) => ({
