@@ -1,0 +1,1 @@
+読み取り専用で、現在のリポジトリを Elysia の best-practice に沿って M1 段階整理するための具体的な移行設計を作ってください。対象はまず src/server/m1.ts。既存 API/alias/Worker entrypoint/worker-events の互換性を維持します。機能別の推奨ファイル構成、各ファイルの責務と依存方向、循環依存を避ける方法、schema の Elysia model/reference 化、response schema、guard/resolve/macro の認可集約、テストの段階的追加、リスクとロールバック単位を、現状の行番号・関数名に紐づけて報告してください。編集・コミット・テスト実行はしないでください。
