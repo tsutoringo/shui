@@ -3,7 +3,7 @@
   "checkpoint_id": "01M077MS1YFTSW5KZ1BG8KXZ77",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 19,
+  "checkpoints_count": 29,
   "files_touched": [
     "ROADMAP.md",
     "migrations/0004_awesome_thunderbolts.sql",
@@ -56,6 +56,7 @@
     "src/server/modules/teams/service.ts",
     "src/server/modules/users/routes.ts",
     "src/server/modules/users/service.ts",
+    "src/server/shared/infrastructure.ts",
     "test/setup-routing.test.ts",
     "test/worker-runtime.test.ts"
   ],
@@ -115,13 +116,20 @@
       "compact_transcript": "/7/transcript.jsonl",
       "content_hash": "/7/content_hash.txt",
       "prompt": "/7/prompt.txt"
+    },
+    {
+      "metadata": "/8/metadata.json",
+      "transcript": "/8/full.jsonl",
+      "compact_transcript": "/8/transcript.jsonl",
+      "content_hash": "/8/content_hash.txt",
+      "prompt": "/8/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 3474263,
+    "input_tokens": 6043321,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 69067776,
-    "output_tokens": 328086,
-    "api_call_count": 639
+    "cache_read_tokens": 98583040,
+    "output_tokens": 392617,
+    "api_call_count": 857
   }
 }
