@@ -1,0 +1,7 @@
+現在の作業ツリーの未コミット変更をコードレビューしてください。今回の対象は `src/server/m1.ts` facade、`src/server/m1/**` の feature split/model/error/macro、`src/lib/m1-client.ts` の Eden Treaty wrapper、setup/invitation UI の型付き呼び出しです。既存のユーザー変更を編集・コミットせず、バグ、API互換性、認可/lifecycle、EdenのSSR/browser境界、response schema、D1 batch/transaction、テスト不足を優先度順に報告してください。具体的なファイル・行番号と再現条件を付け、問題がなければその旨と残余リスクを明記してください。
+
+---
+
+The previous request exceeded the provider's size limit due to large media attachments. The conversation was compacted and media files were removed from context. If the user was asking about attached images or files, explain that the attachments were too large to process and suggest they try again with smaller or fewer files.
+
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.

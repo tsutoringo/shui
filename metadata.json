@@ -3,7 +3,7 @@
   "checkpoint_id": "01M08ZS7WTAACYAZA8BXRSTVWH",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 2,
+  "checkpoints_count": 3,
   "files_touched": [
     "ROADMAP.md",
     "docs/token-verification.md",
@@ -88,13 +88,20 @@
       "compact_transcript": "/1/transcript.jsonl",
       "content_hash": "/1/content_hash.txt",
       "prompt": "/1/prompt.txt"
+    },
+    {
+      "metadata": "/2/metadata.json",
+      "transcript": "/2/full.jsonl",
+      "compact_transcript": "/2/transcript.jsonl",
+      "content_hash": "/2/content_hash.txt",
+      "prompt": "/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 595987,
+    "input_tokens": 1130804,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 23481856,
-    "output_tokens": 91411,
-    "api_call_count": 197
+    "cache_read_tokens": 37895168,
+    "output_tokens": 109360,
+    "api_call_count": 327
   }
 }
