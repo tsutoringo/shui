@@ -1,0 +1,106 @@
+{
+  "cli_version": "0.9.0",
+  "checkpoint_id": "01M07K2H9Z2G67JESQ966H80S8",
+  "session_id": "01a00c80-f194-7181-8700-99ebee5ceda7",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-17T10:08:08.078378Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "save_step_count": 4,
+  "files_touched": [
+    "package.json",
+    "pnpm-lock.yaml",
+    "src/components/admin-layout.tsx",
+    "src/components/forbidden-page.tsx",
+    "src/components/invite-admin-page.tsx",
+    "src/components/landing-page.tsx",
+    "src/components/service-accounts-admin-page.tsx",
+    "src/components/system-roles-admin-page.tsx",
+    "src/components/teams-admin-page.tsx",
+    "src/components/users-admin-page.tsx",
+    "src/lib/admin-policy.ts",
+    "src/lib/admin-routing.ts",
+    "src/lib/api-client.ts",
+    "src/lib/api-query-options.ts",
+    "src/routeTree.gen.ts",
+    "src/routes/admin/index.tsx",
+    "src/routes/admin/route.tsx",
+    "src/routes/admin/service-accounts.tsx",
+    "src/routes/admin/system-roles.tsx",
+    "src/routes/admin/teams.tsx",
+    "src/routes/admin/users.tsx",
+    "src/routes/api.$.ts",
+    "src/routes/forbidden.tsx",
+    "src/routes/invite.tsx",
+    "src/routes/service-accounts.tsx",
+    "src/routes/sign-in.tsx",
+    "src/routes/system-roles.tsx",
+    "src/routes/teams.tsx",
+    "src/routes/users.tsx",
+    "src/server/modules/authorization/routes.ts",
+    "src/server/modules/authorization/service.ts",
+    "src/server/modules/index.ts",
+    "src/server/modules/models.ts",
+    "src/server/modules/service-accounts/routes.ts",
+    "src/server/modules/service-accounts/service.ts",
+    "test/admin-policy.test.ts",
+    "test/worker-runtime.test.ts"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.6-luna",
+  "turn_id": "edef701d1d12",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 2721568,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 59131904,
+    "output_tokens": 290038,
+    "api_call_count": 483
+  },
+  "session_metrics": {
+    "turn_count": 11
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-17T10:08:07.876695Z",
+    "agent_lines": 919,
+    "agent_removed": 357,
+    "human_added": 0,
+    "human_modified": 2,
+    "human_removed": 0,
+    "total_committed": 921,
+    "total_lines_changed": 1278,
+    "agent_percentage": 99.8435054773083,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 792,
+      "agent_lines_removed": 111
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 2,
+      "user_lines_removed": 2,
+      "agent_lines_added": 760,
+      "agent_lines_removed": 228,
+      "user_added_per_file": {
+        "src/components/admin-layout.tsx": 1,
+        "src/components/users-admin-page.tsx": 1
+      },
+      "user_removed_per_file": {
+        "src/components/admin-layout.tsx": 1,
+        "src/components/users-admin-page.tsx": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "cli_version": "0.9.0",
+  "checkpoint_id": "01M07K2H9Z2G67JESQ966H80S8",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "package.json",
+    "pnpm-lock.yaml",
+    "src/components/admin-layout.tsx",
+    "src/components/forbidden-page.tsx",
+    "src/components/invite-admin-page.tsx",
+    "src/components/landing-page.tsx",
+    "src/components/service-accounts-admin-page.tsx",
+    "src/components/system-roles-admin-page.tsx",
+    "src/components/teams-admin-page.tsx",
+    "src/components/users-admin-page.tsx",
+    "src/lib/admin-policy.ts",
+    "src/lib/admin-routing.ts",
+    "src/lib/api-client.ts",
+    "src/lib/api-query-options.ts",
+    "src/routeTree.gen.ts",
+    "src/routes/admin/index.tsx",
+    "src/routes/admin/route.tsx",
+    "src/routes/admin/service-accounts.tsx",
+    "src/routes/admin/system-roles.tsx",
+    "src/routes/admin/teams.tsx",
+    "src/routes/admin/users.tsx",
+    "src/routes/api.$.ts",
+    "src/routes/forbidden.tsx",
+    "src/routes/invite.tsx",
+    "src/routes/service-accounts.tsx",
+    "src/routes/sign-in.tsx",
+    "src/routes/system-roles.tsx",
+    "src/routes/teams.tsx",
+    "src/routes/users.tsx",
+    "src/server/modules/authorization/routes.ts",
+    "src/server/modules/authorization/service.ts",
+    "src/server/modules/index.ts",
+    "src/server/modules/models.ts",
+    "src/server/modules/service-accounts/routes.ts",
+    "src/server/modules/service-accounts/service.ts",
+    "test/admin-policy.test.ts",
+    "test/worker-runtime.test.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 2721568,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 59131904,
+    "output_tokens": 290038,
+    "api_call_count": 483
+  }
+}
