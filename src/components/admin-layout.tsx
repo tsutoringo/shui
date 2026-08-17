@@ -1,4 +1,4 @@
-import { Badge, Banner, Button, Dialog, LinkButton, Sidebar } from "@cloudflare/kumo";
+import { Badge, Banner, Breadcrumbs, Button, Dialog, LinkButton, Sidebar } from "@cloudflare/kumo";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactElement, type ReactNode } from "react";
 
@@ -37,9 +37,11 @@ export function AdminLayout({
   children,
   description,
   eyebrow,
+  breadcrumbLabel,
   title,
 }: Readonly<{
   activePath: (typeof navigation)[number]["href"];
+  breadcrumbLabel?: string;
   children: ReactNode;
   description: string;
   eyebrow: string;
@@ -51,6 +53,7 @@ export function AdminLayout({
   const visibleNavigation = navigation.filter((item) =>
     hasAdminPermission(accessQuery.data, item.permission),
   );
+  const activeNavigationItem = navigation.find((item) => item.href === activePath);
 
   async function signOut() {
     await authClient.signOut();
@@ -120,22 +123,35 @@ export function AdminLayout({
               SHUI<span>/</span>
             </LinkButton>
           </header>
+          <div className="flex h-14.5 items-center border-b border-kumo-line bg-kumo-elevated px-5 sm:px-8">
+            <Breadcrumbs className="mx-auto max-w-7xl" size="sm">
+              <Breadcrumbs.Link href="/" icon={<ShuiMark />}>
+                SHUI
+              </Breadcrumbs.Link>
+              <Breadcrumbs.Separator />
+              <Breadcrumbs.Link href="/admin">Administration</Breadcrumbs.Link>
+              <Breadcrumbs.Separator />
+              <Breadcrumbs.Current>
+                {breadcrumbLabel ?? activeNavigationItem?.label ?? "Administration"}
+              </Breadcrumbs.Current>
+            </Breadcrumbs>
+          </div>
           <main
             aria-labelledby="admin-page-title"
-            className="mx-auto max-w-7xl px-5 pb-16 pt-8 sm:px-8 sm:pt-12"
+            className="mx-auto max-w-7xl px-5 pb-16 pt-8 sm:px-8 sm:pt-10"
             id="admin-content"
           >
             <div className="max-w-3xl">
               <p className="text-base font-medium text-(--tangerine)">{eyebrow}</p>
               <h1
-                className="mt-3 font-display text-4xl font-semibold leading-none text-kumo-strong sm:text-6xl"
+                className="mt-2 font-display text-3xl font-semibold leading-tight text-kumo-strong sm:text-4xl"
                 id="admin-page-title"
               >
                 {title}
               </h1>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-kumo-subtle">{description}</p>
+              <p className="mt-3 max-w-2xl text-base leading-7 text-kumo-subtle">{description}</p>
             </div>
-            <div className="mt-8">{children}</div>
+            <div className="mt-7">{children}</div>
           </main>
         </div>
       </Sidebar.Provider>
@@ -227,7 +243,7 @@ function ShuiMark() {
   );
 }
 
-function AdminIcon({ name }: Readonly<{ name: AdminIconName }>) {
+export function AdminIcon({ name }: Readonly<{ name: AdminIconName }>) {
   const paths = {
     "service-accounts": (
       <>

@@ -4,10 +4,12 @@ import {
   Dialog,
   Input,
   LayerCard,
+  Link,
   LinkButton,
   Select,
   Table,
   Tabs,
+  Tooltip,
 } from "@cloudflare/kumo";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -41,6 +43,7 @@ import {
 import {
   AdminConfirmDialog,
   AdminError,
+  AdminIcon,
   AdminLayout,
   AdminStatus,
   StatusPill,
@@ -242,7 +245,7 @@ function ApplicationsTable({ applications }: Readonly<{ applications: Applicatio
   return (
     <LayerCard className="overflow-hidden bg-kumo-elevated p-0 ring ring-kumo-line">
       <div className="overflow-x-auto">
-        <Table className="min-w-[58rem]">
+        <Table className="min-w-[52rem]">
           <caption className="sr-only">Applications</caption>
           <Table.Header>
             <Table.Row>
@@ -252,24 +255,33 @@ function ApplicationsTable({ applications }: Readonly<{ applications: Applicatio
               <Table.Head>Roles</Table.Head>
               <Table.Head>Assignments</Table.Head>
               <Table.Head>OIDC clients</Table.Head>
-              <Table.Head>Actions</Table.Head>
             </Table.Row>
           </Table.Header>
           <Table.Body>
             {applications.map((application) => (
               <Table.Row key={application.id}>
                 <Table.Cell className="max-w-[20rem] align-top">
-                  <p className="font-medium text-kumo-strong">{application.name}</p>
-                  <p className="mt-1 break-words text-sm text-kumo-subtle">
-                    {application.description || "No description"}
-                  </p>
+                  <Link className="font-medium" href={`/admin/applications/${application.id}`}>
+                    {application.name}
+                  </Link>
                 </Table.Cell>
                 <Table.Cell className="align-top">
                   <StatusPill status={application.status} />
                 </Table.Cell>
                 <Table.Cell className="align-top">
-                  <p className="font-medium text-kumo-strong">{application.owner.label}</p>
-                  <p className="mt-1 text-xs text-kumo-subtle">{application.owner.type}</p>
+                  <div className="flex items-center gap-2">
+                    <Tooltip content={application.owner.type === "team" ? "Team" : "User"}>
+                      <>
+                        <span aria-hidden="true" className="text-kumo-subtle">
+                          <AdminIcon name={application.owner.type === "team" ? "teams" : "users"} />
+                        </span>
+                        <span className="sr-only">
+                          {application.owner.type === "team" ? "Team" : "User"}
+                        </span>
+                      </>
+                    </Tooltip>
+                    <span className="font-medium text-kumo-strong">{application.owner.label}</span>
+                  </div>
                 </Table.Cell>
                 <Table.Cell className="align-top font-medium text-kumo-strong">
                   {application.roleCount}
@@ -279,11 +291,6 @@ function ApplicationsTable({ applications }: Readonly<{ applications: Applicatio
                 </Table.Cell>
                 <Table.Cell className="align-top font-medium text-kumo-strong">
                   {application.clientCount}
-                </Table.Cell>
-                <Table.Cell className="align-top">
-                  <LinkButton href={`/admin/applications/${application.id}`} variant="ghost">
-                    View application
-                  </LinkButton>
                 </Table.Cell>
               </Table.Row>
             ))}
@@ -368,6 +375,7 @@ export function ApplicationDetailPage({
   return (
     <AdminLayout
       activePath="/admin/applications"
+      breadcrumbLabel={application?.name ?? "Application detail"}
       description={
         application
           ? `Manage ${application.name}'s authorization boundary and connected clients.`
