@@ -117,12 +117,9 @@ export async function requirePermission(
 }
 
 export function resolvePermissions(roleKeys: Iterable<string>) {
-  const permissions = new Set<SystemPermission>();
-  for (const roleKey of roleKeys) {
-    const rolePermissions =
-      SYSTEM_ROLE_PERMISSIONS[roleKey as keyof typeof SYSTEM_ROLE_PERMISSIONS];
-    if (!rolePermissions) continue;
-    for (const permission of rolePermissions) permissions.add(permission);
-  }
-  return [...permissions].sort();
+  const permissions = Iterator.from(roleKeys).flatMap<SystemPermission>(
+    (roleKey) => SYSTEM_ROLE_PERMISSIONS[roleKey as keyof typeof SYSTEM_ROLE_PERMISSIONS] ?? [],
+  );
+
+  return Array.from(new Set(permissions)).sort();
 }
