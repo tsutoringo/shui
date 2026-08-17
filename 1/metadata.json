@@ -1,0 +1,144 @@
+{
+  "cli_version": "0.9.0",
+  "checkpoint_id": "01M08SPYMPBND99082XBTYBK1C",
+  "session_id": "01a010dc-082d-7c90-8f8f-4fa24bf5eb34",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-17T21:23:22.538944Z",
+  "branch": "main",
+  "checkpoints_count": 7,
+  "save_step_count": 7,
+  "files_touched": [
+    ".gitignore",
+    "ROADMAP.md",
+    "migrations/0005_slow_human_cannonball.sql",
+    "migrations/meta/0005_snapshot.json",
+    "migrations/meta/_journal.json",
+    "src/components/admin-layout.tsx",
+    "src/components/applications-admin-page.tsx",
+    "src/components/landing-page.tsx",
+    "src/db/domain-schema.ts",
+    "src/lib/admin-policy.ts",
+    "src/lib/api-client.ts",
+    "src/lib/api-query-options.ts",
+    "src/routeTree.gen.ts",
+    "src/routes/admin/applications/$applicationId/access.tsx",
+    "src/routes/admin/applications/$applicationId/index.tsx",
+    "src/routes/admin/applications/$applicationId/oidc.tsx",
+    "src/routes/admin/applications/$applicationId/roles.tsx",
+    "src/routes/admin/applications/$applicationId/route.tsx",
+    "src/routes/admin/applications/$applicationId/settings.tsx",
+    "src/routes/admin/applications/index.tsx",
+    "src/routes/admin/applications/route.tsx",
+    "src/server/api.ts",
+    "src/server/auth.ts",
+    "src/server/modules/applications/routes.ts",
+    "src/server/modules/applications/service.ts",
+    "src/server/modules/authorization/service.ts",
+    "src/server/modules/identity/service.ts",
+    "src/server/modules/index.ts",
+    "src/server/modules/invitations/service.ts",
+    "src/server/modules/models.ts",
+    "src/server/modules/service-accounts/service.ts",
+    "src/server/modules/teams/service.ts",
+    "src/server/modules/users/service.ts",
+    "test/worker-runtime.test.ts"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.6-luna",
+  "turn_id": "eaa607f64352",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 2328297,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 31461888,
+    "output_tokens": 162581,
+    "api_call_count": 236
+  },
+  "session_metrics": {
+    "turn_count": 7
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 341,
+      "user_lines_removed": 87,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "ROADMAP.md": 5,
+        "src/server/api.ts": 13,
+        "src/server/auth.ts": 2,
+        "src/server/modules/identity/service.ts": 52,
+        "src/server/modules/invitations/service.ts": 77,
+        "test/worker-runtime.test.ts": 192
+      },
+      "user_removed_per_file": {
+        "ROADMAP.md": 4,
+        "src/server/api.ts": 2,
+        "src/server/modules/identity/service.ts": 33,
+        "src/server/modules/invitations/service.ts": 47,
+        "test/worker-runtime.test.ts": 1
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 341,
+      "agent_lines_removed": 87
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 9388,
+      "agent_lines_removed": 107
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 9388,
+      "agent_lines_removed": 107
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 413,
+      "user_lines_removed": 174,
+      "agent_lines_added": 9600,
+      "agent_lines_removed": 107,
+      "user_added_per_file": {
+        "src/components/applications-admin-page.tsx": 413
+      },
+      "user_removed_per_file": {
+        "src/components/applications-admin-page.tsx": 174
+      }
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 453,
+      "user_lines_removed": 195,
+      "agent_lines_added": 9625,
+      "agent_lines_removed": 107,
+      "user_added_per_file": {
+        "src/components/applications-admin-page.tsx": 453
+      },
+      "user_removed_per_file": {
+        "src/components/applications-admin-page.tsx": 195
+      }
+    },
+    {
+      "checkpoint_number": 7,
+      "user_lines_added": 453,
+      "user_lines_removed": 195,
+      "agent_lines_added": 9625,
+      "agent_lines_removed": 107,
+      "user_added_per_file": {
+        "src/components/applications-admin-page.tsx": 453
+      },
+      "user_removed_per_file": {
+        "src/components/applications-admin-page.tsx": 195
+      }
+    }
+  ]
+}
