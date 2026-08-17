@@ -1,0 +1,65 @@
+{
+  "cli_version": "0.9.0",
+  "checkpoint_id": "01M08ZS7WTAACYAZA8BXRSTVWH",
+  "session_id": "01a011c8-a77d-7053-a2e8-b8724bee4dae",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-17T23:09:28.656435Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "ROADMAP.md",
+    "docs/token-verification.md",
+    "migrations/0006_wandering_mordo.sql",
+    "migrations/meta/0006_snapshot.json",
+    "migrations/meta/_journal.json",
+    "src/components/service-accounts-admin-page.tsx",
+    "src/db/domain-schema.ts",
+    "src/lib/api-client.ts",
+    "src/lib/api-query-options.ts",
+    "src/server/auth.ts",
+    "src/server/modules/applications/claims.ts",
+    "src/server/modules/applications/service.ts",
+    "src/server/modules/models.ts",
+    "src/server/modules/service-accounts/credentials.ts",
+    "src/server/modules/service-accounts/routes.ts",
+    "test/worker-runtime.test.ts"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.6-luna",
+  "turn_id": "897079d278fc",
+  "checkpoint_transcript_start": 86,
+  "transcript_lines_at_start": 86,
+  "compact_transcript_start": 19,
+  "token_usage": {
+    "input_tokens": 532156,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 22446336,
+    "output_tokens": 76338,
+    "api_call_count": 173
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-17T23:09:28.507116Z",
+    "agent_lines": 5541,
+    "agent_removed": 378,
+    "human_added": 4079,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 9620,
+    "total_lines_changed": 13456,
+    "agent_percentage": 43.987812128418554,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.9.0",
+  "checkpoint_id": "01M08ZS7WTAACYAZA8BXRSTVWH",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "ROADMAP.md",
+    "docs/token-verification.md",
+    "migrations/0006_wandering_mordo.sql",
+    "migrations/meta/0006_snapshot.json",
+    "migrations/meta/_journal.json",
+    "src/components/service-accounts-admin-page.tsx",
+    "src/db/domain-schema.ts",
+    "src/lib/api-client.ts",
+    "src/lib/api-query-options.ts",
+    "src/server/auth.ts",
+    "src/server/modules/applications/claims.ts",
+    "src/server/modules/applications/service.ts",
+    "src/server/modules/models.ts",
+    "src/server/modules/service-accounts/credentials.ts",
+    "src/server/modules/service-accounts/routes.ts",
+    "test/worker-runtime.test.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 532156,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 22446336,
+    "output_tokens": 76338,
+    "api_call_count": 173
+  }
+}
