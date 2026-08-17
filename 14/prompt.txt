@@ -1,0 +1,5 @@
+Review the current uncommitted M1 implementation in the shared workspace, including migrations/0001_m1.sql, src/server/m1.ts, src/server/auth.ts, src/db/domain-schema.ts, src/db/index.ts, frontend M1 routes/components, and test changes. Do not edit. Check ROADMAP M1 exit criteria, concurrency/security, Better Auth RC5 behavior, production configuration, and UI integration. Return only actionable findings ordered by severity, or explicitly say no findings and list residual risks.
+
+---
+
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
