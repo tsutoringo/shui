@@ -1,0 +1,13 @@
+componentsをfeatures basedに整理したい。
+
+---
+
+componentsをfeatures basedに整理したい。
+
+---
+
+src/lib の API/queryも移動させたいよ
+
+---
+
+Implement the plan.
