@@ -3,12 +3,14 @@ import { and, asc, eq } from "drizzle-orm";
 import { user } from "../../../db/auth-schema";
 import { createDb } from "../../../db";
 import {
+  applications,
   humanPrincipals,
   serviceAccounts,
   teamMemberships,
   teams,
 } from "../../../db/domain-schema";
 import { type AuthEnvironment } from "../../auth";
+import { applicationsForTeamAuthzVersionStatement } from "../applications/service";
 import { type Actor } from "../authorization/service";
 import { ApiError } from "../errors";
 import { resolveHumanPrincipal } from "../users/service";
@@ -193,7 +195,10 @@ export async function setTeamDisabled(
   if (team.status === (disabled ? "disabled" : "active")) {
     return { id: teamId, status: team.status };
   }
-  if (disabled) await assertNoOwnedServiceAccounts(db, teamId);
+  if (disabled) {
+    await assertNoOwnedServiceAccounts(db, teamId);
+    await assertNoOwnedApplications(db, teamId);
+  }
 
   const now = Date.now();
   const status = disabled ? "disabled" : "active";
@@ -208,6 +213,7 @@ export async function setTeamDisabled(
     .where(and(eq(teams.id, teamId), eq(teams.status, status), eq(teams.updatedAt, now)));
   const result = await db.batch([
     changed,
+    applicationsForTeamAuthzVersionStatement(db, teamId, now),
     auditStatementWhen(
       db,
       `team:${disabled ? "disabled" : "enabled"}:${teamId}:${now}`,
@@ -245,9 +251,11 @@ export async function deleteTeam(
   const team = await db.select({ id: teams.id }).from(teams).where(eq(teams.id, teamId)).get();
   if (!team) throw new ApiError(404);
   await assertNoOwnedServiceAccounts(db, teamId);
+  await assertNoOwnedApplications(db, teamId);
   const now = Date.now();
   const deleted = db.delete(teams).where(eq(teams.id, teamId)).returning({ id: teams.id });
   const result = await db.batch([
+    applicationsForTeamAuthzVersionStatement(db, teamId, now),
     deleted,
     auditStatement(
       db,
@@ -269,7 +277,7 @@ export async function deleteTeam(
       now,
     ),
   ]);
-  if (!result[0]?.length) throw new ApiError(409);
+  if (!result[1]?.length) throw new ApiError(409);
   return { id: teamId, status: "deleted" as const };
 }
 
@@ -311,6 +319,7 @@ export async function addTeamMember(
     .where(eq(teamMemberships.id, membershipId));
   const result = await db.batch([
     inserted,
+    applicationsForTeamAuthzVersionStatement(db, teamId, now),
     auditStatementWhen(
       db,
       `team-member:added:${teamId}:${human.principal_id}:${now}`,
@@ -373,6 +382,7 @@ export async function removeTeamMember(
     .returning({ id: teamMemberships.id });
   const result = await db.batch([
     deleted,
+    applicationsForTeamAuthzVersionStatement(db, teamId, now),
     auditStatement(
       db,
       `team-member:removed:${teamId}:${human.principal_id}:${now}`,
@@ -402,6 +412,15 @@ async function assertNoOwnedServiceAccounts(database: ReturnType<typeof createDb
     .select({ id: serviceAccounts.principalId })
     .from(serviceAccounts)
     .where(eq(serviceAccounts.ownerTeamId, teamId))
+    .get();
+  if (owned) throw new ApiError(409);
+}
+
+async function assertNoOwnedApplications(database: ReturnType<typeof createDb>, teamId: string) {
+  const owned = await database
+    .select({ id: applications.id })
+    .from(applications)
+    .where(eq(applications.ownerTeamId, teamId))
     .get();
   if (owned) throw new ApiError(409);
 }

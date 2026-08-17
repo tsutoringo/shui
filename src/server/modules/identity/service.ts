@@ -19,11 +19,10 @@ export type ExpireInvitation = (
   now: number,
 ) => Promise<void>;
 
-export async function ensureControlledUser(
+export async function ensureControlledUserIdentity(
   auth: AuthInstance,
   email: string,
   name: string,
-  password: string,
   existingUserId?: string | null,
   allowExistingCredential = false,
   existingSince?: number | null,
@@ -48,7 +47,6 @@ export async function ensureControlledUser(
   if (user && normalizeEmail(user.email) !== email) throw new ApiError(409);
 
   if (!user) {
-    const passwordHash = await context.password.hash(password);
     try {
       user = await context.internalAdapter.createUser(
         { email, emailVerified: false, name },
@@ -60,41 +58,62 @@ export async function ensureControlledUser(
         null;
       if (!user) throw new ApiError(500);
     }
-
-    try {
-      await context.internalAdapter.linkAccount({
-        accountId: user.id,
-        issuer: createLocalAccountIssuer("credential"),
-        password: passwordHash,
-        providerId: "credential",
-        userId: user.id,
-      });
-    } catch {
-      if (!(await context.internalAdapter.findCredentialAccount(user.id))) throw new ApiError(500);
-    }
-  } else {
-    const credential = await context.internalAdapter.findCredentialAccount(user.id);
-    if (!credential) {
-      const passwordHash = await context.password.hash(password);
-      try {
-        await context.internalAdapter.linkAccount({
-          accountId: user.id,
-          issuer: createLocalAccountIssuer("credential"),
-          password: passwordHash,
-          providerId: "credential",
-          userId: user.id,
-        });
-      } catch {
-        if (!(await context.internalAdapter.findCredentialAccount(user.id)))
-          throw new ApiError(500);
-      }
-    } else if (allowExistingCredential) {
-      const passwordHash = await context.password.hash(password);
-      await context.internalAdapter.updatePassword(user.id, passwordHash);
-    }
   }
 
   return user as ManagedUser;
+}
+
+export async function ensureControlledUserCredential(
+  auth: AuthInstance,
+  managedUser: ManagedUser,
+  password: string,
+  allowExistingCredential = false,
+) {
+  const context = await auth.$context;
+  const credential = await context.internalAdapter.findCredentialAccount(managedUser.id);
+  if (credential) {
+    if (allowExistingCredential) {
+      const passwordHash = await context.password.hash(password);
+      await context.internalAdapter.updatePassword(managedUser.id, passwordHash);
+    }
+    return;
+  }
+
+  const passwordHash = await context.password.hash(password);
+  try {
+    await context.internalAdapter.linkAccount({
+      accountId: managedUser.id,
+      issuer: createLocalAccountIssuer("credential"),
+      password: passwordHash,
+      providerId: "credential",
+      userId: managedUser.id,
+    });
+  } catch {
+    if (!(await context.internalAdapter.findCredentialAccount(managedUser.id))) {
+      throw new ApiError(500);
+    }
+  }
+}
+
+export async function ensureControlledUser(
+  auth: AuthInstance,
+  email: string,
+  name: string,
+  password: string,
+  existingUserId?: string | null,
+  allowExistingCredential = false,
+  existingSince?: number | null,
+): Promise<ManagedUser> {
+  const managedUser = await ensureControlledUserIdentity(
+    auth,
+    email,
+    name,
+    existingUserId,
+    allowExistingCredential,
+    existingSince,
+  );
+  await ensureControlledUserCredential(auth, managedUser, password, allowExistingCredential);
+  return managedUser;
 }
 
 export async function readHumanMapping(database: AppDb, userId: string) {

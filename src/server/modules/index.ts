@@ -4,6 +4,7 @@ import { type AuthEnvironment, type AuthInstance } from "../auth";
 import { ApiError } from "./errors";
 import { assertMutationOrigin } from "./http";
 import { createAuthorizationRoutes } from "./authorization/routes";
+import { createApplicationRoutes } from "./applications/routes";
 import { createBootstrapRoutes } from "./bootstrap/routes";
 import { createInvitationRoutes } from "./invitations/routes";
 import { createServiceAccountRoutes } from "./service-accounts/routes";
@@ -32,6 +33,7 @@ export function createApiRoutes(environment: AuthEnvironment, auth: AuthInstance
       };
     })
     .use(createAuthorizationRoutes(environment, auth))
+    .use(createApplicationRoutes(environment, auth))
     .use(createBootstrapRoutes(environment, auth))
     .use(createInvitationRoutes(environment, auth))
     .use(createUserRoutes(environment, auth))

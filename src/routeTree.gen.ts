@@ -19,6 +19,7 @@ import { Route as SetupRouteImport } from './routes/setup'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminApplicationsRouteRouteImport } from './routes/admin/applications/route'
 import { Route as AdminServiceAccountsRouteImport } from './routes/admin/service-accounts'
 import { Route as AdminSystemRolesRouteImport } from './routes/admin/system-roles'
 import { Route as AdminTeamsRouteImport } from './routes/admin/teams'
@@ -26,6 +27,13 @@ import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as ApiSplatRouteImport } from './routes/api.$'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as ResetPasswordTokenRouteImport } from './routes/reset-password.$token'
+import { Route as AdminApplicationsIndexRouteImport } from './routes/admin/applications/index'
+import { Route as AdminApplicationsApplicationIdRouteRouteImport } from './routes/admin/applications/$applicationId/route'
+import { Route as AdminApplicationsApplicationIdIndexRouteImport } from './routes/admin/applications/$applicationId/index'
+import { Route as AdminApplicationsApplicationIdAccessRouteImport } from './routes/admin/applications/$applicationId/access'
+import { Route as AdminApplicationsApplicationIdOidcRouteImport } from './routes/admin/applications/$applicationId/oidc'
+import { Route as AdminApplicationsApplicationIdRolesRouteImport } from './routes/admin/applications/$applicationId/roles'
+import { Route as AdminApplicationsApplicationIdSettingsRouteImport } from './routes/admin/applications/$applicationId/settings'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -77,6 +85,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminApplicationsRouteRoute = AdminApplicationsRouteRouteImport.update({
+  id: '/applications',
+  path: '/applications',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminServiceAccountsRoute = AdminServiceAccountsRouteImport.update({
   id: '/service-accounts',
   path: '/service-accounts',
@@ -112,6 +125,47 @@ const ResetPasswordTokenRoute = ResetPasswordTokenRouteImport.update({
   path: '/$token',
   getParentRoute: () => ResetPasswordRoute,
 } as any)
+const AdminApplicationsIndexRoute = AdminApplicationsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminApplicationsRouteRoute,
+} as any)
+const AdminApplicationsApplicationIdRouteRoute =
+  AdminApplicationsApplicationIdRouteRouteImport.update({
+    id: '/$applicationId',
+    path: '/$applicationId',
+    getParentRoute: () => AdminApplicationsRouteRoute,
+  } as any)
+const AdminApplicationsApplicationIdIndexRoute =
+  AdminApplicationsApplicationIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminApplicationsApplicationIdRouteRoute,
+  } as any)
+const AdminApplicationsApplicationIdAccessRoute =
+  AdminApplicationsApplicationIdAccessRouteImport.update({
+    id: '/access',
+    path: '/access',
+    getParentRoute: () => AdminApplicationsApplicationIdRouteRoute,
+  } as any)
+const AdminApplicationsApplicationIdOidcRoute =
+  AdminApplicationsApplicationIdOidcRouteImport.update({
+    id: '/oidc',
+    path: '/oidc',
+    getParentRoute: () => AdminApplicationsApplicationIdRouteRoute,
+  } as any)
+const AdminApplicationsApplicationIdRolesRoute =
+  AdminApplicationsApplicationIdRolesRouteImport.update({
+    id: '/roles',
+    path: '/roles',
+    getParentRoute: () => AdminApplicationsApplicationIdRouteRoute,
+  } as any)
+const AdminApplicationsApplicationIdSettingsRoute =
+  AdminApplicationsApplicationIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AdminApplicationsApplicationIdRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -123,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/admin/applications': typeof AdminApplicationsRouteRouteWithChildren
   '/admin/service-accounts': typeof AdminServiceAccountsRoute
   '/admin/system-roles': typeof AdminSystemRolesRoute
   '/admin/teams': typeof AdminTeamsRoute
@@ -131,6 +186,13 @@ export interface FileRoutesByFullPath {
   '/invite/$token': typeof InviteTokenRoute
   '/reset-password/$token': typeof ResetPasswordTokenRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/applications/$applicationId': typeof AdminApplicationsApplicationIdRouteRouteWithChildren
+  '/admin/applications/': typeof AdminApplicationsIndexRoute
+  '/admin/applications/$applicationId/access': typeof AdminApplicationsApplicationIdAccessRoute
+  '/admin/applications/$applicationId/oidc': typeof AdminApplicationsApplicationIdOidcRoute
+  '/admin/applications/$applicationId/roles': typeof AdminApplicationsApplicationIdRolesRoute
+  '/admin/applications/$applicationId/settings': typeof AdminApplicationsApplicationIdSettingsRoute
+  '/admin/applications/$applicationId/': typeof AdminApplicationsApplicationIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -149,6 +211,12 @@ export interface FileRoutesByTo {
   '/invite/$token': typeof InviteTokenRoute
   '/reset-password/$token': typeof ResetPasswordTokenRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/applications': typeof AdminApplicationsIndexRoute
+  '/admin/applications/$applicationId/access': typeof AdminApplicationsApplicationIdAccessRoute
+  '/admin/applications/$applicationId/oidc': typeof AdminApplicationsApplicationIdOidcRoute
+  '/admin/applications/$applicationId/roles': typeof AdminApplicationsApplicationIdRolesRoute
+  '/admin/applications/$applicationId/settings': typeof AdminApplicationsApplicationIdSettingsRoute
+  '/admin/applications/$applicationId': typeof AdminApplicationsApplicationIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -161,6 +229,7 @@ export interface FileRoutesById {
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/admin/applications': typeof AdminApplicationsRouteRouteWithChildren
   '/admin/service-accounts': typeof AdminServiceAccountsRoute
   '/admin/system-roles': typeof AdminSystemRolesRoute
   '/admin/teams': typeof AdminTeamsRoute
@@ -169,6 +238,13 @@ export interface FileRoutesById {
   '/invite/$token': typeof InviteTokenRoute
   '/reset-password/$token': typeof ResetPasswordTokenRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/applications/$applicationId': typeof AdminApplicationsApplicationIdRouteRouteWithChildren
+  '/admin/applications/': typeof AdminApplicationsIndexRoute
+  '/admin/applications/$applicationId/access': typeof AdminApplicationsApplicationIdAccessRoute
+  '/admin/applications/$applicationId/oidc': typeof AdminApplicationsApplicationIdOidcRoute
+  '/admin/applications/$applicationId/roles': typeof AdminApplicationsApplicationIdRolesRoute
+  '/admin/applications/$applicationId/settings': typeof AdminApplicationsApplicationIdSettingsRoute
+  '/admin/applications/$applicationId/': typeof AdminApplicationsApplicationIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -182,6 +258,7 @@ export interface FileRouteTypes {
     | '/setup'
     | '/sign-in'
     | '/verify-email'
+    | '/admin/applications'
     | '/admin/service-accounts'
     | '/admin/system-roles'
     | '/admin/teams'
@@ -190,6 +267,13 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/reset-password/$token'
     | '/admin/'
+    | '/admin/applications/$applicationId'
+    | '/admin/applications/'
+    | '/admin/applications/$applicationId/access'
+    | '/admin/applications/$applicationId/oidc'
+    | '/admin/applications/$applicationId/roles'
+    | '/admin/applications/$applicationId/settings'
+    | '/admin/applications/$applicationId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -208,6 +292,12 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/reset-password/$token'
     | '/admin'
+    | '/admin/applications'
+    | '/admin/applications/$applicationId/access'
+    | '/admin/applications/$applicationId/oidc'
+    | '/admin/applications/$applicationId/roles'
+    | '/admin/applications/$applicationId/settings'
+    | '/admin/applications/$applicationId'
   id:
     | '__root__'
     | '/'
@@ -219,6 +309,7 @@ export interface FileRouteTypes {
     | '/setup'
     | '/sign-in'
     | '/verify-email'
+    | '/admin/applications'
     | '/admin/service-accounts'
     | '/admin/system-roles'
     | '/admin/teams'
@@ -227,6 +318,13 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/reset-password/$token'
     | '/admin/'
+    | '/admin/applications/$applicationId'
+    | '/admin/applications/'
+    | '/admin/applications/$applicationId/access'
+    | '/admin/applications/$applicationId/oidc'
+    | '/admin/applications/$applicationId/roles'
+    | '/admin/applications/$applicationId/settings'
+    | '/admin/applications/$applicationId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -315,6 +413,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/applications': {
+      id: '/admin/applications'
+      path: '/applications'
+      fullPath: '/admin/applications'
+      preLoaderRoute: typeof AdminApplicationsRouteRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/service-accounts': {
       id: '/admin/service-accounts'
       path: '/service-accounts'
@@ -364,10 +469,104 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordTokenRouteImport
       parentRoute: typeof ResetPasswordRoute
     }
+    '/admin/applications/': {
+      id: '/admin/applications/'
+      path: '/'
+      fullPath: '/admin/applications/'
+      preLoaderRoute: typeof AdminApplicationsIndexRouteImport
+      parentRoute: typeof AdminApplicationsRouteRoute
+    }
+    '/admin/applications/$applicationId': {
+      id: '/admin/applications/$applicationId'
+      path: '/$applicationId'
+      fullPath: '/admin/applications/$applicationId'
+      preLoaderRoute: typeof AdminApplicationsApplicationIdRouteRouteImport
+      parentRoute: typeof AdminApplicationsRouteRoute
+    }
+    '/admin/applications/$applicationId/': {
+      id: '/admin/applications/$applicationId/'
+      path: '/'
+      fullPath: '/admin/applications/$applicationId/'
+      preLoaderRoute: typeof AdminApplicationsApplicationIdIndexRouteImport
+      parentRoute: typeof AdminApplicationsApplicationIdRouteRoute
+    }
+    '/admin/applications/$applicationId/access': {
+      id: '/admin/applications/$applicationId/access'
+      path: '/access'
+      fullPath: '/admin/applications/$applicationId/access'
+      preLoaderRoute: typeof AdminApplicationsApplicationIdAccessRouteImport
+      parentRoute: typeof AdminApplicationsApplicationIdRouteRoute
+    }
+    '/admin/applications/$applicationId/oidc': {
+      id: '/admin/applications/$applicationId/oidc'
+      path: '/oidc'
+      fullPath: '/admin/applications/$applicationId/oidc'
+      preLoaderRoute: typeof AdminApplicationsApplicationIdOidcRouteImport
+      parentRoute: typeof AdminApplicationsApplicationIdRouteRoute
+    }
+    '/admin/applications/$applicationId/roles': {
+      id: '/admin/applications/$applicationId/roles'
+      path: '/roles'
+      fullPath: '/admin/applications/$applicationId/roles'
+      preLoaderRoute: typeof AdminApplicationsApplicationIdRolesRouteImport
+      parentRoute: typeof AdminApplicationsApplicationIdRouteRoute
+    }
+    '/admin/applications/$applicationId/settings': {
+      id: '/admin/applications/$applicationId/settings'
+      path: '/settings'
+      fullPath: '/admin/applications/$applicationId/settings'
+      preLoaderRoute: typeof AdminApplicationsApplicationIdSettingsRouteImport
+      parentRoute: typeof AdminApplicationsApplicationIdRouteRoute
+    }
   }
 }
 
+interface AdminApplicationsApplicationIdRouteRouteChildren {
+  AdminApplicationsApplicationIdAccessRoute: typeof AdminApplicationsApplicationIdAccessRoute
+  AdminApplicationsApplicationIdOidcRoute: typeof AdminApplicationsApplicationIdOidcRoute
+  AdminApplicationsApplicationIdRolesRoute: typeof AdminApplicationsApplicationIdRolesRoute
+  AdminApplicationsApplicationIdSettingsRoute: typeof AdminApplicationsApplicationIdSettingsRoute
+  AdminApplicationsApplicationIdIndexRoute: typeof AdminApplicationsApplicationIdIndexRoute
+}
+
+const AdminApplicationsApplicationIdRouteRouteChildren: AdminApplicationsApplicationIdRouteRouteChildren =
+  {
+    AdminApplicationsApplicationIdAccessRoute:
+      AdminApplicationsApplicationIdAccessRoute,
+    AdminApplicationsApplicationIdOidcRoute:
+      AdminApplicationsApplicationIdOidcRoute,
+    AdminApplicationsApplicationIdRolesRoute:
+      AdminApplicationsApplicationIdRolesRoute,
+    AdminApplicationsApplicationIdSettingsRoute:
+      AdminApplicationsApplicationIdSettingsRoute,
+    AdminApplicationsApplicationIdIndexRoute:
+      AdminApplicationsApplicationIdIndexRoute,
+  }
+
+const AdminApplicationsApplicationIdRouteRouteWithChildren =
+  AdminApplicationsApplicationIdRouteRoute._addFileChildren(
+    AdminApplicationsApplicationIdRouteRouteChildren,
+  )
+
+interface AdminApplicationsRouteRouteChildren {
+  AdminApplicationsApplicationIdRouteRoute: typeof AdminApplicationsApplicationIdRouteRouteWithChildren
+  AdminApplicationsIndexRoute: typeof AdminApplicationsIndexRoute
+}
+
+const AdminApplicationsRouteRouteChildren: AdminApplicationsRouteRouteChildren =
+  {
+    AdminApplicationsApplicationIdRouteRoute:
+      AdminApplicationsApplicationIdRouteRouteWithChildren,
+    AdminApplicationsIndexRoute: AdminApplicationsIndexRoute,
+  }
+
+const AdminApplicationsRouteRouteWithChildren =
+  AdminApplicationsRouteRoute._addFileChildren(
+    AdminApplicationsRouteRouteChildren,
+  )
+
 interface AdminRouteRouteChildren {
+  AdminApplicationsRouteRoute: typeof AdminApplicationsRouteRouteWithChildren
   AdminServiceAccountsRoute: typeof AdminServiceAccountsRoute
   AdminSystemRolesRoute: typeof AdminSystemRolesRoute
   AdminTeamsRoute: typeof AdminTeamsRoute
@@ -376,6 +575,7 @@ interface AdminRouteRouteChildren {
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminApplicationsRouteRoute: AdminApplicationsRouteRouteWithChildren,
   AdminServiceAccountsRoute: AdminServiceAccountsRoute,
   AdminSystemRolesRoute: AdminSystemRolesRoute,
   AdminTeamsRoute: AdminTeamsRoute,

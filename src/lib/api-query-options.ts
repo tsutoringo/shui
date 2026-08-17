@@ -3,11 +3,22 @@ import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import {
   acceptInvitation,
   addTeamMember,
+  createApplication,
+  createApplicationClient,
+  createApplicationRole,
   completeBootstrap,
   createInvitation,
   createServiceAccount,
   createTeam,
   deleteTeam,
+  deleteApplication,
+  deleteApplicationClient,
+  deleteApplicationRole,
+  getApplicationAccess,
+  getApplicationClients,
+  getApplicationOwners,
+  getApplicationRoles,
+  getApplications,
   getInvitation,
   getAdminAccess,
   getServiceAccounts,
@@ -16,14 +27,24 @@ import {
   getTeams,
   getUsers,
   grantUserRole,
+  grantApplicationRole,
+  removeApplicationAssignment,
   removeTeamMember,
   repairUser,
   reserveBootstrap,
   revokeUserRole,
+  revokeApplicationRole,
+  setApplicationAssignment,
+  setApplicationClientStatus,
+  setApplicationStatus,
   setServiceAccountStatus,
   setTeamStatus,
   setUserStatus,
   transferServiceAccount,
+  transferApplicationOwnership,
+  updateApplication,
+  updateApplicationClient,
+  updateApplicationRole,
   updateServiceAccount,
   updateTeam,
 } from "./api-client";
@@ -32,10 +53,16 @@ import type {
   ServiceAccountUpdateBody,
   TeamUpdateBody,
   OwnershipBody,
+  ApplicationAssignmentBody,
+  ApplicationClientUpdateBody,
+  ApplicationRoleUpdateBody,
+  ApplicationUpdateBody,
 } from "../server/modules/models";
 
 export const apiQueryKeys = {
   adminAccess: ["admin-access"] as const,
+  applications: ["applications"] as const,
+  applicationOwners: ["application-owners"] as const,
   serviceAccounts: ["service-accounts"] as const,
   serviceAccountOwners: ["service-account-owners"] as const,
   systemRoles: ["system-roles"] as const,
@@ -55,6 +82,40 @@ export const usersQueryOptions = queryOptions({
   queryKey: apiQueryKeys.users,
   retry: false,
 });
+
+export const applicationsQueryOptions = queryOptions({
+  queryFn: getApplications,
+  queryKey: apiQueryKeys.applications,
+  retry: false,
+});
+
+export const applicationOwnersQueryOptions = queryOptions({
+  queryFn: getApplicationOwners,
+  queryKey: apiQueryKeys.applicationOwners,
+  retry: false,
+  staleTime: 60_000,
+});
+
+export const applicationRolesQueryOptions = (id: string) =>
+  queryOptions({
+    queryFn: () => getApplicationRoles(id),
+    queryKey: [...apiQueryKeys.applications, id, "roles"] as const,
+    retry: false,
+  });
+
+export const applicationAccessQueryOptions = (id: string) =>
+  queryOptions({
+    queryFn: () => getApplicationAccess(id),
+    queryKey: [...apiQueryKeys.applications, id, "access"] as const,
+    retry: false,
+  });
+
+export const applicationClientsQueryOptions = (id: string) =>
+  queryOptions({
+    queryFn: () => getApplicationClients(id),
+    queryKey: [...apiQueryKeys.applications, id, "clients"] as const,
+    retry: false,
+  });
 
 export const teamsQueryOptions = queryOptions({
   queryFn: getTeams,
@@ -104,6 +165,138 @@ export const acceptInvitationMutationOptions = () =>
   });
 
 export const repairUserMutationOptions = () => mutationOptions({ mutationFn: repairUser });
+
+export const createApplicationMutationOptions = () =>
+  mutationOptions({ mutationFn: createApplication });
+
+export const updateApplicationMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({ body, id }: { body: ApplicationUpdateBody; id: string }) =>
+      updateApplication(id, body),
+  });
+
+export const transferApplicationOwnershipMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({ body, id }: { body: OwnershipBody; id: string }) =>
+      transferApplicationOwnership(id, body),
+  });
+
+export const setApplicationStatusMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({ id, status }: { id: string; status: "active" | "disabled" }) =>
+      setApplicationStatus(id, status),
+  });
+
+export const deleteApplicationMutationOptions = () =>
+  mutationOptions({ mutationFn: deleteApplication });
+
+export const createApplicationRoleMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({ body, id }: { body: Parameters<typeof createApplicationRole>[1]; id: string }) =>
+      createApplicationRole(id, body),
+  });
+
+export const updateApplicationRoleMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({
+      body,
+      id,
+      roleKey,
+    }: {
+      body: ApplicationRoleUpdateBody;
+      id: string;
+      roleKey: string;
+    }) => updateApplicationRole(id, roleKey, body),
+  });
+
+export const deleteApplicationRoleMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({ id, roleKey }: { id: string; roleKey: string }) =>
+      deleteApplicationRole(id, roleKey),
+  });
+
+export const setApplicationAssignmentMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({ body, id }: { body: ApplicationAssignmentBody; id: string }) =>
+      setApplicationAssignment(id, body),
+  });
+
+export const removeApplicationAssignmentMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({
+      id,
+      subjectId,
+      subjectType,
+    }: {
+      id: string;
+      subjectId: string;
+      subjectType: "user" | "service-account" | "team";
+    }) => removeApplicationAssignment(id, subjectType, subjectId),
+  });
+
+export const grantApplicationRoleMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({ body, id }: { body: Parameters<typeof grantApplicationRole>[1]; id: string }) =>
+      grantApplicationRole(id, body),
+  });
+
+export const revokeApplicationRoleMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({
+      id,
+      roleKey,
+      subjectId,
+      subjectType,
+    }: {
+      id: string;
+      roleKey: string;
+      subjectId: string;
+      subjectType: "user" | "service-account" | "team";
+    }) => revokeApplicationRole(id, subjectType, subjectId, roleKey),
+  });
+
+export const createApplicationClientMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({
+      body,
+      id,
+    }: {
+      body: Parameters<typeof createApplicationClient>[1];
+      id: string;
+    }) => createApplicationClient(id, body),
+  });
+
+export const updateApplicationClientMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({
+      body,
+      clientId,
+      id,
+    }: {
+      body: ApplicationClientUpdateBody;
+      clientId: string;
+      id: string;
+    }) => updateApplicationClient(id, clientId, body),
+  });
+
+export const setApplicationClientStatusMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({
+      clientId,
+      id,
+      status,
+    }: {
+      clientId: string;
+      id: string;
+      status: "active" | "disabled";
+    }) => setApplicationClientStatus(id, clientId, status),
+  });
+
+export const deleteApplicationClientMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({ clientId, id }: { clientId: string; id: string }) =>
+      deleteApplicationClient(id, clientId),
+  });
 
 export const setUserStatusMutationOptions = () =>
   mutationOptions({

@@ -12,7 +12,12 @@ import {
 } from "../../../db/domain-schema";
 import { type AuthEnvironment, type AuthInstance, deliverEmail } from "../../auth";
 import { type Actor } from "../authorization/service";
-import { ensureControlledUser, ensureHumanPrincipal, readHumanMapping } from "../identity/service";
+import {
+  ensureControlledUserCredential,
+  ensureControlledUserIdentity,
+  ensureHumanPrincipal,
+  readHumanMapping,
+} from "../identity/service";
 import { ApiError } from "../errors";
 import { type InvitationAcceptBody, type InvitationCreateBody } from "../models";
 import {
@@ -27,6 +32,8 @@ import {
   sha256Base64Url,
   type Invitation,
 } from "../../shared/infrastructure";
+
+const INVITATION_CLAIM_LEASE_MS = 5 * 60 * 1000;
 
 function toInvitation(row: typeof invitations.$inferSelect): Invitation {
   return {
@@ -52,6 +59,62 @@ async function readInvitation(database: AppDb, tokenHash: string) {
     .get();
 
   return row ? toInvitation(row) : undefined;
+}
+
+async function claimInvitationForAcceptance(database: AppDb, invitation: Invitation, now: number) {
+  if (invitation.status === "pending") {
+    if (invitation.expires_at <= now) {
+      await expireInvitation(database, invitation, now);
+      throw new ApiError(404);
+    }
+
+    const claimed = await database
+      .update(invitations)
+      .set({ status: "claimed", claimedAt: now, updatedAt: now })
+      .where(
+        and(
+          eq(invitations.id, invitation.id),
+          eq(invitations.status, "pending"),
+          gt(invitations.expiresAt, now),
+        ),
+      )
+      .returning()
+      .get();
+    if (!claimed) throw new ApiError(409);
+    return toInvitation(claimed);
+  }
+
+  if (invitation.status === "claimed") {
+    if (invitation.expires_at <= now) {
+      await expireInvitation(database, invitation, now);
+      throw new ApiError(409);
+    }
+
+    const leaseExpired =
+      invitation.claimed_at === null || invitation.claimed_at <= now - INVITATION_CLAIM_LEASE_MS;
+    if (!leaseExpired) throw new ApiError(409);
+
+    const reclaimed = await database
+      .update(invitations)
+      .set({ claimedAt: now, updatedAt: now })
+      .where(
+        and(
+          eq(invitations.id, invitation.id),
+          eq(invitations.status, "claimed"),
+          gt(invitations.expiresAt, now),
+          or(
+            isNull(invitations.claimedAt),
+            lte(invitations.claimedAt, now - INVITATION_CLAIM_LEASE_MS),
+          ),
+        ),
+      )
+      .returning()
+      .get();
+    if (!reclaimed) throw new ApiError(409);
+    return toInvitation(reclaimed);
+  }
+
+  throw new ApiError(409);
 }
 
 async function expireInvitation(database: AppDb, invitation: Pick<Invitation, "id">, now: number) {
@@ -410,40 +473,9 @@ export async function claimInvitationWithAuth(
     throw new ApiError(400);
   }
 
-  let current = invitation;
-  if (current.status === "pending") {
-    if (current.expires_at <= now) {
-      await expireInvitation(database, current, now);
-      throw new ApiError(404);
-    }
-    const claimed = await database
-      .update(invitations)
-      .set({ status: "claimed", claimedAt: now, updatedAt: now })
-      .where(
-        and(
-          eq(invitations.id, current.id),
-          eq(invitations.status, "pending"),
-          gt(invitations.expiresAt, now),
-        ),
-      )
-      .returning()
-      .get();
-    current = claimed
-      ? toInvitation(claimed)
-      : ((await readInvitation(database, current.token_hash)) ?? current);
-  }
-  if (current.status === "pending" || current.status === "revoked") {
-    throw new ApiError(409);
-  }
-  if (current.status === "expired") {
-    await expireInvitation(database, current, now);
-    throw new ApiError(409);
-  }
-  if (current.expires_at <= now) {
-    await expireInvitation(database, current, now);
-    throw new ApiError(409);
-  }
-  if (current.status === "completed") throw new ApiError(409);
+  let current = await claimInvitationForAcceptance(database, invitation, now);
+  const claimAt = current.claimed_at;
+  if (claimAt === null) throw new ApiError(409);
 
   const existingUser = await database
     .select({ id: user.id })
@@ -457,14 +489,13 @@ export async function claimInvitationWithAuth(
     existingMapping?.principal_status === "active" &&
     existingMapping.human_status === "active" &&
     existingMapping.disabled === 0;
-  const managedUser = await ensureControlledUser(
+  const managedUser = await ensureControlledUserIdentity(
     auth,
     current.email,
     normalizeName(body.name, current.name ?? current.email),
-    body.password,
     current.claimed_user_id,
-    Boolean(current.claimed_user_id) || !hasActiveMapping,
-    current.claimed_at,
+    !hasActiveMapping,
+    claimAt,
   );
   const marked = await database
     .update(invitations)
@@ -473,20 +504,19 @@ export async function claimInvitationWithAuth(
       and(
         eq(invitations.id, current.id),
         eq(invitations.status, "claimed"),
+        eq(invitations.claimedAt, claimAt),
         or(isNull(invitations.claimedUserId), eq(invitations.claimedUserId, managedUser.id)),
       ),
     )
     .returning({ claimedUserId: invitations.claimedUserId })
     .get();
-  if (!marked) {
-    const racedInvitation = await readInvitation(database, current.token_hash);
-    if (!racedInvitation || racedInvitation.claimed_user_id !== managedUser.id)
-      throw new ApiError(409);
-    current = racedInvitation;
-  } else {
-    current = (await readInvitation(database, current.token_hash)) ?? current;
+  if (!marked) throw new ApiError(409);
+  current = (await readInvitation(database, current.token_hash)) ?? current;
+  if (current.status !== "claimed" || current.claimed_user_id !== managedUser.id) {
+    throw new ApiError(409);
   }
-  if (current.status !== "claimed") throw new ApiError(409);
+
+  await ensureControlledUserCredential(auth, managedUser, body.password, !hasActiveMapping);
 
   const roleKeys = await validateRoleKeys(database, roleKeysFromStorage(current.system_role_keys));
   const principalId = await ensureHumanPrincipal(

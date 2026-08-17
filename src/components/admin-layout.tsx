@@ -11,6 +11,12 @@ const navigation = [
   { href: "/admin/users", label: "Users", icon: "users", permission: "users:read" },
   { href: "/admin/teams", label: "Teams", icon: "teams", permission: "teams:read" },
   {
+    href: "/admin/applications",
+    label: "Applications",
+    icon: "applications",
+    permission: "applications:read",
+  },
+  {
     href: "/admin/service-accounts",
     label: "Service accounts",
     icon: "service-accounts",
@@ -227,6 +233,12 @@ function AdminIcon({ name }: Readonly<{ name: AdminIconName }>) {
       <>
         <path d="M7.5 3.5h9v17h-9z" />
         <path d="M10.5 7.5h3M10.5 11.5h3M10.5 15.5h3" />
+      </>
+    ),
+    applications: (
+      <>
+        <rect height="13" rx="2" width="16" x="4" y="5.5" />
+        <path d="M8 5.5V4h8v1.5M8 10h8M8 14h5" />
       </>
     ),
     "sign-out": (

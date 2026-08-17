@@ -1,6 +1,6 @@
 # Shui Roadmap
 
-Last updated: 2026-08-16
+Last updated: 2026-08-18
 
 ## Goal
 
@@ -459,9 +459,9 @@ Exit criteria:
 
 M1 follow-up hardening:
 
-- [ ] Make concurrent invitation acceptance claim the invitation before mutating credentials, so a losing request cannot overwrite the user's password
-- [ ] Prevent an interrupted or expired invitation from leaving an active principal until the scheduled cleanup runs
-- [ ] Equalize password-reset behavior for existing and unknown accounts to prevent timing-based account enumeration
+- [x] Make concurrent invitation acceptance claim the invitation before mutating credentials, so a losing request cannot overwrite the user's password
+- [x] Prevent an interrupted or expired invitation from leaving an active principal until the scheduled cleanup runs
+- [x] Equalize password-reset behavior for existing and unknown accounts to prevent timing-based account enumeration
 
 Exit criteria:
 
@@ -494,24 +494,24 @@ Exit criteria:
 
 ### M3: Applications, Assignments, And Roles
 
-- [ ] Implement Application lifecycle and ownership
-- [ ] Implement one OAuth Resource per Application
-- [ ] Implement Human OIDC Client management
-- [ ] Implement dynamic Application Roles
-- [ ] Implement typed User, Service Account, and Team Assignments
-- [ ] Implement typed direct and Team Role Grants
-- [ ] Implement effective Assignment queries
-- [ ] Implement effective Role queries with all origins
-- [ ] Increment `authz_version` on authorization-affecting changes
-- [ ] Build Application, Assignment, Role, and origin-aware administration UI
+- [x] Implement Application lifecycle and ownership
+- [x] Implement one OAuth Resource per Application
+- [x] Implement Human OIDC Client management
+- [x] Implement dynamic Application Roles
+- [x] Implement typed User, Service Account, and Team Assignments
+- [x] Implement typed direct and Team Role Grants
+- [x] Implement effective Assignment queries
+- [x] Implement effective Role queries with all origins
+- [x] Increment `authz_version` on authorization-affecting changes
+- [x] Build Application, Assignment, Role, and origin-aware administration UI
 
 Exit criteria:
 
-- Assigned without Roles is distinct from not assigned
-- Team Assignment grants effective access to active Team members
-- Direct and Team Role origins are returned separately
-- Duplicate Role origins collapse into one claim value without losing administration provenance
-- Team removal and membership removal update effective access immediately for new token issuance
+- [x] Assigned without Roles is distinct from not assigned
+- [x] Team Assignment grants effective access to active Team members
+- [x] Direct and Team Role origins are returned separately
+- [x] Duplicate Role origins collapse into one claim value without losing administration provenance
+- [x] Team removal and membership removal update effective access immediately for new token issuance
 
 ### M4: Application OIDC And Service Accounts
 
@@ -692,4 +692,6 @@ These decisions do not block M0 and must be fixed before the listed milestone be
 - [x] Service Account Client Credentials strategy selected
 - [x] Outbound SCIM direction selected
 - [x] M0 compatibility spike implemented and locally verified
+- [x] M1 authentication, setup, invitation, and hardening implemented and locally verified
 - [x] M2 principals, teams, system roles, ownership, and administration implemented and locally verified
+- [x] M3 applications, assignments, roles, OIDC clients, and administration implemented and locally verified

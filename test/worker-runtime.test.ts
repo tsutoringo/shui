@@ -1,7 +1,14 @@
-import { SELF } from "cloudflare:test";
+import { SELF, createScheduledController } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { createLocalJWKSet, jwtVerify } from "jose";
 import { describe, expect, it } from "vite-plus/test";
+
+import {
+  PASSWORD_RESET_TIMING_FLOOR_MS,
+  clearDevelopmentEmailSink,
+  readDevelopmentEmailSink,
+} from "../src/server/auth";
+import { handleScheduled } from "../src/worker-events";
 
 const origin = "http://localhost:8787";
 const issuer = `${origin}/api/auth`;
@@ -397,6 +404,95 @@ describe("Shui worker runtime", () => {
     expect(replayResponse.status).toBe(409);
   });
 
+  it("allows only one concurrent invitation acceptance to set credentials", async () => {
+    const invitation = await createPendingInvitation();
+    const passwords = ["first-correct-horse-battery", "second-correct-horse-battery"] as const;
+    const responses = await Promise.all(
+      passwords.map((password, index) =>
+        SELF.fetch(`${origin}/api/invitations/${invitation.token}/accept`, {
+          body: JSON.stringify({
+            email: invitation.email,
+            name: `Concurrent User ${index}`,
+            password,
+          }),
+          headers: {
+            "content-type": "application/json",
+            "x-forwarded-for": `10.20.0.${index + 1}`,
+          },
+          method: "POST",
+        }),
+      ),
+    );
+    const statuses = responses
+      .map((response) => response.status)
+      .sort((left, right) => left - right);
+    expect(statuses).toEqual([200, 409]);
+
+    const winningIndex = responses.findIndex((response) => response.status === 200);
+    const winningSignIn = await SELF.fetch(`${origin}/api/auth/sign-in/email`, {
+      body: JSON.stringify({ email: invitation.email, password: passwords[winningIndex] }),
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": `10.20.1.${testClientIp++}`,
+      },
+      method: "POST",
+    });
+    expect(winningSignIn.status).toBe(200);
+
+    const losingSignIn = await SELF.fetch(`${origin}/api/auth/sign-in/email`, {
+      body: JSON.stringify({
+        email: invitation.email,
+        password: passwords[winningIndex === 0 ? 1 : 0],
+      }),
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": `10.20.1.${testClientIp++}`,
+      },
+      method: "POST",
+    });
+    expect(losingSignIn.status).not.toBe(200);
+
+    const invitationRow = await env.DB.prepare(
+      "SELECT status, claimed_user_id, claimed_principal_id FROM invitations WHERE id = ?",
+    )
+      .bind(invitation.id)
+      .first<{
+        status: string;
+        claimed_user_id: string | null;
+        claimed_principal_id: string | null;
+      }>();
+    expect(invitationRow?.status).toBe("completed");
+    expect(invitationRow?.claimed_user_id).toBeTruthy();
+    expect(invitationRow?.claimed_principal_id).toBeTruthy();
+
+    const userCount = await env.DB.prepare("SELECT COUNT(*) AS count FROM user WHERE email = ?")
+      .bind(invitation.email)
+      .first<{ count: number }>();
+    expect(userCount?.count).toBe(1);
+  });
+
+  it("reclaims an interrupted invitation after its claim lease expires", async () => {
+    const invitation = await createPendingInvitation();
+    await env.DB.prepare(
+      `UPDATE invitations
+          SET status = 'claimed', claimed_at = ?, claimed_user_id = NULL
+        WHERE id = ?`,
+    )
+      .bind(Date.now() - 5 * 60 * 1000 - 1, invitation.id)
+      .run();
+
+    const response = await SELF.fetch(`${origin}/api/invitations/${invitation.token}/accept`, {
+      body: JSON.stringify({
+        email: invitation.email,
+        name: "Reclaimed User",
+        password: "reclaimed-correct-horse",
+      }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+    expect(response.status).toBe(200);
+  });
+
   it("revokes and expires invitations", async () => {
     const revoked = await createPendingInvitation();
     const root = await ensureRoot();
@@ -550,6 +646,101 @@ describe("Shui worker runtime", () => {
       },
     );
     expect(replayResponse.status).toBe(409);
+  });
+
+  it("scheduled cleanup disables principals left by expired invitations", async () => {
+    const invitation = await createPendingInvitation();
+    const acceptResponse = await SELF.fetch(
+      `${origin}/api/invitations/${invitation.token}/accept`,
+      {
+        body: JSON.stringify({
+          email: invitation.email,
+          name: "Scheduled Cleanup User",
+          password: "scheduled-correct-horse",
+        }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      },
+    );
+    expect(acceptResponse.status).toBe(200);
+
+    const invitedUser = await env.DB.prepare("SELECT id FROM user WHERE email = ?")
+      .bind(invitation.email)
+      .first<{ id: string }>();
+    expect(invitedUser?.id).toBeTruthy();
+    const signInResponse = await SELF.fetch(`${origin}/api/auth/sign-in/email`, {
+      body: JSON.stringify({ email: invitation.email, password: "scheduled-correct-horse" }),
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": `10.20.2.${testClientIp++}`,
+      },
+      method: "POST",
+    });
+    expect(signInResponse.status).toBe(200);
+
+    await env.DB.prepare(
+      `UPDATE invitations
+          SET status = 'claimed', expires_at = ?, claimed_principal_id = NULL
+        WHERE id = ?`,
+    )
+      .bind(Date.now() - 1, invitation.id)
+      .run();
+    await handleScheduled(createScheduledController({ cron: "*/15 * * * *" }), env);
+
+    const principal = await env.DB.prepare(
+      `SELECT p.status, hp.status AS human_status, hp.disabled
+         FROM principals p
+         JOIN human_principals hp ON hp.principal_id = p.id
+        WHERE hp.user_id = ?`,
+    )
+      .bind(invitedUser?.id)
+      .first<{ status: string; human_status: string; disabled: number }>();
+    expect(principal).toEqual({ disabled: 1, human_status: "disabled", status: "disabled" });
+
+    const sessionCount = await env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM session WHERE user_id = ?",
+    )
+      .bind(invitedUser?.id)
+      .first<{ count: number }>();
+    expect(sessionCount?.count).toBe(0);
+  });
+
+  it("keeps password reset responses generic and applies a timing floor", async () => {
+    const user = await signUpUser("Password Reset User");
+    clearDevelopmentEmailSink();
+
+    const knownStartedAt = Date.now();
+    const knownResponse = await SELF.fetch(`${origin}/api/auth/request-password-reset`, {
+      body: JSON.stringify({ email: user.email, redirectTo: "/reset-password" }),
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": "10.30.0.1",
+      },
+      method: "POST",
+    });
+    const knownElapsed = Date.now() - knownStartedAt;
+
+    const unknownStartedAt = Date.now();
+    const unknownResponse = await SELF.fetch(`${origin}/api/auth/request-password-reset`, {
+      body: JSON.stringify({
+        email: `unknown-${crypto.randomUUID()}@example.com`,
+        redirectTo: "/reset-password",
+      }),
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": "10.30.0.2",
+      },
+      method: "POST",
+    });
+    const unknownElapsed = Date.now() - unknownStartedAt;
+
+    expect(knownResponse.status).toBe(unknownResponse.status);
+    await expect(knownResponse.text()).resolves.toBe(await unknownResponse.text());
+    expect(knownElapsed).toBeGreaterThanOrEqual(PASSWORD_RESET_TIMING_FLOOR_MS - 25);
+    expect(unknownElapsed).toBeGreaterThanOrEqual(PASSWORD_RESET_TIMING_FLOOR_MS - 25);
+    expect(readDevelopmentEmailSink()).toEqual([
+      expect.objectContaining({ email: user.email, kind: "password-reset" }),
+    ]);
   });
 
   it("revokes disabled-user sessions and protects the last root", async () => {
@@ -982,7 +1173,19 @@ describe("Shui worker runtime", () => {
     });
     expect(applicationAdminAccessResponse.status).toBe(200);
     await expect(applicationAdminAccessResponse.json()).resolves.toEqual({
-      permissions: ["owners:read", "service-accounts:read", "service-accounts:write"],
+      permissions: [
+        "application-roles:read",
+        "application-roles:write",
+        "applications:read",
+        "applications:write",
+        "assignments:read",
+        "assignments:write",
+        "oidc-clients:read",
+        "oidc-clients:write",
+        "owners:read",
+        "service-accounts:read",
+        "service-accounts:write",
+      ],
     });
 
     const ownersResponse = await SELF.fetch(`${origin}/api/service-accounts/owners`, {
@@ -1000,6 +1203,433 @@ describe("Shui worker runtime", () => {
       headers: { cookie: applicationAdmin.cookie },
     });
     expect(applicationUsersResponse.status).toBe(403);
+  });
+
+  it("manages application roles, typed assignments, and effective access origins", async () => {
+    const root = await ensureRoot();
+    const member = await signUpUser("M3 Application Member");
+    const teamOnly = await signUpUser("M3 Team-only Member");
+
+    const teamResponse = await SELF.fetch(`${origin}/api/teams`, {
+      body: JSON.stringify({ name: `M3 Access Team ${crypto.randomUUID()}` }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(teamResponse.status).toBe(200);
+    const team = (await teamResponse.json()) as { id: string };
+
+    for (const userId of [member.userId, teamOnly.userId]) {
+      const response = await SELF.fetch(`${origin}/api/teams/${team.id}/members`, {
+        body: JSON.stringify({ userId }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      });
+      expect(response.status).toBe(200);
+    }
+
+    const applicationResponse = await SELF.fetch(`${origin}/api/applications`, {
+      body: JSON.stringify({
+        description: "M3 authorization application",
+        name: `M3 Application ${crypto.randomUUID()}`,
+        ownerId: `human_${root.userId}`,
+        ownerType: "user",
+      }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(applicationResponse.status).toBe(200);
+    const application = (await applicationResponse.json()) as {
+      id: string;
+      authzVersion: number;
+      resourceIdentifier: string;
+    };
+    expect(application.resourceIdentifier).toBe(`${origin}/api/resources/${application.id}`);
+    const initialAuthzVersion = application.authzVersion;
+
+    const viewerRoleResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/roles`,
+      {
+        body: JSON.stringify({ key: "viewer", name: "Viewer" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(viewerRoleResponse.status).toBe(200);
+
+    const operatorRoleResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/roles`,
+      {
+        body: JSON.stringify({ key: "operator", name: "Operator" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(operatorRoleResponse.status).toBe(200);
+
+    const teamAssignmentResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/assignments`,
+      {
+        body: JSON.stringify({ subjectId: team.id, subjectType: "team" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(teamAssignmentResponse.status).toBe(200);
+
+    const teamGrantResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/role-grants`,
+      {
+        body: JSON.stringify({ roleKey: "operator", subjectId: team.id, subjectType: "team" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(teamGrantResponse.status).toBe(200);
+
+    const duplicateOriginGrantResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/role-grants`,
+      {
+        body: JSON.stringify({ roleKey: "viewer", subjectId: team.id, subjectType: "team" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(duplicateOriginGrantResponse.status).toBe(200);
+
+    const userAssignmentResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/assignments`,
+      {
+        body: JSON.stringify({ subjectId: member.userId, subjectType: "user" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(userAssignmentResponse.status).toBe(200);
+    await expect(userAssignmentResponse.json()).resolves.toMatchObject({
+      subjectId: `human_${member.userId}`,
+      status: "active",
+      subjectType: "user",
+    });
+
+    const userGrantResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/role-grants`,
+      {
+        body: JSON.stringify({
+          roleKey: "viewer",
+          subjectId: member.userId,
+          subjectType: "user",
+        }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(userGrantResponse.status).toBe(200);
+
+    const accessResponse = await SELF.fetch(`${origin}/api/applications/${application.id}/access`, {
+      headers: { cookie: root.cookie },
+    });
+    expect(accessResponse.status).toBe(200);
+    const access = (await accessResponse.json()) as {
+      users: Array<{
+        id: string;
+        assignmentStatus: string | null;
+        directRoles: string[];
+        effectiveRoles: string[];
+        teamRoles: Array<{ kind: string; roleKey: string; teamId?: string }>;
+      }>;
+      teams: Array<{ id: string; assignmentStatus: string | null; directRoles: string[] }>;
+    };
+    const memberAccess = access.users.find((candidate) => candidate.id === member.userId);
+    const teamOnlyAccess = access.users.find((candidate) => candidate.id === teamOnly.userId);
+    expect(memberAccess).toMatchObject({
+      assignmentStatus: "active",
+      directRoles: ["viewer"],
+      effectiveRoles: expect.arrayContaining(["operator", "viewer"]),
+    });
+    expect(memberAccess?.effectiveRoles).toHaveLength(2);
+    expect(memberAccess?.teamRoles).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "team", roleKey: "operator", teamId: team.id }),
+        expect.objectContaining({ kind: "team", roleKey: "viewer", teamId: team.id }),
+      ]),
+    );
+    expect(teamOnlyAccess).toMatchObject({
+      assignmentStatus: null,
+      effectiveRoles: expect.arrayContaining(["operator", "viewer"]),
+    });
+    expect(teamOnlyAccess?.effectiveRoles).toHaveLength(2);
+    expect(access.teams.find((candidate) => candidate.id === team.id)).toMatchObject({
+      assignmentStatus: "active",
+      directRoles: expect.arrayContaining(["operator", "viewer"]),
+    });
+
+    const beforeMembershipVersion = await env.DB.prepare(
+      "SELECT authz_version FROM applications WHERE id = ?",
+    )
+      .bind(application.id)
+      .first<{ authz_version: number }>();
+    const removeMemberResponse = await SELF.fetch(
+      `${origin}/api/teams/${team.id}/members/${member.userId}`,
+      { headers: { cookie: root.cookie }, method: "DELETE" },
+    );
+    expect(removeMemberResponse.status).toBe(200);
+    const afterMembershipVersion = await env.DB.prepare(
+      "SELECT authz_version FROM applications WHERE id = ?",
+    )
+      .bind(application.id)
+      .first<{ authz_version: number }>();
+    expect(afterMembershipVersion?.authz_version).toBeGreaterThan(
+      beforeMembershipVersion?.authz_version ?? initialAuthzVersion,
+    );
+
+    const afterRemovalResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/access`,
+      { headers: { cookie: root.cookie } },
+    );
+    const afterRemoval = (await afterRemovalResponse.json()) as {
+      users: Array<{ id: string; effectiveRoles: string[] }>;
+    };
+    expect(afterRemoval.users.find((candidate) => candidate.id === member.userId)).toMatchObject({
+      effectiveRoles: ["viewer"],
+    });
+    expect(afterRemoval.users.find((candidate) => candidate.id === teamOnly.userId)).toMatchObject({
+      effectiveRoles: expect.arrayContaining(["operator", "viewer"]),
+    });
+
+    const listedApplicationsResponse = await SELF.fetch(`${origin}/api/applications`, {
+      headers: { cookie: root.cookie },
+    });
+    expect(listedApplicationsResponse.status).toBe(200);
+    const listedApplications = (await listedApplicationsResponse.json()) as {
+      applications: Array<{ id: string; authzVersion: number }>;
+    };
+    expect(
+      listedApplications.applications.find((candidate) => candidate.id === application.id),
+    ).toMatchObject({ id: application.id });
+    expect(
+      listedApplications.applications.find((candidate) => candidate.id === application.id)
+        ?.authzVersion,
+    ).toBeGreaterThan(initialAuthzVersion);
+  });
+
+  it("creates public and confidential human OIDC clients with PKCE", async () => {
+    const root = await ensureRoot();
+    const applicationResponse = await SELF.fetch(`${origin}/api/applications`, {
+      body: JSON.stringify({
+        name: `M3 OIDC Application ${crypto.randomUUID()}`,
+        ownerId: `human_${root.userId}`,
+        ownerType: "user",
+      }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(applicationResponse.status).toBe(200);
+    const application = (await applicationResponse.json()) as { id: string };
+    const redirectUris = [`${origin}/m3/oauth/callback`];
+
+    const publicResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/clients`,
+      {
+        body: JSON.stringify({
+          clientType: "public",
+          name: "M3 Public Client",
+          redirectUris,
+          scopes: ["openid", "profile", "email"],
+        }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(publicResponse.status).toBe(200);
+    const publicClient = (await publicResponse.json()) as {
+      clientId: string;
+      clientSecret: string | null;
+      clientType: string;
+    };
+    expect(publicClient).toMatchObject({ clientSecret: null, clientType: "public" });
+
+    const confidentialResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/clients`,
+      {
+        body: JSON.stringify({
+          clientType: "confidential",
+          name: "M3 Confidential Client",
+          redirectUris,
+          scopes: ["openid", "profile", "email", "api:read"],
+        }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(confidentialResponse.status).toBe(200);
+    const confidentialClient = (await confidentialResponse.json()) as {
+      clientId: string;
+      clientSecret: string | null;
+      clientType: string;
+    };
+    expect(confidentialClient.clientSecret).toEqual(expect.any(String));
+    expect(confidentialClient.clientType).toBe("confidential");
+
+    const storedClient = await env.DB.prepare(
+      `SELECT client_secret, token_endpoint_auth_method, require_pkce, grant_types,
+              response_types, scopes
+         FROM oauth_client
+        WHERE client_id = ?`,
+    )
+      .bind(confidentialClient.clientId)
+      .first<{
+        client_secret: string | null;
+        grant_types: string;
+        require_pkce: number;
+        response_types: string;
+        scopes: string;
+        token_endpoint_auth_method: string;
+      }>();
+    expect(storedClient?.client_secret).toBeTruthy();
+    expect(storedClient?.client_secret).not.toBe(confidentialClient.clientSecret);
+    expect(storedClient?.token_endpoint_auth_method).toBe("client_secret_basic");
+    expect(storedClient?.require_pkce).toBe(1);
+    expect(JSON.parse(storedClient?.grant_types ?? "[]")).toEqual(["authorization_code"]);
+    expect(JSON.parse(storedClient?.response_types ?? "[]")).toEqual(["code"]);
+    expect(JSON.parse(storedClient?.scopes ?? "[]")).toEqual([
+      "openid",
+      "profile",
+      "email",
+      "api:read",
+    ]);
+
+    const clientsResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/clients`,
+      { headers: { cookie: root.cookie } },
+    );
+    expect(clientsResponse.status).toBe(200);
+    const clients = (await clientsResponse.json()) as {
+      clients: Array<{ clientId: string; clientSecret?: string; disabled: boolean }>;
+    };
+    expect(clients.clients).toHaveLength(2);
+    expect(clients.clients.every((client) => !("clientSecret" in client))).toBe(true);
+
+    const disableResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/clients/${publicClient.clientId}/disable`,
+      { headers: { cookie: root.cookie }, method: "POST" },
+    );
+    expect(disableResponse.status).toBe(200);
+    await expect(disableResponse.json()).resolves.toMatchObject({ disabled: true });
+  });
+
+  it("protects application owners and supports conditional deletion", async () => {
+    const root = await ensureRoot();
+    const owner = await signUpUser("M3 Application Owner");
+    const applicationResponse = await SELF.fetch(`${origin}/api/applications`, {
+      body: JSON.stringify({
+        name: `M3 Deletion Application ${crypto.randomUUID()}`,
+        ownerId: `human_${owner.userId}`,
+        ownerType: "user",
+      }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(applicationResponse.status).toBe(200);
+    const application = (await applicationResponse.json()) as {
+      id: string;
+      resourceIdentifier: string;
+    };
+
+    const disableOwnerResponse = await SELF.fetch(`${origin}/api/users/${owner.userId}/disable`, {
+      headers: { cookie: root.cookie },
+      method: "POST",
+    });
+    expect(disableOwnerResponse.status).toBe(409);
+
+    const transferResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/transfer-ownership`,
+      {
+        body: JSON.stringify({ ownerId: `human_${root.userId}`, ownerType: "user" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(transferResponse.status).toBe(200);
+
+    const disableOwnerAfterTransferResponse = await SELF.fetch(
+      `${origin}/api/users/${owner.userId}/disable`,
+      { headers: { cookie: root.cookie }, method: "POST" },
+    );
+    expect(disableOwnerAfterTransferResponse.status).toBe(200);
+
+    const roleResponse = await SELF.fetch(`${origin}/api/applications/${application.id}/roles`, {
+      body: JSON.stringify({ key: "cleanup", name: "Cleanup" }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(roleResponse.status).toBe(200);
+
+    const clientResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/clients`,
+      {
+        body: JSON.stringify({
+          clientType: "public",
+          name: "Cleanup Client",
+          redirectUris: [`${origin}/m3/cleanup`],
+          scopes: ["openid"],
+        }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(clientResponse.status).toBe(200);
+    const client = (await clientResponse.json()) as { clientId: string };
+
+    const assignmentResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/assignments`,
+      {
+        body: JSON.stringify({ subjectId: root.userId, subjectType: "user" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(assignmentResponse.status).toBe(200);
+
+    const blockedDeleteResponse = await SELF.fetch(`${origin}/api/applications/${application.id}`, {
+      headers: { cookie: root.cookie },
+      method: "DELETE",
+    });
+    expect(blockedDeleteResponse.status).toBe(409);
+
+    const removeAssignmentResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/assignments/user/${root.userId}`,
+      { headers: { cookie: root.cookie }, method: "DELETE" },
+    );
+    expect(removeAssignmentResponse.status).toBe(200);
+
+    const deleteClientResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/clients/${client.clientId}`,
+      { headers: { cookie: root.cookie }, method: "DELETE" },
+    );
+    expect(deleteClientResponse.status).toBe(200);
+
+    const deleteRoleResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/roles/cleanup`,
+      { headers: { cookie: root.cookie }, method: "DELETE" },
+    );
+    expect(deleteRoleResponse.status).toBe(200);
+
+    const deleteResponse = await SELF.fetch(`${origin}/api/applications/${application.id}`, {
+      headers: { cookie: root.cookie },
+      method: "DELETE",
+    });
+    expect(deleteResponse.status).toBe(200);
+    await expect(deleteResponse.json()).resolves.toEqual({
+      id: application.id,
+      status: "deleted",
+    });
+
+    const resourceRow = await env.DB.prepare(
+      "SELECT identifier FROM oauth_resource WHERE identifier = ?",
+    )
+      .bind(application.resourceIdentifier)
+      .first<{ identifier: string }>();
+    expect(resourceRow).toBeNull();
   });
 
   it("repairs a Better Auth user that has no human principal mapping", async () => {

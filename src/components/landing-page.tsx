@@ -10,9 +10,6 @@ export function LandingPage() {
           SHUI<span>/</span>
         </LinkButton>
         <div className="flex items-center gap-2">
-          <LinkButton className="text-sm" href="/admin" variant="ghost">
-            Admin console
-          </LinkButton>
           <LinkButton className="text-sm" href="/sign-in" variant="ghost">
             Sign in
           </LinkButton>
@@ -30,15 +27,9 @@ export function LandingPage() {
             Shui gives people and applications one deliberate place to authenticate, request access,
             and carry the right context downstream.
           </p>
-          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-10">
             <LinkButton className="justify-center text-sm" href="/sign-in" variant="primary">
               Sign in to Shui
-            </LinkButton>
-            <LinkButton className="justify-center text-sm" href="/admin/users" variant="ghost">
-              Invite a teammate
-            </LinkButton>
-            <LinkButton className="justify-center text-sm" href="/setup" variant="ghost">
-              First-run setup
             </LinkButton>
           </div>
         </div>

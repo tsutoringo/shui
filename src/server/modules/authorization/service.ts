@@ -25,7 +25,19 @@ export const SYSTEM_ROLE_PERMISSIONS = {
     "teams:write",
     "system-roles:read",
   ] as const,
-  "application-admin": ["owners:read", "service-accounts:read", "service-accounts:write"] as const,
+  "application-admin": [
+    "applications:read",
+    "applications:write",
+    "application-roles:read",
+    "application-roles:write",
+    "assignments:read",
+    "assignments:write",
+    "oidc-clients:read",
+    "oidc-clients:write",
+    "owners:read",
+    "service-accounts:read",
+    "service-accounts:write",
+  ] as const,
 };
 
 export type SystemPermission =

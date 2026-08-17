@@ -17,6 +17,8 @@ export interface DevelopmentEmailMessage {
   url: string;
 }
 
+export const PASSWORD_RESET_TIMING_FLOOR_MS = 250;
+
 const developmentEmailSink: DevelopmentEmailMessage[] = [];
 
 export interface AuthEnvironment {

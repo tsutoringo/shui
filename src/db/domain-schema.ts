@@ -1,7 +1,7 @@
 import { check, index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 
-import { user } from "./auth-schema";
+import { oauthClient, oauthResource, user } from "./auth-schema";
 
 export const principals = sqliteTable(
   "principals",
@@ -122,6 +122,235 @@ export const systemRoleGrants = sqliteTable(
   (table) => [
     uniqueIndex("system_role_grants_principal_role_uidx").on(table.principalId, table.roleId),
     index("system_role_grants_role_idx").on(table.roleId, table.revokedAt),
+  ],
+);
+
+export const applications = sqliteTable(
+  "applications",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    description: text("description"),
+    status: text("status", { enum: ["active", "disabled"] }).notNull(),
+    disabledAt: integer("disabled_at"),
+    ownerUserPrincipalId: text("owner_user_principal_id").references(() => principals.id, {
+      onDelete: "restrict",
+    }),
+    ownerTeamId: text("owner_team_id").references(() => teams.id, { onDelete: "restrict" }),
+    authzVersion: integer("authz_version").notNull().default(1),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    check(
+      "applications_one_owner",
+      sql`(${table.ownerUserPrincipalId} IS NOT NULL AND ${table.ownerTeamId} IS NULL) OR (${table.ownerUserPrincipalId} IS NULL AND ${table.ownerTeamId} IS NOT NULL)`,
+    ),
+    index("applications_status_idx").on(table.status),
+    index("applications_owner_user_idx").on(table.ownerUserPrincipalId),
+    index("applications_owner_team_idx").on(table.ownerTeamId),
+  ],
+);
+
+export const applicationResources = sqliteTable(
+  "application_resources",
+  {
+    applicationId: text("application_id")
+      .primaryKey()
+      .references(() => applications.id, { onDelete: "cascade" }),
+    resourceIdentifier: text("resource_identifier")
+      .notNull()
+      .unique()
+      .references(() => oauthResource.identifier, { onDelete: "cascade" }),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [index("application_resources_resource_idx").on(table.resourceIdentifier)],
+);
+
+export const applicationOauthClients = sqliteTable(
+  "application_oauth_clients",
+  {
+    clientId: text("client_id")
+      .primaryKey()
+      .references(() => oauthClient.clientId, { onDelete: "cascade" }),
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => applications.id, { onDelete: "cascade" }),
+    clientType: text("client_type", { enum: ["public", "confidential"] }).notNull(),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [index("application_oauth_clients_application_idx").on(table.applicationId)],
+);
+
+export const applicationRoles = sqliteTable(
+  "application_roles",
+  {
+    id: text("id").primaryKey(),
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => applications.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    status: text("status", { enum: ["active", "disabled"] }).notNull(),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("application_roles_application_key_uidx").on(table.applicationId, table.key),
+    index("application_roles_application_idx").on(table.applicationId, table.status),
+  ],
+);
+
+export const userApplicationAssignments = sqliteTable(
+  "user_application_assignments",
+  {
+    id: text("id").primaryKey(),
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => applications.id, { onDelete: "cascade" }),
+    userPrincipalId: text("user_principal_id")
+      .notNull()
+      .references(() => principals.id, { onDelete: "cascade" }),
+    status: text("status", { enum: ["active", "suspended"] }).notNull(),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("user_application_assignments_uidx").on(table.applicationId, table.userPrincipalId),
+    index("user_application_assignments_user_idx").on(table.userPrincipalId),
+  ],
+);
+
+export const serviceAccountApplicationAssignments = sqliteTable(
+  "service_account_application_assignments",
+  {
+    id: text("id").primaryKey(),
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => applications.id, { onDelete: "cascade" }),
+    serviceAccountPrincipalId: text("service_account_principal_id")
+      .notNull()
+      .references(() => principals.id, { onDelete: "cascade" }),
+    status: text("status", { enum: ["active", "suspended"] }).notNull(),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("service_account_application_assignments_uidx").on(
+      table.applicationId,
+      table.serviceAccountPrincipalId,
+    ),
+    index("service_account_application_assignments_service_idx").on(
+      table.serviceAccountPrincipalId,
+    ),
+  ],
+);
+
+export const teamApplicationAssignments = sqliteTable(
+  "team_application_assignments",
+  {
+    id: text("id").primaryKey(),
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => applications.id, { onDelete: "cascade" }),
+    teamId: text("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    status: text("status", { enum: ["active", "suspended"] }).notNull(),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("team_application_assignments_uidx").on(table.applicationId, table.teamId),
+    index("team_application_assignments_team_idx").on(table.teamId),
+  ],
+);
+
+export const userApplicationRoleGrants = sqliteTable(
+  "user_application_role_grants",
+  {
+    id: text("id").primaryKey(),
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => applications.id, { onDelete: "cascade" }),
+    userPrincipalId: text("user_principal_id")
+      .notNull()
+      .references(() => principals.id, { onDelete: "cascade" }),
+    roleId: text("role_id")
+      .notNull()
+      .references(() => applicationRoles.id, { onDelete: "cascade" }),
+    grantedByPrincipalId: text("granted_by_principal_id").references(() => principals.id, {
+      onDelete: "set null",
+    }),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("user_application_role_grants_uidx").on(
+      table.applicationId,
+      table.userPrincipalId,
+      table.roleId,
+    ),
+    index("user_application_role_grants_user_idx").on(table.userPrincipalId),
+  ],
+);
+
+export const serviceAccountApplicationRoleGrants = sqliteTable(
+  "service_account_application_role_grants",
+  {
+    id: text("id").primaryKey(),
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => applications.id, { onDelete: "cascade" }),
+    serviceAccountPrincipalId: text("service_account_principal_id")
+      .notNull()
+      .references(() => principals.id, { onDelete: "cascade" }),
+    roleId: text("role_id")
+      .notNull()
+      .references(() => applicationRoles.id, { onDelete: "cascade" }),
+    grantedByPrincipalId: text("granted_by_principal_id").references(() => principals.id, {
+      onDelete: "set null",
+    }),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("service_account_application_role_grants_uidx").on(
+      table.applicationId,
+      table.serviceAccountPrincipalId,
+      table.roleId,
+    ),
+    index("service_account_application_role_grants_service_idx").on(
+      table.serviceAccountPrincipalId,
+    ),
+  ],
+);
+
+export const teamApplicationRoleGrants = sqliteTable(
+  "team_application_role_grants",
+  {
+    id: text("id").primaryKey(),
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => applications.id, { onDelete: "cascade" }),
+    teamId: text("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    roleId: text("role_id")
+      .notNull()
+      .references(() => applicationRoles.id, { onDelete: "cascade" }),
+    grantedByPrincipalId: text("granted_by_principal_id").references(() => principals.id, {
+      onDelete: "set null",
+    }),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("team_application_role_grants_uidx").on(
+      table.applicationId,
+      table.teamId,
+      table.roleId,
+    ),
+    index("team_application_role_grants_team_idx").on(table.teamId),
   ],
 );
 

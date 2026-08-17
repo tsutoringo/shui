@@ -4,6 +4,7 @@ import { user } from "../../../db/auth-schema";
 import { createDb } from "../../../db";
 import { humanPrincipals, principals, serviceAccounts, teams } from "../../../db/domain-schema";
 import { type AuthEnvironment } from "../../auth";
+import { applicationsForPrincipalAuthzVersionStatement } from "../applications/service";
 import { type Actor } from "../authorization/service";
 import { ApiError } from "../errors";
 import { resolveActiveOwner, type OwnershipInput } from "../ownership";
@@ -356,6 +357,7 @@ export async function setServiceAccountDisabled(
     );
   const result = await db.batch([
     changed,
+    applicationsForPrincipalAuthzVersionStatement(db, principalId, now),
     auditStatementWhen(
       db,
       `service-account:${disabled ? "disabled" : "enabled"}:${principalId}:${now}`,

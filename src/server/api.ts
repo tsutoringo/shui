@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
 
-import { type AuthEnvironment, createAuth } from "./auth";
+import { PASSWORD_RESET_TIMING_FLOOR_MS, type AuthEnvironment, createAuth } from "./auth";
 import { createApiRoutes } from "./modules";
 
 export function createApiApp(environment: AuthEnvironment) {
@@ -16,7 +16,18 @@ export function createApiApp(environment: AuthEnvironment) {
       }),
     })
     .head("/health", () => new Response(null, { status: 204 }))
-    .mount(auth.handler);
+    .mount(async (request) => {
+      const isPasswordReset =
+        request.method === "POST" &&
+        new URL(request.url).pathname.endsWith("/auth/request-password-reset");
+      const startedAt = Date.now();
+      const response = await auth.handler(request);
+      if (isPasswordReset) {
+        const remaining = PASSWORD_RESET_TIMING_FLOOR_MS - (Date.now() - startedAt);
+        if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining));
+      }
+      return response;
+    });
 }
 
 export type ApiApp = ReturnType<typeof createApiApp>;

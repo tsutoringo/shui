@@ -4,6 +4,7 @@ import { createDb, type AppDb } from "../../../db";
 import { session, user } from "../../../db/auth-schema";
 import {
   humanPrincipals,
+  applications,
   principals,
   serviceAccounts,
   systemRoleGrants,
@@ -12,6 +13,7 @@ import {
   teams,
 } from "../../../db/domain-schema";
 import { type AuthEnvironment } from "../../auth";
+import { applicationsForPrincipalAuthzVersionStatement } from "../applications/service";
 import { type Actor } from "../authorization/service";
 import { ApiError } from "../errors";
 import { ensureHumanPrincipal } from "../identity/service";
@@ -237,6 +239,12 @@ export async function setUserDisabled(
       .where(eq(serviceAccounts.ownerUserPrincipalId, target.principal_id))
       .get();
     if (ownedServiceAccount) throw new ApiError(409);
+    const ownedApplication = await db
+      .select({ id: applications.id })
+      .from(applications)
+      .where(eq(applications.ownerUserPrincipalId, target.principal_id))
+      .get();
+    if (ownedApplication) throw new ApiError(409);
   }
   if (disabled && target.is_root === 1 && (await activeRootCount(db)) <= 1) {
     throw new ApiError(409);
@@ -318,6 +326,7 @@ export async function setUserDisabled(
       })
       .where(and(eq(humanPrincipals.principalId, target.principal_id), exists(updatedPrincipal))),
     ...(disabled ? [db.delete(session).where(eq(session.userId, target.user_id))] : []),
+    applicationsForPrincipalAuthzVersionStatement(db, target.principal_id, now),
     auditStatementWhen(
       db,
       `user:${disabled ? "disabled" : "enabled"}:${target.principal_id}:${now}`,
