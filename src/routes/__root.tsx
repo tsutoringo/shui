@@ -3,8 +3,8 @@ import type { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createRootRouteWithContext, Outlet, redirect } from "@tanstack/react-router";
 
-import { AppLink } from "../components/app-link";
-import { RootDocument } from "../components/root-document";
+import { AppLink } from "../components/shared/app-link";
+import { RootDocument } from "../components/shared/root-document";
 import { getSetupRedirect } from "../lib/setup-routing";
 import { getApiFetch } from "./api.$";
 import "../styles/app.css";

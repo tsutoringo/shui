@@ -2,8 +2,11 @@ import { Button, Input, LinkButton } from "@cloudflare/kumo";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-import { formatApiError } from "../lib/api-client";
-import { acceptInvitationMutationOptions, invitationQueryOptions } from "../lib/api-query-options";
+import { formatApiError } from "../../lib/api-client";
+import {
+  acceptInvitationMutationOptions,
+  invitationQueryOptions,
+} from "../../lib/api-query-options";
 import { FormError, FormStatus, M1Layout } from "./m1-layout";
 
 export function InvitationPage({ token }: Readonly<{ token: string }>) {

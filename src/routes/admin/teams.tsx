@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { TeamsAdminPage } from "../../components/teams-admin-page";
+import { TeamsAdminPage } from "../../components/admin/teams-admin-page";
 import { adminRoutePermissions, requireAdminPermission } from "../../lib/admin-routing";
 
 export const Route = createFileRoute("/admin/teams")({

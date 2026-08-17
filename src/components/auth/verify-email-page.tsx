@@ -1,7 +1,7 @@
 import { LinkButton } from "@cloudflare/kumo";
 import { useEffect, useState } from "react";
 
-import { formatAuthError, authFetch } from "../lib/auth-api";
+import { formatAuthError, authFetch } from "../../lib/auth-api";
 import { FormError, FormStatus, M1Layout } from "./m1-layout";
 
 export function VerifyEmailPage({ token }: Readonly<{ token?: string }>) {

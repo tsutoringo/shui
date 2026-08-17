@@ -15,7 +15,11 @@ import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useState, type FormEvent, type ReactNode } from "react";
 
-import { formatApiError, type Application, type ApplicationClientCreated } from "../lib/api-client";
+import {
+  formatApiError,
+  type Application,
+  type ApplicationClientCreated,
+} from "../../lib/api-client";
 import {
   apiQueryKeys,
   applicationAccessQueryOptions,
@@ -39,7 +43,7 @@ import {
   updateApplicationClientMutationOptions,
   updateApplicationMutationOptions,
   updateApplicationRoleMutationOptions,
-} from "../lib/api-query-options";
+} from "../../lib/api-query-options";
 import {
   AdminConfirmDialog,
   AdminError,

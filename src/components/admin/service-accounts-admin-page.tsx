@@ -2,23 +2,47 @@ import { Button, Grid, Input, LayerCard, Select } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { formatApiError, type ServiceAccount } from "../lib/api-client";
+import { formatApiError, type Application, type ServiceAccount } from "../../lib/api-client";
 import {
   apiQueryKeys,
+  applicationsQueryOptions,
+  createServiceAccountCredentialMutationOptions,
   createServiceAccountMutationOptions,
+  deleteServiceAccountCredentialMutationOptions,
+  rotateServiceAccountCredentialMutationOptions,
   serviceAccountsQueryOptions,
+  serviceAccountCredentialsQueryOptions,
   serviceAccountOwnersQueryOptions,
+  setServiceAccountCredentialStatusMutationOptions,
   setServiceAccountStatusMutationOptions,
   transferServiceAccountMutationOptions,
   updateServiceAccountMutationOptions,
-} from "../lib/api-query-options";
+} from "../../lib/api-query-options";
 import { AdminError, AdminLayout, AdminStatus, StatusPill } from "./admin-layout";
+
+type CreatedCredentialSecret = { clientId: string; clientSecret: string };
+
+function isCreatedCredential(value: unknown): value is CreatedCredentialSecret {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "clientId" in value &&
+    typeof value.clientId === "string" &&
+    "clientSecret" in value &&
+    typeof value.clientSecret === "string"
+  );
+}
 
 export function ServiceAccountsAdminPage() {
   const queryClient = useQueryClient();
   const accountsQuery = useQuery(serviceAccountsQueryOptions);
+  const applicationsQuery = useQuery(applicationsQueryOptions);
   const ownersQuery = useQuery(serviceAccountOwnersQueryOptions);
   const createMutation = useMutation(createServiceAccountMutationOptions());
+  const createCredentialMutation = useMutation(createServiceAccountCredentialMutationOptions());
+  const rotateCredentialMutation = useMutation(rotateServiceAccountCredentialMutationOptions());
+  const credentialStatusMutation = useMutation(setServiceAccountCredentialStatusMutationOptions());
+  const deleteCredentialMutation = useMutation(deleteServiceAccountCredentialMutationOptions());
   const updateMutation = useMutation(updateServiceAccountMutationOptions());
   const transferMutation = useMutation(transferServiceAccountMutationOptions());
   const statusMutation = useMutation(setServiceAccountStatusMutationOptions());
@@ -29,9 +53,15 @@ export function ServiceAccountsAdminPage() {
   const [busyId, setBusyId] = useState<string>();
   const [error, setError] = useState<string>();
   const [status, setStatus] = useState<string>();
+  const [secretNotice, setSecretNotice] = useState<CreatedCredentialSecret>();
 
-  async function refresh(message?: string) {
+  async function refresh(message?: string, accountId?: string) {
     await queryClient.invalidateQueries({ queryKey: apiQueryKeys.serviceAccounts });
+    if (accountId) {
+      await queryClient.invalidateQueries({
+        queryKey: apiQueryKeys.serviceAccountCredentials(accountId),
+      });
+    }
     if (message) setStatus(message);
   }
 
@@ -39,6 +69,7 @@ export function ServiceAccountsAdminPage() {
     event.preventDefault();
     setError(undefined);
     setStatus(undefined);
+    setSecretNotice(undefined);
     setBusyId("create");
     try {
       await createMutation.mutateAsync({
@@ -63,8 +94,9 @@ export function ServiceAccountsAdminPage() {
     setError(undefined);
     setStatus(undefined);
     try {
-      await action();
-      await refresh(message);
+      const result = await action();
+      await refresh(message, id);
+      return result;
     } catch (actionError) {
       setError(formatApiError(actionError));
     } finally {
@@ -75,11 +107,12 @@ export function ServiceAccountsAdminPage() {
   const users = ownersQuery.data?.users ?? [];
   const teams = ownersQuery.data?.teams ?? [];
   const accounts = accountsQuery.data?.serviceAccounts ?? [];
+  const applications = applicationsQuery.data?.applications ?? [];
 
   return (
     <AdminLayout
       activePath="/admin/service-accounts"
-      description="Service Accounts represent non-human principals. This screen covers their lifecycle and ownership; OAuth credentials are handled separately."
+      description="Service Accounts represent non-human principals. Manage ownership and application-scoped OAuth credentials here."
       eyebrow="Principals / Non-human"
       title="Give automation a responsible owner."
     >
@@ -147,8 +180,27 @@ export function ServiceAccountsAdminPage() {
           <AdminError>{formatApiError(accountsQuery.error)}</AdminError>
         ) : null}
         {ownersQuery.isError ? <AdminError>{formatApiError(ownersQuery.error)}</AdminError> : null}
+        {applicationsQuery.isError ? (
+          <AdminError>{formatApiError(applicationsQuery.error)}</AdminError>
+        ) : null}
         {error ? <AdminError>{error}</AdminError> : null}
         {status ? <AdminStatus>{status}</AdminStatus> : null}
+        {secretNotice ? (
+          <LayerCard
+            aria-live="polite"
+            className="bg-kumo-elevated p-5 ring ring-kumo-line sm:p-6"
+            role="status"
+          >
+            <h2 className="text-lg font-semibold text-kumo-strong">Credential secret</h2>
+            <p className="mt-1 text-sm text-kumo-subtle">
+              This secret is shown once. Store it securely before leaving this page.
+            </p>
+            <code className="mt-4 block overflow-x-auto rounded-md bg-kumo-base p-3 text-sm text-kumo-strong">
+              {secretNotice.clientSecret}
+            </code>
+            <p className="mt-2 text-xs text-kumo-subtle">Client ID: {secretNotice.clientId}</p>
+          </LayerCard>
+        ) : null}
         <Grid gap="sm" variant="2up">
           {accounts.map((account) => (
             <ServiceAccountCard
@@ -181,6 +233,48 @@ export function ServiceAccountsAdminPage() {
               }
               teams={teams}
               users={users}
+              applications={applications}
+              onCredentialCreate={async (body) => {
+                const result = await runAccountAction(
+                  account.id,
+                  () => createCredentialMutation.mutateAsync({ body, id: account.id }),
+                  "OAuth credential created.",
+                );
+                if (!isCreatedCredential(result)) return;
+                const created = result;
+                setSecretNotice({ clientId: created.clientId, clientSecret: created.clientSecret });
+              }}
+              onCredentialRotate={async (clientId) => {
+                const result = await runAccountAction(
+                  account.id,
+                  () => rotateCredentialMutation.mutateAsync({ clientId, id: account.id }),
+                  "OAuth credential rotated.",
+                );
+                if (!isCreatedCredential(result)) return;
+                const created = result;
+                setSecretNotice({ clientId: created.clientId, clientSecret: created.clientSecret });
+              }}
+              onCredentialStatus={(clientId, nextStatus) =>
+                runAccountAction(
+                  account.id,
+                  () =>
+                    credentialStatusMutation.mutateAsync({
+                      clientId,
+                      id: account.id,
+                      status: nextStatus,
+                    }),
+                  nextStatus === "active"
+                    ? "OAuth credential enabled."
+                    : "OAuth credential disabled.",
+                )
+              }
+              onCredentialDelete={(clientId) =>
+                runAccountAction(
+                  account.id,
+                  () => deleteCredentialMutation.mutateAsync({ clientId, id: account.id }),
+                  "OAuth credential deleted.",
+                )
+              }
             />
           ))}
         </Grid>
@@ -197,6 +291,11 @@ function ServiceAccountCard({
   onUpdate,
   teams,
   users,
+  applications,
+  onCredentialCreate,
+  onCredentialRotate,
+  onCredentialStatus,
+  onCredentialDelete,
 }: Readonly<{
   account: ServiceAccount;
   busy: boolean;
@@ -205,11 +304,19 @@ function ServiceAccountCard({
   onUpdate: (body: { description?: string | null; name?: string }) => void;
   teams: Array<{ id: string; name: string }>;
   users: Array<{ id: string; name: string }>;
+  applications: Application[];
+  onCredentialCreate: (body: { applicationId: string; name: string }) => Promise<void>;
+  onCredentialRotate: (clientId: string) => Promise<void>;
+  onCredentialStatus: (clientId: string, status: "active" | "disabled") => void;
+  onCredentialDelete: (clientId: string) => void;
 }>) {
   const [name, setName] = useState(account.name);
   const [description, setDescription] = useState(account.description ?? "");
   const [ownerType, setOwnerType] = useState<"user" | "team">(account.owner.type);
   const [ownerId, setOwnerId] = useState(account.owner.id);
+  const credentialsQuery = useQuery(serviceAccountCredentialsQueryOptions(account.id));
+  const [applicationId, setApplicationId] = useState("");
+  const [credentialName, setCredentialName] = useState("");
 
   return (
     <LayerCard className="bg-kumo-elevated p-5 ring ring-kumo-line sm:p-6">
@@ -297,6 +404,104 @@ function ServiceAccountCard({
             Transfer ownership
           </Button>
         </form>
+      </div>
+      <div className="mt-5 border-t border-kumo-hairline pt-5">
+        <h3 className="text-lg font-semibold text-kumo-strong">OAuth credentials</h3>
+        <p className="mt-1 text-sm text-kumo-subtle">
+          Credentials are scoped to one Application. Secrets are only returned when created or
+          rotated.
+        </p>
+        <form
+          className="mt-4 grid gap-3 sm:grid-cols-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (applicationId && credentialName.trim()) {
+              void onCredentialCreate({ applicationId, name: credentialName });
+              setCredentialName("");
+            }
+          }}
+        >
+          <Select
+            items={applications
+              .filter((application) => application.status === "active")
+              .map((application) => ({ label: application.name, value: application.id }))}
+            label="Application"
+            onValueChange={(value) => setApplicationId(value ?? "")}
+            placeholder="Choose an application"
+            required
+            value={applicationId || null}
+          />
+          <Input
+            id={`credential-name-${account.id}`}
+            label="Credential name"
+            onChange={(event) => setCredentialName(event.target.value)}
+            required
+            value={credentialName}
+          />
+          <Button
+            className="sm:col-span-2"
+            disabled={busy || !applicationId || !credentialName.trim()}
+            type="submit"
+            variant="primary"
+          >
+            Create OAuth credential
+          </Button>
+        </form>
+        {credentialsQuery.isLoading ? (
+          <p className="mt-4 text-sm text-kumo-subtle">Loading credentials...</p>
+        ) : null}
+        {credentialsQuery.isError ? (
+          <p className="mt-4 text-sm text-kumo-danger">{formatApiError(credentialsQuery.error)}</p>
+        ) : null}
+        <div className="mt-4 space-y-3">
+          {(credentialsQuery.data?.credentials ?? []).map((credential) => (
+            <div className="rounded-md border border-kumo-hairline p-3" key={credential.clientId}>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-kumo-strong">{credential.name}</p>
+                  <p className="mt-1 text-sm text-kumo-subtle">
+                    Application: {credential.applicationName}
+                  </p>
+                  <p className="mt-1 break-all font-mono text-xs text-kumo-subtle">
+                    {credential.clientId}
+                  </p>
+                </div>
+                <StatusPill status={credential.disabled ? "disabled" : "active"} />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  disabled={busy}
+                  onClick={() => void onCredentialRotate(credential.clientId)}
+                  type="button"
+                  variant="ghost"
+                >
+                  Rotate secret
+                </Button>
+                <Button
+                  disabled={busy}
+                  onClick={() =>
+                    onCredentialStatus(
+                      credential.clientId,
+                      credential.disabled ? "active" : "disabled",
+                    )
+                  }
+                  type="button"
+                  variant="ghost"
+                >
+                  {credential.disabled ? "Enable" : "Disable"}
+                </Button>
+                <Button
+                  disabled={busy}
+                  onClick={() => onCredentialDelete(credential.clientId)}
+                  type="button"
+                  variant="ghost"
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </LayerCard>
   );

@@ -2,10 +2,10 @@ import { Badge, Banner, Breadcrumbs, Button, Dialog, LinkButton, Sidebar } from 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactElement, type ReactNode } from "react";
 
-import { authClient } from "../lib/auth-client";
-import { authQueryKeys, sessionQueryOptions } from "../lib/auth-queries";
-import { adminAccessQueryOptions } from "../lib/api-query-options";
-import { hasAdminPermission } from "../lib/admin-routing";
+import { authClient } from "../../lib/auth-client";
+import { authQueryKeys, sessionQueryOptions } from "../../lib/auth-queries";
+import { adminAccessQueryOptions } from "../../lib/api-query-options";
+import { hasAdminPermission } from "../../lib/admin-routing";
 
 const navigation = [
   { href: "/admin/users", label: "Users", icon: "users", permission: "users:read" },

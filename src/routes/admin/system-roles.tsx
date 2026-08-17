@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { SystemRolesAdminPage } from "../../components/system-roles-admin-page";
+import { SystemRolesAdminPage } from "../../components/admin/system-roles-admin-page";
 import { adminRoutePermissions, requireAdminPermission } from "../../lib/admin-routing";
 
 export const Route = createFileRoute("/admin/system-roles")({

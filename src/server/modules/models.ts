@@ -192,6 +192,35 @@ export const ApiModels = {
     principalId: idSchema,
     status: t.Union([t.Literal("active"), t.Literal("disabled")]),
   }),
+  ServiceAccountCredentialCreateBody: t.Object({
+    applicationId: idSchema,
+    name: t.String({ maxLength: 160, minLength: 1 }),
+  }),
+  ServiceAccountCredentialRotateBody: t.Object({
+    name: t.Optional(t.String({ maxLength: 160, minLength: 1 })),
+  }),
+  ServiceAccountCredential: t.Object({
+    serviceAccountId: idSchema,
+    applicationId: idSchema,
+    applicationName: t.String(),
+    resourceIdentifier: resourceIdentifierSchema,
+    clientId: idSchema,
+    name: t.String(),
+    scopes: t.Array(t.String()),
+    disabled: t.Boolean(),
+    createdAt: t.Number(),
+    updatedAt: t.Number(),
+  }),
+  ServiceAccountCredentialCreated: t.Intersect([
+    t.Object({ clientSecret: t.String() }),
+    t.Ref("ServiceAccountCredential"),
+  ]),
+  ServiceAccountCredentials: t.Object({ credentials: t.Array(t.Ref("ServiceAccountCredential")) }),
+  ServiceAccountCredentialStatus: t.Object({
+    clientId: idSchema,
+    status: t.Union([t.Literal("active"), t.Literal("disabled"), t.Literal("deleted")]),
+  }),
+  ServiceAccountCredentialParams: t.Object({ id: idSchema, clientId: idSchema }),
   TeamCreateBody: t.Object({
     name: t.String({ maxLength: 160, minLength: 1 }),
     description: t.Optional(t.String({ maxLength: 1000 })),
@@ -432,6 +461,14 @@ export type ServiceAccountOwners = typeof ApiModels.ServiceAccountOwners.static;
 export type Team = typeof ApiModels.Team.static;
 export type ServiceAccountCreateBody = typeof ApiModels.ServiceAccountCreateBody.static;
 export type ServiceAccountUpdateBody = typeof ApiModels.ServiceAccountUpdateBody.static;
+export type ServiceAccountCredentialCreateBody =
+  typeof ApiModels.ServiceAccountCredentialCreateBody.static;
+export type ServiceAccountCredentialRotateBody =
+  typeof ApiModels.ServiceAccountCredentialRotateBody.static;
+export type ServiceAccountCredential = typeof ApiModels.ServiceAccountCredential.static;
+export type ServiceAccountCredentialCreated = ServiceAccountCredential & { clientSecret: string };
+export type ServiceAccountCredentials = typeof ApiModels.ServiceAccountCredentials.static;
+export type ServiceAccountCredentialStatus = typeof ApiModels.ServiceAccountCredentialStatus.static;
 export type OwnershipBody = typeof ApiModels.OwnershipBody.static;
 export type TeamCreateBody = typeof ApiModels.TeamCreateBody.static;
 export type TeamUpdateBody = typeof ApiModels.TeamUpdateBody.static;

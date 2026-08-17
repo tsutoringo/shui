@@ -230,7 +230,12 @@ async function createPendingInvitation(
   return { ...invitation, email };
 }
 
-async function authorizeWithPkce(clientId: string, cookie: string) {
+async function authorizeWithPkce(
+  clientId: string,
+  cookie: string,
+  targetResource = resourceIdentifier,
+  scope = "openid profile email",
+) {
   const verifier = `verifier-${crypto.randomUUID()}-${crypto.randomUUID()}`;
   const challenge = await sha256Base64Url(verifier);
   const state = crypto.randomUUID();
@@ -241,8 +246,8 @@ async function authorizeWithPkce(clientId: string, cookie: string) {
     code_challenge_method: "S256",
     redirect_uri: redirectUri,
     response_type: "code",
-    resource: resourceIdentifier,
-    scope: "openid profile email",
+    resource: targetResource,
+    scope,
     state,
   });
   const response = await SELF.fetch(`${origin}/api/auth/oauth2/authorize?${params}`, {
@@ -269,6 +274,7 @@ async function authorizeWithPkce(clientId: string, cookie: string) {
 async function exchangeAuthorizationCode(
   clientId: string,
   authorization: { code: string; redirectUri: string; verifier: string },
+  targetResource = resourceIdentifier,
 ) {
   return SELF.fetch(`${origin}/api/auth/oauth2/token`, {
     body: new URLSearchParams({
@@ -277,7 +283,7 @@ async function exchangeAuthorizationCode(
       code_verifier: authorization.verifier,
       grant_type: "authorization_code",
       redirect_uri: authorization.redirectUri,
-      resource: resourceIdentifier,
+      resource: targetResource,
     }).toString(),
     headers: { "content-type": "application/x-www-form-urlencoded" },
     method: "POST",
@@ -1630,6 +1636,358 @@ describe("Shui worker runtime", () => {
       .bind(application.resourceIdentifier)
       .first<{ identifier: string }>();
     expect(resourceRow).toBeNull();
+  });
+
+  it("acts as a reference relying party for target-scoped human and Service Account claims", async () => {
+    const root = await ensureRoot();
+    const member = await signUpUser("M4 Application Member");
+
+    const applicationResponse = await SELF.fetch(`${origin}/api/applications`, {
+      body: JSON.stringify({
+        name: `M4 Claims Application ${crypto.randomUUID()}`,
+        ownerId: `human_${root.userId}`,
+        ownerType: "user",
+      }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(applicationResponse.status).toBe(200);
+    const application = (await applicationResponse.json()) as {
+      id: string;
+      resourceIdentifier: string;
+    };
+
+    const otherApplicationResponse = await SELF.fetch(`${origin}/api/applications`, {
+      body: JSON.stringify({
+        name: `M4 Other Application ${crypto.randomUUID()}`,
+        ownerId: `human_${root.userId}`,
+        ownerType: "user",
+      }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(otherApplicationResponse.status).toBe(200);
+    const otherApplication = (await otherApplicationResponse.json()) as {
+      id: string;
+      resourceIdentifier: string;
+    };
+
+    const roleResponse = await SELF.fetch(`${origin}/api/applications/${application.id}/roles`, {
+      body: JSON.stringify({ key: "reader", name: "Reader" }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(roleResponse.status).toBe(200);
+    const otherRoleResponse = await SELF.fetch(
+      `${origin}/api/applications/${otherApplication.id}/roles`,
+      {
+        body: JSON.stringify({ key: "other", name: "Other Application Role" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(otherRoleResponse.status).toBe(200);
+
+    const userAssignmentResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/assignments`,
+      {
+        body: JSON.stringify({ subjectId: member.userId, subjectType: "user" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(userAssignmentResponse.status).toBe(200);
+    const userGrantResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/role-grants`,
+      {
+        body: JSON.stringify({ roleKey: "reader", subjectId: member.userId, subjectType: "user" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(userGrantResponse.status).toBe(200);
+
+    const humanClientResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/clients`,
+      {
+        body: JSON.stringify({
+          clientType: "public",
+          name: "M4 Human Client",
+          redirectUris: [`${origin}/oauth/callback`],
+          scopes: ["openid", "profile", "email", "api:read"],
+        }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(humanClientResponse.status).toBe(200);
+    const humanClient = (await humanClientResponse.json()) as { clientId: string };
+    await env.DB.prepare("UPDATE oauth_client SET skip_consent = 1 WHERE client_id = ?")
+      .bind(humanClient.clientId)
+      .run();
+
+    const authorization = await authorizeWithPkce(
+      humanClient.clientId,
+      member.cookie,
+      application.resourceIdentifier,
+      "openid profile email api:read",
+    );
+    const humanTokenResponse = await exchangeAuthorizationCode(
+      humanClient.clientId,
+      authorization,
+      application.resourceIdentifier,
+    );
+    expect(humanTokenResponse.status).toBe(200);
+    const humanToken = (await humanTokenResponse.json()) as TokenResponse;
+    const jwks = await getJwkSet();
+    const namespace = `${origin}/claims/`;
+    const humanClaims = await jwtVerify(humanToken.access_token, jwks, {
+      audience: application.resourceIdentifier,
+      issuer,
+    });
+    expect(humanClaims.payload.sub).toBe(member.userId);
+    expect(humanClaims.payload[`${namespace}application_id`]).toBe(application.id);
+    expect(humanClaims.payload[`${namespace}principal_id`]).toBe(`human_${member.userId}`);
+    expect(humanClaims.payload[`${namespace}principal_type`]).toBe("user");
+    expect(humanClaims.payload[`${namespace}roles`]).toEqual(["reader"]);
+    expect(humanClaims.payload[`${namespace}teams`]).toEqual([]);
+    expect(humanClaims.payload[`${namespace}authz_version`]).toEqual(expect.any(Number));
+    await expect(
+      jwtVerify(humanToken.access_token, jwks, {
+        audience: otherApplication.resourceIdentifier,
+        issuer,
+      }),
+    ).rejects.toThrow();
+    await expect(
+      jwtVerify(humanToken.access_token, jwks, {
+        audience: application.resourceIdentifier,
+        issuer: `${origin}/wrong-issuer`,
+      }),
+    ).rejects.toThrow();
+    await expect(
+      jwtVerify(humanToken.access_token, jwks, {
+        audience: application.resourceIdentifier,
+        currentDate: new Date(Date.now() + 2 * 60 * 60 * 1000),
+        issuer,
+      }),
+    ).rejects.toThrow();
+
+    const serviceAccountResponse = await SELF.fetch(`${origin}/api/service-accounts`, {
+      body: JSON.stringify({
+        name: `M4 Service Account ${crypto.randomUUID()}`,
+        ownerId: `human_${root.userId}`,
+        ownerType: "user",
+      }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(serviceAccountResponse.status).toBe(200);
+    const serviceAccount = (await serviceAccountResponse.json()) as { id: string };
+
+    const serviceAssignmentResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/assignments`,
+      {
+        body: JSON.stringify({ subjectId: serviceAccount.id, subjectType: "service-account" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(serviceAssignmentResponse.status).toBe(200);
+    const serviceGrantResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/role-grants`,
+      {
+        body: JSON.stringify({
+          roleKey: "reader",
+          subjectId: serviceAccount.id,
+          subjectType: "service-account",
+        }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(serviceGrantResponse.status).toBe(200);
+
+    const credentialResponse = await SELF.fetch(
+      `${origin}/api/service-accounts/${serviceAccount.id}/credentials`,
+      {
+        body: JSON.stringify({ applicationId: application.id, name: "M4 Primary Credential" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(credentialResponse.status).toBe(200);
+    const credential = (await credentialResponse.json()) as {
+      clientId: string;
+      clientSecret: string;
+      resourceIdentifier: string;
+    };
+    expect(credential.clientSecret).toEqual(expect.any(String));
+    expect(credential.resourceIdentifier).toBe(application.resourceIdentifier);
+
+    const credentialsListResponse = await SELF.fetch(
+      `${origin}/api/service-accounts/${serviceAccount.id}/credentials`,
+      { headers: { cookie: root.cookie } },
+    );
+    expect(credentialsListResponse.status).toBe(200);
+    const credentialsList = (await credentialsListResponse.json()) as {
+      credentials: Array<{ clientId: string; clientSecret?: string }>;
+    };
+    expect(credentialsList.credentials).toHaveLength(1);
+    expect(credentialsList.credentials[0]).not.toHaveProperty("clientSecret");
+
+    async function serviceToken(
+      clientId: string,
+      clientSecret: string,
+      targetResource = application.resourceIdentifier,
+      scope = "api:read",
+    ) {
+      return SELF.fetch(`${origin}/api/auth/oauth2/token`, {
+        body: new URLSearchParams({
+          grant_type: "client_credentials",
+          resource: targetResource,
+          scope,
+        }).toString(),
+        headers: {
+          authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        method: "POST",
+      });
+    }
+
+    const firstServiceTokenResponse = await serviceToken(
+      credential.clientId,
+      credential.clientSecret,
+    );
+    expect(firstServiceTokenResponse.status).toBe(200);
+    const firstServiceToken = (await firstServiceTokenResponse.json()) as TokenResponse;
+    const firstClaims = await jwtVerify(firstServiceToken.access_token, jwks, {
+      audience: application.resourceIdentifier,
+      issuer,
+    });
+    expect(firstClaims.payload.sub).toBe(credential.clientId);
+    expect(firstClaims.payload[`${namespace}principal_id`]).toBe(serviceAccount.id);
+    expect(firstClaims.payload[`${namespace}principal_type`]).toBe("service-account");
+    expect(firstClaims.payload[`${namespace}roles`]).toEqual(["reader"]);
+    expect(firstClaims.payload[`${namespace}application_id`]).toBe(application.id);
+
+    const wrongAudienceResponse = await serviceToken(
+      credential.clientId,
+      credential.clientSecret,
+      otherApplication.resourceIdentifier,
+    );
+    expect(wrongAudienceResponse.status).toBe(400);
+    const wrongScopeResponse = await serviceToken(
+      credential.clientId,
+      credential.clientSecret,
+      application.resourceIdentifier,
+      "profile",
+    );
+    expect(wrongScopeResponse.status).toBe(400);
+    const multipleResourceBody = new URLSearchParams({
+      grant_type: "client_credentials",
+      scope: "api:read",
+    });
+    multipleResourceBody.append("resource", application.resourceIdentifier);
+    multipleResourceBody.append("resource", otherApplication.resourceIdentifier);
+    const multipleResourceResponse = await SELF.fetch(`${origin}/api/auth/oauth2/token`, {
+      body: multipleResourceBody.toString(),
+      headers: {
+        authorization: `Basic ${btoa(`${credential.clientId}:${credential.clientSecret}`)}`,
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      method: "POST",
+    });
+    expect(multipleResourceResponse.status).toBe(400);
+
+    const rotationResponse = await SELF.fetch(
+      `${origin}/api/service-accounts/${serviceAccount.id}/credentials/${credential.clientId}/rotate`,
+      {
+        body: JSON.stringify({ name: "M4 Rotated Credential" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(rotationResponse.status).toBe(200);
+    const rotatedCredential = (await rotationResponse.json()) as {
+      clientId: string;
+      clientSecret: string;
+    };
+    expect(rotatedCredential.clientId).not.toBe(credential.clientId);
+    expect(rotatedCredential.clientSecret).toEqual(expect.any(String));
+
+    const overlappingResponse = await serviceToken(credential.clientId, credential.clientSecret);
+    expect(overlappingResponse.status).toBe(200);
+    const rotatedTokenResponse = await serviceToken(
+      rotatedCredential.clientId,
+      rotatedCredential.clientSecret,
+    );
+    expect(rotatedTokenResponse.status).toBe(200);
+    const rotatedToken = (await rotatedTokenResponse.json()) as TokenResponse;
+    const rotatedClaims = await jwtVerify(rotatedToken.access_token, jwks, {
+      audience: application.resourceIdentifier,
+      issuer,
+    });
+    expect(rotatedClaims.payload.sub).toBe(rotatedCredential.clientId);
+    expect(rotatedClaims.payload[`${namespace}principal_id`]).toBe(serviceAccount.id);
+
+    const disableOldCredentialResponse = await SELF.fetch(
+      `${origin}/api/service-accounts/${serviceAccount.id}/credentials/${credential.clientId}/disable`,
+      { headers: { cookie: root.cookie }, method: "POST" },
+    );
+    expect(disableOldCredentialResponse.status).toBe(200);
+    const disabledOldTokenResponse = await serviceToken(
+      credential.clientId,
+      credential.clientSecret,
+    );
+    expect(disabledOldTokenResponse.status).toBe(401);
+
+    const removeAssignmentResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/assignments/service-account/${serviceAccount.id}`,
+      { headers: { cookie: root.cookie }, method: "DELETE" },
+    );
+    expect(removeAssignmentResponse.status).toBe(200);
+    const unassignedTokenResponse = await serviceToken(
+      rotatedCredential.clientId,
+      rotatedCredential.clientSecret,
+    );
+    expect(unassignedTokenResponse.status).toBe(400);
+
+    const restoreAssignmentResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/assignments`,
+      {
+        body: JSON.stringify({ subjectId: serviceAccount.id, subjectType: "service-account" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(restoreAssignmentResponse.status).toBe(200);
+    const disableServiceAccountResponse = await SELF.fetch(
+      `${origin}/api/service-accounts/${serviceAccount.id}/disable`,
+      { headers: { cookie: root.cookie }, method: "POST" },
+    );
+    expect(disableServiceAccountResponse.status).toBe(200);
+    const disabledServiceTokenResponse = await serviceToken(
+      rotatedCredential.clientId,
+      rotatedCredential.clientSecret,
+    );
+    expect(disabledServiceTokenResponse.status).toBe(400);
+
+    const enableServiceAccountResponse = await SELF.fetch(
+      `${origin}/api/service-accounts/${serviceAccount.id}/enable`,
+      { headers: { cookie: root.cookie }, method: "POST" },
+    );
+    expect(enableServiceAccountResponse.status).toBe(200);
+    const disableApplicationResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/disable`,
+      { headers: { cookie: root.cookie }, method: "POST" },
+    );
+    expect(disableApplicationResponse.status).toBe(200);
+    const disabledApplicationTokenResponse = await serviceToken(
+      rotatedCredential.clientId,
+      rotatedCredential.clientSecret,
+    );
+    expect(disabledApplicationTokenResponse.status).toBe(400);
   });
 
   it("repairs a Better Auth user that has no human principal mapping", async () => {

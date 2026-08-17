@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ResetPasswordPage } from "../components/password-recovery-page";
+import { ResetPasswordPage } from "../components/auth/password-recovery-page";
 
 export const Route = createFileRoute("/reset-password")({
   validateSearch: (search) => ({

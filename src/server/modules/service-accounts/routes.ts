@@ -8,6 +8,13 @@ import {
   transferServiceAccountOwnership,
   updateServiceAccount,
 } from "./service";
+import {
+  createServiceAccountCredential,
+  deleteServiceAccountCredential,
+  listServiceAccountCredentials,
+  rotateServiceAccountCredential,
+  setServiceAccountCredentialDisabled,
+} from "./credentials";
 
 export function createServiceAccountRoutes(environment: AuthEnvironment, auth: AuthInstance) {
   return createDomainApiRoutes(environment, auth, "service-accounts")
@@ -20,6 +27,90 @@ export function createServiceAccountRoutes(environment: AuthEnvironment, auth: A
       requirePermission: "owners:read",
       response: "ServiceAccountOwners",
     })
+    .get(
+      "/service-accounts/:id/credentials",
+      async ({ params }) => ({
+        credentials: await listServiceAccountCredentials(environment, params.id),
+      }),
+      {
+        params: "IdentifierParams",
+        requirePermission: "service-accounts:read",
+        response: "ServiceAccountCredentials",
+      },
+    )
+    .post(
+      "/service-accounts/:id/credentials",
+      async ({ actor, body, params, request }) =>
+        createServiceAccountCredential(environment, actor, params.id, body, request),
+      {
+        body: "ServiceAccountCredentialCreateBody",
+        params: "IdentifierParams",
+        requirePermission: "service-accounts:write",
+        response: "ServiceAccountCredentialCreated",
+      },
+    )
+    .post(
+      "/service-accounts/:id/credentials/:clientId/rotate",
+      async ({ actor, body, params, request }) =>
+        rotateServiceAccountCredential(
+          environment,
+          actor,
+          params.id,
+          params.clientId,
+          body,
+          request,
+        ),
+      {
+        body: "ServiceAccountCredentialRotateBody",
+        params: "ServiceAccountCredentialParams",
+        requirePermission: "service-accounts:write",
+        response: "ServiceAccountCredentialCreated",
+      },
+    )
+    .post(
+      "/service-accounts/:id/credentials/:clientId/disable",
+      async ({ actor, params, request }) =>
+        setServiceAccountCredentialDisabled(
+          environment,
+          actor,
+          params.id,
+          params.clientId,
+          true,
+          request,
+        ),
+      {
+        params: "ServiceAccountCredentialParams",
+        requirePermission: "service-accounts:write",
+        response: "ServiceAccountCredential",
+      },
+    )
+    .post(
+      "/service-accounts/:id/credentials/:clientId/enable",
+      async ({ actor, params, request }) =>
+        setServiceAccountCredentialDisabled(
+          environment,
+          actor,
+          params.id,
+          params.clientId,
+          false,
+          request,
+        ),
+      {
+        params: "ServiceAccountCredentialParams",
+        requirePermission: "service-accounts:write",
+        response: "ServiceAccountCredential",
+      },
+    )
+    .delete(
+      "/service-accounts/:id/credentials/:clientId",
+      async ({ actor, params, request }) =>
+        deleteServiceAccountCredential(environment, actor, params.id, params.clientId, request),
+      {
+        params: "ServiceAccountCredentialParams",
+        requirePermission: "service-accounts:write",
+        response: "ServiceAccountCredentialStatus",
+      },
+    )
     .post(
       "/service-accounts",
       async ({ actor, body, request }) => createServiceAccount(environment, actor, body, request),

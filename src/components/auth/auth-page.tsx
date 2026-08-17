@@ -2,8 +2,8 @@ import { Button, Input, LayerCard, LinkButton } from "@cloudflare/kumo";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { authClient } from "../lib/auth-client";
-import { authQueryKeys } from "../lib/auth-queries";
+import { authClient } from "../../lib/auth-client";
+import { authQueryKeys } from "../../lib/auth-queries";
 
 export function AuthPage({ redirectTo = "/" }: Readonly<{ redirectTo?: string }>) {
   const queryClient = useQueryClient();

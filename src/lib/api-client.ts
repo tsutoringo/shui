@@ -13,6 +13,8 @@ import type {
   InvitationCreateBody,
   OwnershipBody,
   ServiceAccountCreateBody,
+  ServiceAccountCredentialCreateBody,
+  ServiceAccountCredentialRotateBody,
   ServiceAccountUpdateBody,
   TeamCreateBody,
   TeamMemberBody,
@@ -36,6 +38,9 @@ export type {
   InvitationCreated,
   InvitationPublic,
   ServiceAccount,
+  ServiceAccountCredential,
+  ServiceAccountCredentialCreated,
+  ServiceAccountCredentials,
   ServiceAccountOwners,
   SystemRole,
   Team,
@@ -517,6 +522,74 @@ export async function setServiceAccountStatus(id: string, status: "active" | "di
       ...emptyRequest,
       method: "POST",
       params: { id },
+    }),
+  );
+}
+
+export async function getServiceAccountCredentials(id: string) {
+  return unwrapApiResponse(
+    await getApiFetch()("/api/service-accounts/:id/credentials", {
+      ...emptyRequest,
+      method: "GET",
+      params: { id },
+    }),
+  );
+}
+
+export async function createServiceAccountCredential(
+  id: string,
+  body: ServiceAccountCredentialCreateBody,
+) {
+  return unwrapApiResponse(
+    await getApiFetch()("/api/service-accounts/:id/credentials", {
+      body,
+      headers: {},
+      method: "POST",
+      params: { id },
+    }),
+  );
+}
+
+export async function rotateServiceAccountCredential(
+  id: string,
+  clientId: string,
+  body: ServiceAccountCredentialRotateBody = {},
+) {
+  return unwrapApiResponse(
+    await getApiFetch()("/api/service-accounts/:id/credentials/:clientId/rotate", {
+      body,
+      headers: {},
+      method: "POST",
+      params: { clientId, id },
+    }),
+  );
+}
+
+export async function setServiceAccountCredentialStatus(
+  id: string,
+  clientId: string,
+  status: "active" | "disabled",
+) {
+  return unwrapApiResponse(
+    await getApiFetch()(
+      status === "active"
+        ? "/api/service-accounts/:id/credentials/:clientId/enable"
+        : "/api/service-accounts/:id/credentials/:clientId/disable",
+      {
+        ...emptyRequest,
+        method: "POST",
+        params: { clientId, id },
+      },
+    ),
+  );
+}
+
+export async function deleteServiceAccountCredential(id: string, clientId: string) {
+  return unwrapApiResponse(
+    await getApiFetch()("/api/service-accounts/:id/credentials/:clientId", {
+      ...emptyRequest,
+      method: "DELETE",
+      params: { clientId, id },
     }),
   );
 }

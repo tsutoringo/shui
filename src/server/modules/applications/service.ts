@@ -11,6 +11,7 @@ import {
   principals,
   serviceAccountApplicationAssignments,
   serviceAccountApplicationRoleGrants,
+  serviceAccountOauthClients,
   serviceAccounts,
   teamApplicationAssignments,
   teamApplicationRoleGrants,
@@ -204,34 +205,45 @@ async function readApplicationRow(database: AppDb, applicationId: string) {
 }
 
 async function toApplication(database: AppDb, row: Awaited<ReturnType<typeof readApplicationRow>>) {
-  const [roleCount, clientCount, userAssignmentCount, serviceAssignmentCount, teamAssignmentCount] =
-    await Promise.all([
-      database
-        .select({ id: applicationRoles.id })
-        .from(applicationRoles)
-        .where(eq(applicationRoles.applicationId, row.id))
-        .all(),
-      database
-        .select({ id: applicationOauthClients.clientId })
-        .from(applicationOauthClients)
-        .where(eq(applicationOauthClients.applicationId, row.id))
-        .all(),
-      database
-        .select({ id: userApplicationAssignments.id })
-        .from(userApplicationAssignments)
-        .where(eq(userApplicationAssignments.applicationId, row.id))
-        .all(),
-      database
-        .select({ id: serviceAccountApplicationAssignments.id })
-        .from(serviceAccountApplicationAssignments)
-        .where(eq(serviceAccountApplicationAssignments.applicationId, row.id))
-        .all(),
-      database
-        .select({ id: teamApplicationAssignments.id })
-        .from(teamApplicationAssignments)
-        .where(eq(teamApplicationAssignments.applicationId, row.id))
-        .all(),
-    ]);
+  const [
+    roleCount,
+    humanClientCount,
+    serviceClientCount,
+    userAssignmentCount,
+    serviceAssignmentCount,
+    teamAssignmentCount,
+  ] = await Promise.all([
+    database
+      .select({ id: applicationRoles.id })
+      .from(applicationRoles)
+      .where(eq(applicationRoles.applicationId, row.id))
+      .all(),
+    database
+      .select({ id: applicationOauthClients.clientId })
+      .from(applicationOauthClients)
+      .where(eq(applicationOauthClients.applicationId, row.id))
+      .all(),
+    database
+      .select({ id: serviceAccountOauthClients.clientId })
+      .from(serviceAccountOauthClients)
+      .where(eq(serviceAccountOauthClients.applicationId, row.id))
+      .all(),
+    database
+      .select({ id: userApplicationAssignments.id })
+      .from(userApplicationAssignments)
+      .where(eq(userApplicationAssignments.applicationId, row.id))
+      .all(),
+    database
+      .select({ id: serviceAccountApplicationAssignments.id })
+      .from(serviceAccountApplicationAssignments)
+      .where(eq(serviceAccountApplicationAssignments.applicationId, row.id))
+      .all(),
+    database
+      .select({ id: teamApplicationAssignments.id })
+      .from(teamApplicationAssignments)
+      .where(eq(teamApplicationAssignments.applicationId, row.id))
+      .all(),
+  ]);
   return {
     id: row.id,
     name: row.name,
@@ -243,7 +255,7 @@ async function toApplication(database: AppDb, row: Awaited<ReturnType<typeof rea
     roleCount: roleCount.length,
     assignmentCount:
       userAssignmentCount.length + serviceAssignmentCount.length + teamAssignmentCount.length,
-    clientCount: clientCount.length,
+    clientCount: humanClientCount.length + serviceClientCount.length,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   } satisfies ApplicationRecord;
@@ -643,35 +655,42 @@ export async function deleteApplication(
   await enforceRateLimit(environment, request, "application-delete", 30, 60);
   const database = createDb(environment.DB);
   const current = await readApplicationRow(database, applicationId);
-  const [clients, roles, userAssignments, serviceAssignments, teamAssignments] = await Promise.all([
-    database
-      .select({ id: applicationOauthClients.clientId })
-      .from(applicationOauthClients)
-      .where(eq(applicationOauthClients.applicationId, applicationId))
-      .all(),
-    database
-      .select({ id: applicationRoles.id })
-      .from(applicationRoles)
-      .where(eq(applicationRoles.applicationId, applicationId))
-      .all(),
-    database
-      .select({ id: userApplicationAssignments.id })
-      .from(userApplicationAssignments)
-      .where(eq(userApplicationAssignments.applicationId, applicationId))
-      .all(),
-    database
-      .select({ id: serviceAccountApplicationAssignments.id })
-      .from(serviceAccountApplicationAssignments)
-      .where(eq(serviceAccountApplicationAssignments.applicationId, applicationId))
-      .all(),
-    database
-      .select({ id: teamApplicationAssignments.id })
-      .from(teamApplicationAssignments)
-      .where(eq(teamApplicationAssignments.applicationId, applicationId))
-      .all(),
-  ]);
+  const [clients, serviceClients, roles, userAssignments, serviceAssignments, teamAssignments] =
+    await Promise.all([
+      database
+        .select({ id: applicationOauthClients.clientId })
+        .from(applicationOauthClients)
+        .where(eq(applicationOauthClients.applicationId, applicationId))
+        .all(),
+      database
+        .select({ id: serviceAccountOauthClients.clientId })
+        .from(serviceAccountOauthClients)
+        .where(eq(serviceAccountOauthClients.applicationId, applicationId))
+        .all(),
+      database
+        .select({ id: applicationRoles.id })
+        .from(applicationRoles)
+        .where(eq(applicationRoles.applicationId, applicationId))
+        .all(),
+      database
+        .select({ id: userApplicationAssignments.id })
+        .from(userApplicationAssignments)
+        .where(eq(userApplicationAssignments.applicationId, applicationId))
+        .all(),
+      database
+        .select({ id: serviceAccountApplicationAssignments.id })
+        .from(serviceAccountApplicationAssignments)
+        .where(eq(serviceAccountApplicationAssignments.applicationId, applicationId))
+        .all(),
+      database
+        .select({ id: teamApplicationAssignments.id })
+        .from(teamApplicationAssignments)
+        .where(eq(teamApplicationAssignments.applicationId, applicationId))
+        .all(),
+    ]);
   if (
     clients.length ||
+    serviceClients.length ||
     roles.length ||
     userAssignments.length ||
     serviceAssignments.length ||
@@ -1870,6 +1889,23 @@ async function readApplicationClient(database: AppDb, applicationId: string, cli
     )
     .get();
   if (!row) throw new ApiError(404);
+  const applicationResource = await database
+    .select({ resourceIdentifier: applicationResources.resourceIdentifier })
+    .from(applicationResources)
+    .where(eq(applicationResources.applicationId, applicationId))
+    .get();
+  const linkedResources = await database
+    .select({ resourceId: oauthClientResource.resourceId })
+    .from(oauthClientResource)
+    .where(eq(oauthClientResource.clientId, clientId))
+    .all();
+  if (
+    !applicationResource ||
+    linkedResources.length !== 1 ||
+    linkedResources[0]?.resourceId !== applicationResource.resourceIdentifier
+  ) {
+    throw new ApiError(409);
+  }
   return {
     applicationId: row.applicationId,
     clientId: row.clientId,

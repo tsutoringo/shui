@@ -2,7 +2,7 @@ import { Button, Grid, LayerCard, Select } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { formatApiError, type SystemRole, type User } from "../lib/api-client";
+import { formatApiError, type SystemRole, type User } from "../../lib/api-client";
 import {
   apiQueryKeys,
   grantUserRoleMutationOptions,
@@ -10,7 +10,7 @@ import {
   revokeUserRoleMutationOptions,
   systemRolesQueryOptions,
   usersQueryOptions,
-} from "../lib/api-query-options";
+} from "../../lib/api-query-options";
 import { AdminConfirmDialog, AdminError, AdminLayout, AdminStatus } from "./admin-layout";
 
 export function SystemRolesAdminPage() {

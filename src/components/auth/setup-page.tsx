@@ -2,11 +2,11 @@ import { Button, Input, LinkButton } from "@cloudflare/kumo";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { formatApiError } from "../lib/api-client";
+import { formatApiError } from "../../lib/api-client";
 import {
   completeBootstrapMutationOptions,
   reserveBootstrapMutationOptions,
-} from "../lib/api-query-options";
+} from "../../lib/api-query-options";
 import { FormError, FormStatus, M1Layout } from "./m1-layout";
 
 export function SetupPage() {

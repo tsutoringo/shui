@@ -515,24 +515,24 @@ Exit criteria:
 
 ### M4: Application OIDC And Service Accounts
 
-- [ ] Link every managed Client to exactly one allowed Application Resource
-- [ ] Reject token issuance when Assignment is absent or suspended
-- [ ] Emit only target-Application Roles and Teams
-- [ ] Implement namespaced Principal and authorization claims
-- [ ] Implement Service Account OAuth Client credential creation
-- [ ] Display Client secrets once and never log them
-- [ ] Implement overlapping credential rotation and disablement
-- [ ] Deny credentials for disabled Service Accounts or Applications
-- [ ] Publish a downstream token-verification integration guide
-- [ ] Add a reference relying-party test Application
+- [x] Link every managed Client to exactly one allowed Application Resource
+- [x] Reject token issuance when Assignment is absent or suspended
+- [x] Emit only target-Application Roles and Teams
+- [x] Implement namespaced Principal and authorization claims
+- [x] Implement Service Account OAuth Client credential creation
+- [x] Display Client secrets once and never log them
+- [x] Implement overlapping credential rotation and disablement
+- [x] Deny credentials for disabled Service Accounts or Applications
+- [x] Publish a downstream token-verification integration guide
+- [x] Add a reference relying-party test Application
 
 Exit criteria:
 
-- Application A never receives Application B's Roles, Teams, or identifiers
-- Human Access Tokens and M2M Access Tokens validate with the same JWKS
-- M2M `sub` changes with a rotated credential while namespaced `principal_id` remains stable
-- Resource, issuer, audience, expiration, and scope validation failures are covered by tests
-- Disabled credentials cannot issue new tokens
+- [x] Application A never receives Application B's Roles, Teams, or identifiers
+- [x] Human Access Tokens and M2M Access Tokens validate with the same JWKS
+- [x] M2M `sub` changes with a rotated credential while namespaced `principal_id` remains stable
+- [x] Resource, issuer, audience, expiration, and scope validation failures are covered by tests
+- [x] Disabled credentials cannot issue new tokens
 
 ### M5: Outbound SCIM Provisioning
 

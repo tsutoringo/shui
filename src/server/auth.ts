@@ -6,6 +6,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { createDb } from "../db";
 import * as authSchema from "../db/auth-schema";
 import { auditEvents, humanPrincipals, principals } from "../db/domain-schema";
+import { audienceResources, resolveShuiClaims } from "./modules/applications/claims";
 import { consumeRateLimitBucket } from "./shared/infrastructure";
 
 export type DevelopmentEmailKind = "invitation" | "password-reset" | "verification";
@@ -144,6 +145,35 @@ export function createAuth(environment: AuthEnvironment) {
           },
         ],
         scopes: ["openid", "profile", "email", "api:read"],
+        extensions: [
+          {
+            claims: {
+              accessToken: async ({ client, resources, user }) =>
+                resolveShuiClaims(environment, {
+                  clientId: client.clientId,
+                  requireTargetResource: true,
+                  resources,
+                  userId: user?.id,
+                }),
+              idToken: async ({ client, resources, user }) =>
+                resolveShuiClaims(environment, {
+                  clientId: client.clientId,
+                  requireTargetResource: false,
+                  resources,
+                  userId: user?.id,
+                }),
+              userInfo: async ({ client, jwt, user }) =>
+                client
+                  ? resolveShuiClaims(environment, {
+                      clientId: client.clientId,
+                      requireTargetResource: false,
+                      resources: audienceResources(jwt.aud),
+                      userId: user.id,
+                    })
+                  : {},
+            },
+          },
+        ],
         customAccessTokenClaims: async ({ user }) => {
           if (user) await requireActiveHuman(db, user.id);
           return {};

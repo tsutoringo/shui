@@ -6,6 +6,7 @@ import {
   createApplication,
   createApplicationClient,
   createApplicationRole,
+  createServiceAccountCredential,
   completeBootstrap,
   createInvitation,
   createServiceAccount,
@@ -14,6 +15,7 @@ import {
   deleteApplication,
   deleteApplicationClient,
   deleteApplicationRole,
+  deleteServiceAccountCredential,
   getApplicationAccess,
   getApplicationClients,
   getApplicationOwners,
@@ -23,6 +25,7 @@ import {
   getAdminAccess,
   getServiceAccounts,
   getServiceAccountOwners,
+  getServiceAccountCredentials,
   getSystemRoles,
   getTeams,
   getUsers,
@@ -38,9 +41,11 @@ import {
   setApplicationClientStatus,
   setApplicationStatus,
   setServiceAccountStatus,
+  setServiceAccountCredentialStatus,
   setTeamStatus,
   setUserStatus,
   transferServiceAccount,
+  rotateServiceAccountCredential,
   transferApplicationOwnership,
   updateApplication,
   updateApplicationClient,
@@ -65,6 +70,7 @@ export const apiQueryKeys = {
   applicationOwners: ["application-owners"] as const,
   serviceAccounts: ["service-accounts"] as const,
   serviceAccountOwners: ["service-account-owners"] as const,
+  serviceAccountCredentials: (id: string) => ["service-accounts", id, "credentials"] as const,
   systemRoles: ["system-roles"] as const,
   teams: ["teams"] as const,
   users: ["users"] as const,
@@ -135,6 +141,13 @@ export const serviceAccountOwnersQueryOptions = queryOptions({
   retry: false,
   staleTime: 60_000,
 });
+
+export const serviceAccountCredentialsQueryOptions = (id: string) =>
+  queryOptions({
+    queryFn: () => getServiceAccountCredentials(id),
+    queryKey: apiQueryKeys.serviceAccountCredentials(id),
+    retry: false,
+  });
 
 export const systemRolesQueryOptions = queryOptions({
   queryFn: getSystemRoles,
@@ -360,4 +373,47 @@ export const setServiceAccountStatusMutationOptions = () =>
   mutationOptions({
     mutationFn: ({ id, status }: { id: string; status: "active" | "disabled" }) =>
       setServiceAccountStatus(id, status),
+  });
+
+export const createServiceAccountCredentialMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({
+      body,
+      id,
+    }: {
+      body: Parameters<typeof createServiceAccountCredential>[1];
+      id: string;
+    }) => createServiceAccountCredential(id, body),
+  });
+
+export const rotateServiceAccountCredentialMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({
+      body,
+      clientId,
+      id,
+    }: {
+      body?: Parameters<typeof rotateServiceAccountCredential>[2];
+      clientId: string;
+      id: string;
+    }) => rotateServiceAccountCredential(id, clientId, body),
+  });
+
+export const setServiceAccountCredentialStatusMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({
+      clientId,
+      id,
+      status,
+    }: {
+      clientId: string;
+      id: string;
+      status: "active" | "disabled";
+    }) => setServiceAccountCredentialStatus(id, clientId, status),
+  });
+
+export const deleteServiceAccountCredentialMutationOptions = () =>
+  mutationOptions({
+    mutationFn: ({ clientId, id }: { clientId: string; id: string }) =>
+      deleteServiceAccountCredential(id, clientId),
   });

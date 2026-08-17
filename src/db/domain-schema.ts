@@ -183,6 +183,27 @@ export const applicationOauthClients = sqliteTable(
   (table) => [index("application_oauth_clients_application_idx").on(table.applicationId)],
 );
 
+export const serviceAccountOauthClients = sqliteTable(
+  "service_account_oauth_clients",
+  {
+    clientId: text("client_id")
+      .primaryKey()
+      .references(() => oauthClient.clientId, { onDelete: "cascade" }),
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => applications.id, { onDelete: "cascade" }),
+    serviceAccountPrincipalId: text("service_account_principal_id")
+      .notNull()
+      .references(() => principals.id, { onDelete: "cascade" }),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    index("service_account_oauth_clients_application_idx").on(table.applicationId),
+    index("service_account_oauth_clients_service_idx").on(table.serviceAccountPrincipalId),
+  ],
+);
+
 export const applicationRoles = sqliteTable(
   "application_roles",
   {

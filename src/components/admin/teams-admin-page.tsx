@@ -2,7 +2,7 @@ import { Button, Grid, Input, LayerCard, Select } from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { formatApiError, type Team } from "../lib/api-client";
+import { formatApiError, type Team } from "../../lib/api-client";
 import {
   addTeamMemberMutationOptions,
   apiQueryKeys,
@@ -13,7 +13,7 @@ import {
   teamsQueryOptions,
   updateTeamMutationOptions,
   usersQueryOptions,
-} from "../lib/api-query-options";
+} from "../../lib/api-query-options";
 import {
   AdminConfirmDialog,
   AdminError,

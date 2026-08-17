@@ -15,7 +15,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
-import { formatApiError, type InvitationCreated, type User } from "../lib/api-client";
+import { formatApiError, type InvitationCreated, type User } from "../../lib/api-client";
 import {
   adminAccessQueryOptions,
   apiQueryKeys,
@@ -23,8 +23,8 @@ import {
   repairUserMutationOptions,
   setUserStatusMutationOptions,
   usersQueryOptions,
-} from "../lib/api-query-options";
-import { hasAdminPermission } from "../lib/admin-policy";
+} from "../../lib/api-query-options";
+import { hasAdminPermission } from "../../lib/admin-policy";
 import {
   AdminConfirmDialog,
   AdminError,

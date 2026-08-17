@@ -1,6 +1,6 @@
 import { Outlet, createFileRoute } from "@tanstack/react-router";
 
-import { ApplicationDetailPage } from "../../../../components/applications-admin-page";
+import { ApplicationDetailPage } from "../../../../components/admin/applications-admin-page";
 
 export const Route = createFileRoute("/admin/applications/$applicationId")({
   component: ApplicationDetailRoute,
