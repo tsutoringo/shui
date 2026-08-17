@@ -1,0 +1,41 @@
+次のROADMAP内容はなんですか
+
+---
+
+次のマイルストーン実装
+
+---
+
+layoutとかkumoから持ってこれない？
+
+---
+
+layoutとかkumoから持ってこれない?
+
+sidebarにしたいのと主要なcomponentはできる限りkumoからもって来たい
+
+---
+
+Implement the plan.
+
+---
+
+サイドバーが開いているとき縦が縮んでる
+
+---
+
+user一覧はtanstack tableとkumo uiのtableでできる？
+
+---
+
+じゃあやって
+
+---
+
+APIの方 マイルストーン単位で分けるのやめて。
+
+他のと合わせて。
+
+---
+
+てかtanstackのやつからいい感じにできるんじゃないの？
