@@ -7,6 +7,7 @@ import { createDb } from "../db";
 import * as authSchema from "../db/auth-schema";
 import { auditEvents, humanPrincipals, principals } from "../db/domain-schema";
 import { audienceResources, resolveShuiClaims } from "./modules/applications/claims";
+import { createOAuthConsentAccessPlugin } from "./modules/applications/consent";
 import { consumeRateLimitBucket } from "./shared/infrastructure";
 
 export type DevelopmentEmailKind = "invitation" | "password-reset" | "verification";
@@ -197,6 +198,7 @@ export function createAuth(environment: AuthEnvironment) {
           return {};
         },
       }),
+      createOAuthConsentAccessPlugin(environment),
     ],
     secret: environment.BETTER_AUTH_SECRET,
     advanced: {

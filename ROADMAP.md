@@ -517,7 +517,7 @@ Exit criteria:
 
 - [x] Link every managed Client to exactly one allowed Application Resource
 - [x] Reject token issuance when Assignment is absent or suspended
-- [ ] Preflight effective human Application Assignment during consent, show a clear access-denied state before consent, and re-check on consent acceptance so unassigned users do not discover denial at the token endpoint
+- [x] Preflight effective human Application Assignment during consent, show a clear access-denied state before consent, and re-check on consent acceptance so unassigned users do not discover denial at the token endpoint
 - [x] Emit only target-Application Roles and Teams
 - [x] Implement namespaced Principal and authorization claims
 - [x] Implement Service Account OAuth Client credential creation

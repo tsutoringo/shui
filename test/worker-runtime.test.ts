@@ -999,6 +999,141 @@ describe("Shui worker runtime", () => {
     expect(tokenResponse.status).toBe(200);
   });
 
+  it("preflights and rechecks managed human Application Assignment before consent", async () => {
+    const root = await ensureRoot();
+    const member = await signUpUser("M4 Consent Member");
+    const applicationResponse = await SELF.fetch(`${origin}/api/applications`, {
+      body: JSON.stringify({
+        name: `M4 Consent Application ${crypto.randomUUID()}`,
+        ownerId: `human_${root.userId}`,
+        ownerType: "user",
+      }),
+      headers: { "content-type": "application/json", cookie: root.cookie },
+      method: "POST",
+    });
+    expect(applicationResponse.status).toBe(200);
+    const application = (await applicationResponse.json()) as {
+      id: string;
+      name: string;
+      resourceIdentifier: string;
+    };
+
+    const clientResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/clients`,
+      {
+        body: JSON.stringify({
+          clientType: "public",
+          name: "M4 Consent Client",
+          redirectUris: [`${origin}/oauth/callback`],
+          scopes: ["openid", "profile", "email", "api:read"],
+        }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(clientResponse.status).toBe(200);
+    const client = (await clientResponse.json()) as { clientId: string };
+    const redirectUri = `${origin}/oauth/callback`;
+
+    async function requestConsent() {
+      const verifier = `verifier-${crypto.randomUUID()}-${crypto.randomUUID()}`;
+      const params = new URLSearchParams({
+        client_id: client.clientId,
+        code_challenge: await sha256Base64Url(verifier),
+        code_challenge_method: "S256",
+        redirect_uri: redirectUri,
+        response_type: "code",
+        resource: application.resourceIdentifier,
+        scope: "openid profile email api:read",
+        state: crypto.randomUUID(),
+      });
+      const authorizeResponse = await SELF.fetch(`${origin}/api/auth/oauth2/authorize?${params}`, {
+        headers: { cookie: member.cookie },
+        redirect: "manual",
+      });
+      expect(authorizeResponse.status).toBe(302);
+      const consentLocation = new URL(authorizeResponse.headers.get("location") ?? "", origin);
+      expect(consentLocation.pathname).toBe("/consent");
+      const routedParams = new URLSearchParams(
+        stringifyRouterSearch(parseRouterSearch(consentLocation.search)),
+      );
+      return { routedParams, verifier };
+    }
+
+    const initial = await requestConsent();
+    const initialPreflightResponse = await SELF.fetch(
+      `${origin}/api/auth/oauth2/consent/preflight`,
+      {
+        body: JSON.stringify({ oauth_query: signedOAuthQuery(initial.routedParams) }),
+        headers: { "content-type": "application/json", cookie: member.cookie, origin },
+        method: "POST",
+      },
+    );
+    expect(initialPreflightResponse.status).toBe(200);
+    await expect(initialPreflightResponse.json()).resolves.toMatchObject({
+      application: {
+        id: application.id,
+        name: application.name,
+      },
+      authorized: false,
+      clientId: client.clientId,
+      managed: true,
+      reason: "not_assigned",
+    });
+
+    const initialConsentResponse = await SELF.fetch(`${origin}/api/auth/oauth2/consent`, {
+      body: JSON.stringify({ accept: true, oauth_query: signedOAuthQuery(initial.routedParams) }),
+      headers: { "content-type": "application/json", cookie: member.cookie, origin },
+      method: "POST",
+    });
+    const initialConsent = (await initialConsentResponse.json()) as { url?: string };
+    const initialCallback = new URL(initialConsent.url ?? origin);
+    expect(initialConsentResponse.status).toBe(200);
+    expect(initialCallback.searchParams.get("error")).toBe("access_denied");
+    expect(initialCallback.searchParams.get("code")).toBeNull();
+
+    const assignmentResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/assignments`,
+      {
+        body: JSON.stringify({ subjectId: member.userId, subjectType: "user" }),
+        headers: { "content-type": "application/json", cookie: root.cookie },
+        method: "POST",
+      },
+    );
+    expect(assignmentResponse.status).toBe(200);
+
+    const race = await requestConsent();
+    const racePreflightResponse = await SELF.fetch(`${origin}/api/auth/oauth2/consent/preflight`, {
+      body: JSON.stringify({ oauth_query: signedOAuthQuery(race.routedParams) }),
+      headers: { "content-type": "application/json", cookie: member.cookie, origin },
+      method: "POST",
+    });
+    expect(racePreflightResponse.status).toBe(200);
+    await expect(racePreflightResponse.json()).resolves.toMatchObject({
+      assignmentSource: "direct",
+      authorized: true,
+      managed: true,
+      reason: "assigned",
+    });
+
+    const removeAssignmentResponse = await SELF.fetch(
+      `${origin}/api/applications/${application.id}/assignments/user/${member.userId}`,
+      { headers: { cookie: root.cookie }, method: "DELETE" },
+    );
+    expect(removeAssignmentResponse.status).toBe(200);
+
+    const raceConsentResponse = await SELF.fetch(`${origin}/api/auth/oauth2/consent`, {
+      body: JSON.stringify({ accept: true, oauth_query: signedOAuthQuery(race.routedParams) }),
+      headers: { "content-type": "application/json", cookie: member.cookie, origin },
+      method: "POST",
+    });
+    const raceConsent = (await raceConsentResponse.json()) as { url?: string };
+    const raceCallback = new URL(raceConsent.url ?? origin);
+    expect(raceConsentResponse.status).toBe(200);
+    expect(raceCallback.searchParams.get("error")).toBe("access_denied");
+    expect(raceCallback.searchParams.get("code")).toBeNull();
+  });
+
   it("serves JWKS and issuer-path discovery metadata", async () => {
     const jwksResponse = await SELF.fetch(`${origin}/api/auth/jwks`);
     const openIdResponse = await SELF.fetch(`${origin}/api/auth/.well-known/openid-configuration`);
