@@ -1,0 +1,24 @@
+OIDC ERROR: Failed to exchange code for token. Make sure the client secret is correct.
+undefined
+
+cloudflare accessこうなった
+
+---
+
+PKCE有効にしているよ
+
+---
+
+> 未割り当ての場合もToken交換時に同じような汎用エ
+  ラーになる実装です。
+
+これこの実装にしたくないから、ROADMAPにconsent画面時点で判定するように書いてて
+
+---
+
+それをROADMAPに追記してって言ってるの
+
+---
+
+dbに鍵が残ってるから再生成させたい。
+stagingとdevね
