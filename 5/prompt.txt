@@ -1,0 +1,136 @@
+consentがうまく動かない。
+
+Cloudflare Workerのlog
+{
+  "level": "info",
+  "message": "POST https://shui-staging.tsutoringo.workers.dev/api/auth/oauth2/consent",
+  "$workers": {
+    "scriptName": "shui-staging",
+    "scriptVersion": {
+      "id": "484048ec-b4f1-4e37-ac7b-9b9697bd8704"
+    },
+    "eventType": "fetch",
+    "executionModel": "stateless",
+    "truncated": false,
+    "requestId": "540bdfc86d886e6e7cec3f2ab775d512",
+    "event": {
+      "request": {
+        "cf": {
+          "httpProtocol": "HTTP/3",
+          "clientAcceptEncoding": "gzip, deflate, br",
+          "requestPriority": "",
+          "edgeRequestKeepAliveStatus": 1,
+          "requestHeaderNames": {},
+          "clientTcpRtt": 0,
+          "clientQuicRtt": 27,
+          "colo": "KIX",
+          "asn": 9824,
+          "asOrganization": "JCOM Co., Ltd.",
+          "country": "JP",
+          "isEUCountry": false,
+          "city": "Osaka",
+          "continent": "AS",
+          "region": "Osaka",
+          "regionCode": "27",
+          "timezone": "Asia/Tokyo",
+          "longitude": "135.50107",
+          "latitude": "34.69379",
+          "postalCode": "543-0062",
+          "tlsVersion": "TLSv1.3",
+          "tlsCipher": "AEAD-AES128-GCM-SHA256",
+          "tlsClientRandom": "REDACTED",
+          "tlsClientCiphersSha1": "majgAKUWrKK75XCpDQDr/Sf7Eyw=",
+          "tlsClientExtensionsSha1": "cx+XT/YODnSA72zXClzgmIY5Hro=",
+          "tlsClientExtensionsSha1Le": "rhOKV8jlmL2Tj5J0U1wTPIjWTT0=",
+          "tlsClientHelloLength": "1840",
+          "tlsClientAuth": {
+            "certPresented": "0",
+            "certVerified": "NONE",
+            "certRevoked": "0",
+            "certIssuerDN": "",
+            "certSubjectDN": "",
+            "certIssuerDNRFC2253": "",
+            "certSubjectDNRFC2253": "",
+            "certIssuerDNLegacy": "",
+            "certSubjectDNLegacy": "",
+            "certSerial": "",
+            "certIssuerSerial": "",
+            "certSKI": "",
+            "certIssuerSKI": "",
+            "certFingerprintSHA1": "",
+            "certFingerprintSHA256": "",
+            "certNotBefore": "",
+            "certNotAfter": "",
+            "certRFC9440": "",
+            "certRFC9440TooLarge": false,
+            "certChainRFC9440": "",
+            "certChainRFC9440TooLarge": false
+          },
+          "verifiedBotCategory": "",
+          "edgeL4": {
+            "deliveryRate": 204402
+          }
+        },
+        "headers": {
+          "accept": "*/*",
+          "accept-encoding": "gzip, br",
+          "accept-language": "ja,en-US;q=0.9,en;q=0.8",
+          "cf-connecting-ip": "2405:1205:292:9500:905c:21ac:d35a:5f17",
+          "cf-ipcountry": "JP",
+          "cf-ray": "a2cd315c0f7a2e80",
+          "cf-visitor": "{\"scheme\":\"https\"}",
+          "connection": "Keep-Alive",
+          "content-length": "300",
+          "content-type": "application/json",
+          "cookie": "REDACTED",
+          "host": "shui-staging.tsutoringo.workers.dev",
+          "origin": "https://shui-staging.tsutoringo.workers.dev",
+          "priority": "u=0",
+          "referer": "https://shui-staging.tsutoringo.workers.dev/consent?response_type=code&redirect_uri=https%3A%2F%2Ftsutoringo.cloudflareaccess.com%2Fcdn-cgi%2Faccess%2Fcallback&scope=openid+email+profile&state=a8646405ee311e037925cf45d3d35f95562a950d260a68f8a8220ffec39288d8.REDACTED%253D%253D&client_id=client_b0fec7f3-f704-4286-85e5-fd04d29521ac&REDACTED&code_challenge_method=S256&domain=client_b0fec7f3-f704-4286-85e5-fd04d29521ac&exp=1787017639&ba_iat=1787017039151&ba_param=%5B%22ba_iat%22%2C%22ba_param%22%2C%22client_id%22%2C%22code_challenge%22%2C%22code_challenge_method%22%2C%22domain%22%2C%22exp%22%2C%22redirect_uri%22%2C%22response_type%22%2C%22scope%22%2C%22state%22%5D&sig=BU%2FBXBDPwe9Jq6VA2vFu%2FcDShsRzQGFHiDTNxi6Q68U%3D&clientId=client_b0fec7f3-f704-4286-85e5-fd04d29521ac",
+          "sec-fetch-dest": "empty",
+          "sec-fetch-mode": "cors",
+          "sec-fetch-site": "same-origin",
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:153.0) Gecko/20100101 Firefox/153.0",
+          "x-forwarded-proto": "https",
+          "x-real-ip": "2405:1205:292:9500:905c:21ac:d35a:5f17"
+        },
+        "method": "POST",
+        "url": "https://shui-staging.tsutoringo.workers.dev/api/auth/oauth2/consent"
+      },
+      "response": {
+        "status": 400
+      },
+      "path": "/api/auth/oauth2/consent"
+    },
+    "traceId": "cf5945ae3c83099bac972878d1fd2d85",
+    "wallTimeMs": 75,
+    "cpuTimeMs": 34,
+    "outcome": "ok"
+  },
+  "$metadata": {
+    "id": "01M09885DA000000000000000M",
+    "requestId": "540bdfc86d886e6e7cec3f2ab775d512",
+    "rayId": "a2cd315c0f7a2e80",
+    "traceId": "cf5945ae3c83099bac972878d1fd2d85",
+    "trigger": "POST /api/auth/oauth2/consent",
+    "service": "shui-staging",
+    "level": "info",
+    "statusCode": 400,
+    "message": "POST https://shui-staging.tsutoringo.workers.dev/api/auth/oauth2/consent",
+    "url": "https://shui-staging.tsutoringo.workers.dev/api/auth/oauth2/consent",
+    "account": "597b94ff63a3f5d705e847b387f0acf2",
+    "provider": "cloudflare-streaming",
+    "type": "cf-worker-event",
+    "fingerprint": "11cb4d306386878d770f73e34d70ce14",
+    "origin": "fetch"
+  }
+}
+
+consent pageのURL
+https://shui-staging.tsutoringo.workers.dev/consent?response_type=code&redirect_uri=https%3A%2F%2Ftsutoringo.cloudflareaccess.com%2Fcdn-cgi%2Faccess%2Fcallback&scope=openid+email+profile&state=a8646405ee311e037925cf45d3d35f95562a950d260a68f8a8220ffec39288d8.REDACTED%253D%253D&client_id=client_b0fec7f3-f704-4286-85e5-fd04d29521ac&REDACTED&code_challenge_method=S256&domain=client_b0fec7f3-f704-4286-85e5-fd04d29521ac&exp=1787017639&ba_iat=1787017039151&ba_param=%5B%22ba_iat%22%2C%22ba_param%22%2C%22client_id%22%2C%22code_challenge%22%2C%22code_challenge_method%22%2C%22domain%22%2C%22exp%22%2C%22redirect_uri%22%2C%22response_type%22%2C%22scope%22%2C%22state%22%5D&sig=BU%2FBXBDPwe9Jq6VA2vFu%2FcDShsRzQGFHiDTNxi6Q68U%3D&clientId=client_b0fec7f3-f704-4286-85e5-fd04d29521ac
+
+consentのbody
+{"accept":true,"oauth_query":"ba_param=%5B%22ba_iat%22%2C%22ba_param%22%2C%22client_id%22%2C%22code_challenge%22%2C%22code_challenge_method%22%2C%22domain%22%2C%22exp%22%2C%22redirect_uri%22%2C%22response_type%22%2C%22scope%22%2C%22state%22%5D&sig=BU%2FBXBDPwe9Jq6VA2vFu%2FcDShsRzQGFHiDTNxi6Q68U%3D"}
+
+応答
+{"error":"invalid_signature"}
