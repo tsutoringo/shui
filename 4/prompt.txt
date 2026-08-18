@@ -1,0 +1,141 @@
+https://shui-staging.tsutoringo.workers.dev/consent?response_type=code&redirect_uri=https%3A%2F%2Ftsutoringo.cloudflareaccess.com%2Fcdn-cgi%2Faccess%2Fcallback&scope=openid+email+profile&state=82a0d30c30a0b019c5745591b4fa13431e8b92073617cf5e4542c78e9714ff61.REDACTED%253D%253D&client_id=client_b0fec7f3-f704-4286-85e5-fd04d29521ac&REDACTED&code_challenge_method=S256&domain=client_b0fec7f3-f704-4286-85e5-fd04d29521ac&exp=1787016545&ba_iat=1787015945255&ba_param=%5B%22ba_iat%22%2C%22ba_param%22%2C%22client_id%22%2C%22code_challenge%22%2C%22code_challenge_method%22%2C%22domain%22%2C%22exp%22%2C%22redirect_uri%22%2C%22response_type%22%2C%22scope%22%2C%22state%22%5D&sig=v6%REDACTED%3D&clientId=client_b0fec7f3-f704-4286-85e5-fd04d29521ac
+
+試したらinvalid signatureってでた
+
+---
+
+{
+  "level": "info",
+  "message": "POST https://shui-staging.tsutoringo.workers.dev/api/auth/oauth2/consent",
+  "$workers": {
+    "truncated": false,
+    "event": {
+      "request": {
+        "cf": {
+          "isEUCountry": false,
+          "tlsClientAuth": {
+            "certRFC9440TooLarge": false,
+            "certChainRFC9440TooLarge": false,
+            "certPresented": "0",
+            "certVerified": "NONE",
+            "certRevoked": "0",
+            "certIssuerDN": "",
+            "certSubjectDN": "",
+            "certIssuerDNRFC2253": "",
+            "certSubjectDNRFC2253": "",
+            "certIssuerDNLegacy": "",
+            "certSubjectDNLegacy": "",
+            "certSerial": "",
+            "certIssuerSerial": "",
+            "certSKI": "",
+            "certIssuerSKI": "",
+            "certFingerprintSHA1": "",
+            "certFingerprintSHA256": "",
+            "certNotBefore": "",
+            "certNotAfter": "",
+            "certRFC9440": "",
+            "certChainRFC9440": ""
+          },
+          "httpProtocol": "HTTP/3",
+          "clientAcceptEncoding": "gzip, deflate, br",
+          "requestPriority": "",
+          "colo": "KIX",
+          "asOrganization": "JCOM Co., Ltd.",
+          "country": "JP",
+          "city": "Osaka",
+          "continent": "AS",
+          "region": "Osaka",
+          "regionCode": "27",
+          "timezone": "Asia/Tokyo",
+          "longitude": "135.50107",
+          "latitude": "34.69379",
+          "postalCode": "543-0062",
+          "tlsVersion": "TLSv1.3",
+          "tlsCipher": "AEAD-AES128-GCM-SHA256",
+          "tlsClientRandom": "REDACTED",
+          "tlsClientCiphersSha1": "majgAKUWrKK75XCpDQDr/Sf7Eyw=",
+          "tlsClientExtensionsSha1": "8vHFb82WDcBmLni3jdUgp+f//ek=",
+          "tlsClientExtensionsSha1Le": "jZvkJz9B00rZ9tZHfpnsJG1OhOQ=",
+          "tlsClientHelloLength": "1840",
+          "verifiedBotCategory": "",
+          "edgeRequestKeepAliveStatus": 1,
+          "clientTcpRtt": 0,
+          "clientQuicRtt": 27,
+          "asn": 9824,
+          "edgeL4": {
+            "deliveryRate": 61703
+          }
+        },
+        "headers": {
+          "accept": "*/*",
+          "accept-encoding": "gzip, br",
+          "accept-language": "ja,en-US;q=0.9,en;q=0.8",
+          "cache-control": "no-cache",
+          "cf-connecting-ip": "2405:1205:292:9500:905c:21ac:d35a:5f17",
+          "cf-ipcountry": "JP",
+          "cf-ray": "a2cd1aef6addd3fb",
+          "cf-visitor": "{\"scheme\":\"https\"}",
+          "connection": "Keep-Alive",
+          "content-length": "298",
+          "content-type": "application/json",
+          "cookie": "REDACTED",
+          "host": "shui-staging.tsutoringo.workers.dev",
+          "origin": "https://shui-staging.tsutoringo.workers.dev",
+          "pragma": "no-cache",
+          "priority": "u=0",
+          "referer": "https://shui-staging.tsutoringo.workers.dev/consent?response_type=code&redirect_uri=https%3A%2F%2Ftsutoringo.cloudflareaccess.com%2Fcdn-cgi%2Faccess%2Fcallback&scope=openid+email+profile&state=9a1c3496184867d51fa770e7b17ade37947911348fddadbd510274037108ba14.REDACTED%253D%253D&client_id=client_b0fec7f3-f704-4286-85e5-fd04d29521ac&REDACTED&code_challenge_method=S256&domain=client_b0fec7f3-f704-4286-85e5-fd04d29521ac&exp=1787016572&ba_iat=1787015972419&ba_param=%5B%22ba_iat%22%2C%22ba_param%22%2C%22client_id%22%2C%22code_challenge%22%2C%22code_challenge_method%22%2C%22domain%22%2C%22exp%22%2C%22redirect_uri%22%2C%22response_type%22%2C%22scope%22%2C%22state%22%5D&REDACTED%2BASs%3D&clientId=client_b0fec7f3-f704-4286-85e5-fd04d29521ac",
+          "sec-fetch-dest": "empty",
+          "sec-fetch-mode": "cors",
+          "sec-fetch-site": "same-origin",
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:153.0) Gecko/20100101 Firefox/153.0",
+          "x-forwarded-proto": "https",
+          "x-real-ip": "2405:1205:292:9500:905c:21ac:d35a:5f17"
+        },
+        "method": "POST",
+        "url": "https://shui-staging.tsutoringo.workers.dev/api/auth/oauth2/consent"
+      },
+      "path": "/api/auth/oauth2/consent",
+      "response": {
+        "status": 400
+      }
+    },
+    "scriptName": "shui-staging",
+    "scriptVersion": {
+      "id": "484048ec-b4f1-4e37-ac7b-9b9697bd8704"
+    },
+    "eventType": "fetch",
+    "executionModel": "stateless",
+    "requestId": "6698ef173547173b6fed96dc73ba35ae",
+    "traceId": "9270393c9acf515855a544d87cf63912",
+    "outcome": "ok",
+    "wallTimeMs": 74,
+    "cpuTimeMs": 34
+  },
+  "$metadata": {
+    "id": "01M097C4E9000000000000000M",
+    "requestId": "6698ef173547173b6fed96dc73ba35ae",
+    "rayId": "a2cd1aef6addd3fb",
+    "traceId": "9270393c9acf515855a544d87cf63912",
+    "trigger": "POST /api/auth/oauth2/consent",
+    "service": "shui-staging",
+    "level": "info",
+    "message": "POST https://shui-staging.tsutoringo.workers.dev/api/auth/oauth2/consent",
+    "account": "597b94ff63a3f5d705e847b387f0acf2",
+    "type": "cf-worker-event",
+    "fingerprint": "11cb4d306386878d770f73e34d70ce14",
+    "origin": "fetch"
+  }
+}
+これlog
+
+---
+
+{"accept":true,"oauth_query":"ba_param=%5B%22ba_iat%22%2C%22ba_param%22%2C%22client_id%22%2C%22code_challenge%22%2C%22code_challenge_method%22%2C%22domain%22%2C%22exp%22%2C%22redirect_uri%22%2C%22response_type%22%2C%22scope%22%2C%22state%22%5D&REDACTED%2BASs%3D"}
+
+---
+
+フロント側のbetterauthがふるいってこと？
+
+---
+
+今さっきdeployしたばっかだよ
