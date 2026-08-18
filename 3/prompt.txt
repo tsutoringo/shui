@@ -1,0 +1,1 @@
+stagingのbootstrap secret設定したい
