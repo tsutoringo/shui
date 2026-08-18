@@ -517,6 +517,7 @@ Exit criteria:
 
 - [x] Link every managed Client to exactly one allowed Application Resource
 - [x] Reject token issuance when Assignment is absent or suspended
+- [ ] Preflight effective human Application Assignment during consent, show a clear access-denied state before consent, and re-check on consent acceptance so unassigned users do not discover denial at the token endpoint
 - [x] Emit only target-Application Roles and Teams
 - [x] Implement namespaced Principal and authorization claims
 - [x] Implement Service Account OAuth Client credential creation
@@ -695,3 +696,4 @@ These decisions do not block M0 and must be fixed before the listed milestone be
 - [x] M1 authentication, setup, invitation, and hardening implemented and locally verified
 - [x] M2 principals, teams, system roles, ownership, and administration implemented and locally verified
 - [x] M3 applications, assignments, roles, OIDC clients, and administration implemented and locally verified
+- [x] M4 application OIDC, service-account credentials, token claims, and relying-party integration implemented and locally verified

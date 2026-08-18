@@ -6,6 +6,7 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 import type { Application } from "~/features/applications/api/client";
 import {
   applicationQueryKeys,
+  applicationClientsQueryOptions,
   applicationsQueryOptions,
 } from "~/features/applications/api/queries";
 import { formatApiError } from "~/shared/api/errors";
@@ -14,6 +15,7 @@ import {
   AdminLayout,
   AdminStatus,
   StatusPill,
+  type AdminBreadcrumb,
 } from "~/features/admin/components/admin-layout";
 
 type ApplicationTab = "overview" | "settings" | "roles" | "oidc" | "access";
@@ -47,6 +49,12 @@ export function ApplicationDetailPage({
     (candidate) => candidate.id === applicationId,
   );
   const activeTab = applicationTabFromPath(locationPath);
+  const clientId = applicationClientIdFromPath(locationPath);
+  const clientsQuery = useQuery({
+    ...applicationClientsQueryOptions(applicationId),
+    enabled: Boolean(application && clientId),
+  });
+  const client = clientsQuery.data?.clients.find((candidate) => candidate.clientId === clientId);
 
   async function refresh(message?: string) {
     await queryClient.invalidateQueries({ queryKey: applicationQueryKeys.all });
@@ -90,7 +98,13 @@ export function ApplicationDetailPage({
   return (
     <AdminLayout
       activePath="/admin/applications"
-      breadcrumbLabel={application?.name ?? "Application detail"}
+      breadcrumbItems={applicationBreadcrumbItems({
+        activeTab,
+        application,
+        applicationId,
+        clientId,
+        clientName: client?.name,
+      })}
       description={
         application
           ? `Manage ${application.name}'s authorization boundary and connected clients.`
@@ -114,38 +128,27 @@ export function ApplicationDetailPage({
         ) : null}
         {application ? (
           <ApplicationDetailContext.Provider value={{ application, onDeleted, onRefresh: refresh }}>
-            <section aria-labelledby="application-detail-title" className="space-y-6">
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <LinkButton className="mb-4" href="/admin/applications" variant="ghost">
-                    Back to applications
-                  </LinkButton>
-                  <p className="text-sm font-medium uppercase tracking-[0.16em] text-(--tangerine)">
-                    Application detail
-                  </p>
-                  <h2
-                    className="mt-2 font-display text-3xl font-semibold text-kumo-strong"
-                    id="application-detail-title"
-                  >
-                    {application.name}
-                  </h2>
-                </div>
-                <div className="flex items-center gap-3">
+            <section
+              aria-label={`${application.name} application navigation`}
+              className="space-y-6"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <Tabs
+                  className="min-w-0 flex-1"
+                  onValueChange={(value) => {
+                    if (isApplicationTab(value)) void navigateToTab(value);
+                  }}
+                  tabs={applicationTabItems}
+                  value={activeTab}
+                  variant="underline"
+                />
+                <div className="flex shrink-0 items-center gap-3">
                   <StatusPill status={application.status} />
                   <Badge appearance="filled" variant="neutral">
                     authz version {application.authzVersion}
                   </Badge>
                 </div>
               </div>
-              <Tabs
-                className="w-full"
-                onValueChange={(value) => {
-                  if (isApplicationTab(value)) void navigateToTab(value);
-                }}
-                tabs={applicationTabItems}
-                value={activeTab}
-                variant="underline"
-              />
               {status ? <AdminStatus>{status}</AdminStatus> : null}
               {children}
             </section>
@@ -167,9 +170,77 @@ export function useApplicationDetail() {
 function applicationTabFromPath(pathname: string): ApplicationTab {
   if (pathname.endsWith("/settings")) return "settings";
   if (pathname.endsWith("/roles")) return "roles";
-  if (pathname.endsWith("/oidc")) return "oidc";
+  if (pathname.endsWith("/oidc") || pathname.includes("/oidc/")) return "oidc";
   if (pathname.endsWith("/access")) return "access";
   return "overview";
+}
+
+function applicationBreadcrumbItems({
+  activeTab,
+  application,
+  applicationId,
+  clientId,
+  clientName,
+}: Readonly<{
+  activeTab: ApplicationTab;
+  application: Application | undefined;
+  applicationId: string;
+  clientId: string | undefined;
+  clientName: string | undefined;
+}>): AdminBreadcrumb[] {
+  if (!application) return [{ label: "Application detail" }];
+
+  const applicationPath = `/admin/applications/${encodeURIComponent(applicationId)}`;
+  const items: AdminBreadcrumb[] = [{ href: "/admin/applications", label: "Applications" }];
+
+  if (activeTab === "overview") {
+    return [...items, { label: application.name }];
+  }
+
+  items.push({ href: applicationPath, label: application.name });
+
+  if (activeTab === "oidc") {
+    if (clientId) {
+      items.push({ href: `${applicationPath}/oidc`, label: "OIDC clients" });
+      items.push({
+        label: clientName ?? "OIDC client",
+      });
+    } else {
+      items.push({ label: "OIDC clients" });
+    }
+    return items;
+  }
+
+  items.push({
+    label: applicationTabLabel(activeTab),
+  });
+  return items;
+}
+
+function applicationClientIdFromPath(pathname: string) {
+  const marker = "/oidc/";
+  const markerIndex = pathname.indexOf(marker);
+  if (markerIndex === -1) return undefined;
+
+  const encodedClientId = pathname.slice(markerIndex + marker.length).split("/")[0];
+  if (!encodedClientId) return undefined;
+
+  try {
+    return decodeURIComponent(encodedClientId);
+  } catch {
+    return encodedClientId;
+  }
+}
+
+function applicationTabLabel(tab: Exclude<ApplicationTab, "overview" | "oidc">) {
+  switch (tab) {
+    case "settings":
+      return "Settings";
+    case "roles":
+      return "Roles";
+    case "access":
+      return "Access";
+  }
 }
 
 function isApplicationTab(value: string): value is ApplicationTab {

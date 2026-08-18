@@ -1,6 +1,16 @@
-import { Badge, Button, Dialog, Input, LayerCard, Select } from "@cloudflare/kumo";
+import {
+  Badge,
+  Button,
+  Dialog,
+  Input,
+  LayerCard,
+  Link,
+  LinkButton,
+  Select,
+  Table,
+} from "@cloudflare/kumo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 
 import type { Application, ApplicationClientCreated } from "~/features/applications/api/client";
 import {
@@ -21,7 +31,6 @@ import {
   setApplicationClientStatusMutationOptions,
   setApplicationStatusMutationOptions,
   transferApplicationOwnershipMutationOptions,
-  updateApplicationClientMutationOptions,
   updateApplicationMutationOptions,
   updateApplicationRoleMutationOptions,
 } from "~/features/applications/api/queries";
@@ -441,16 +450,8 @@ function ApplicationClients({
 }: Readonly<{ applicationId: string; onRefresh: (message?: string) => Promise<void> }>) {
   const queryClient = useQueryClient();
   const clientsQuery = useQuery(applicationClientsQueryOptions(applicationId));
-  const createMutation = useMutation(createApplicationClientMutationOptions());
-  const updateMutation = useMutation(updateApplicationClientMutationOptions());
   const statusMutation = useMutation(setApplicationClientStatusMutationOptions());
   const deleteMutation = useMutation(deleteApplicationClientMutationOptions());
-  const [name, setName] = useState("");
-  const [clientType, setClientType] = useState<"public" | "confidential">("public");
-  const [redirectUris, setRedirectUris] = useState("");
-  const [scopes, setScopes] = useState("openid profile email");
-  const [secret, setSecret] = useState<ApplicationClientCreated | null>(null);
-  const [acknowledged, setAcknowledged] = useState(false);
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
 
@@ -459,9 +460,10 @@ function ApplicationClients({
     setError(undefined);
     try {
       const result = await action();
-      await queryClient.invalidateQueries({
-        queryKey: applicationQueryKeys.detail(applicationId),
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: applicationQueryKeys.clients(applicationId) }),
+        queryClient.invalidateQueries({ queryKey: applicationQueryKeys.detail(applicationId) }),
+      ]);
       await onRefresh(message);
       return result;
     } catch (actionError) {
@@ -475,172 +477,297 @@ function ApplicationClients({
   const clients = clientsQuery.data?.clients ?? [];
   return (
     <LayerCard className="bg-kumo-elevated p-5 ring ring-kumo-line sm:p-6">
-      <h3 className="text-xl font-semibold text-kumo-strong">Human OIDC clients</h3>
-      <form
-        className="mt-5 grid gap-3 border-b border-kumo-hairline pb-5"
-        onSubmit={async (event) => {
-          event.preventDefault();
-          const result = await run(
-            () =>
-              createMutation.mutateAsync({
-                body: {
-                  clientType,
-                  name,
-                  redirectUris: redirectUris
-                    .split(/\n|,/)
-                    .map((value) => value.trim())
-                    .filter(Boolean),
-                  scopes: scopes.split(/\s+/).filter(Boolean),
-                },
-                id: applicationId,
-              }),
-            "OIDC client created.",
-          );
-          if (result) {
-            setSecret(result as ApplicationClientCreated);
-            setAcknowledged(false);
-            setName("");
-            setRedirectUris("");
-          }
-        }}
-      >
-        <Input
-          id={`client-name-${applicationId}`}
-          label="Name"
-          onChange={(event) => setName(event.target.value)}
-          required
-          value={name}
-        />
-        <Select
-          items={[
-            { label: "Public · PKCE", value: "public" },
-            { label: "Confidential · PKCE", value: "confidential" },
-          ]}
-          label="Client type"
-          onValueChange={(value) =>
-            setClientType(value === "confidential" ? "confidential" : "public")
-          }
-          value={clientType}
-        />
-        <label
-          className="grid gap-1 text-sm font-medium text-kumo-strong"
-          htmlFor={`client-redirects-${applicationId}`}
-        >
-          Redirect URIs
-          <textarea
-            aria-describedby={`client-redirects-help-${applicationId}`}
-            className="min-h-20 rounded-md border border-kumo-line bg-kumo-canvas px-3 py-2 font-mono text-xs text-kumo-strong outline-none focus-visible:ring-2 focus-visible:ring-(--tangerine)"
-            id={`client-redirects-${applicationId}`}
-            onChange={(event) => setRedirectUris(event.target.value)}
-            required
-            value={redirectUris}
-          />
-          <span
-            className="font-normal text-kumo-subtle"
-            id={`client-redirects-help-${applicationId}`}
-          >
-            One HTTPS URI per line. Local HTTP is accepted for development.
-          </span>
-        </label>
-        <Input
-          id={`client-scopes-${applicationId}`}
-          label="Scopes"
-          onChange={(event) => setScopes(event.target.value)}
-          value={scopes}
-        />
-        <Button disabled={busy} type="submit" variant="primary">
-          Create OIDC client
-        </Button>
-      </form>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h3 className="text-xl font-semibold text-kumo-strong">OIDC clients</h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-kumo-subtle">
+            Review registered clients and open a client to see the complete OIDC registration
+            configuration.
+          </p>
+        </div>
+        <ApplicationClientCreateDialog applicationId={applicationId} onRefresh={onRefresh} />
+      </div>
       {clientsQuery.isLoading ? <AdminStatus>Loading OIDC clients...</AdminStatus> : null}
       {clientsQuery.isError ? <AdminError>{formatApiError(clientsQuery.error)}</AdminError> : null}
       {error ? <AdminError>{error}</AdminError> : null}
-      <ul className="mt-5 space-y-3">
-        {clients.map((client) => (
-          <li className="rounded-md bg-kumo-canvas p-3" key={client.clientId}>
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-medium text-kumo-strong">{client.name}</p>
-                <p className="mt-1 break-all font-mono text-xs text-kumo-subtle">
-                  {client.clientId}
-                </p>
-                <p className="mt-1 text-xs text-kumo-subtle">
-                  {client.clientType} · {client.disabled ? "disabled" : "active"} · PKCE S256
-                </p>
-              </div>
-              <div className="flex shrink-0 gap-2">
-                <Button
-                  disabled={busy}
-                  onClick={() =>
-                    void run(
-                      () =>
-                        updateMutation.mutateAsync({
-                          body: { scopes: client.scopes },
-                          clientId: client.clientId,
-                          id: applicationId,
-                        }),
-                      "OIDC client refreshed.",
-                    )
-                  }
-                  type="button"
-                  variant="ghost"
-                >
-                  Save scopes
-                </Button>
-                <Button
-                  disabled={busy}
-                  onClick={() =>
-                    void run(
-                      () =>
-                        statusMutation.mutateAsync({
-                          clientId: client.clientId,
-                          id: applicationId,
-                          status: client.disabled ? "active" : "disabled",
-                        }),
-                      client.disabled ? "OIDC client enabled." : "OIDC client disabled.",
-                    )
-                  }
-                  type="button"
-                  variant="ghost"
-                >
-                  {client.disabled ? "Enable" : "Disable"}
-                </Button>
-                <AdminConfirmDialog
-                  confirmLabel="Delete client"
-                  description="Existing tokens and consents for this Client will no longer be usable."
-                  onConfirm={() =>
-                    void run(
-                      () =>
-                        deleteMutation.mutateAsync({
-                          clientId: client.clientId,
-                          id: applicationId,
-                        }),
-                      "OIDC client deleted.",
-                    )
-                  }
-                  title={`Delete ${client.name}?`}
-                  trigger={
-                    <Button disabled={busy} type="button" variant="secondary-destructive">
-                      Delete
-                    </Button>
-                  }
-                />
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+      {clients.length > 0 ? (
+        <div className="mt-5 overflow-hidden rounded-md border border-kumo-line">
+          <div className="overflow-x-auto">
+            <Table className="min-w-[60rem]">
+              <caption className="sr-only">OIDC clients</caption>
+              <Table.Header>
+                <Table.Row>
+                  <Table.Head>Client</Table.Head>
+                  <Table.Head>Type</Table.Head>
+                  <Table.Head>Status</Table.Head>
+                  <Table.Head>Redirect URIs</Table.Head>
+                  <Table.Head>Scopes</Table.Head>
+                  <Table.Head>Created</Table.Head>
+                  <Table.Head>Actions</Table.Head>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {clients.map((client) => {
+                  const clientPath = `/admin/applications/${applicationId}/oidc/${encodeURIComponent(client.clientId)}`;
+                  return (
+                    <Table.Row key={client.clientId}>
+                      <Table.Cell className="max-w-[18rem] align-top">
+                        <Link className="font-medium" href={clientPath}>
+                          {client.name}
+                        </Link>
+                        <p className="mt-1 break-all font-mono text-xs text-kumo-subtle">
+                          {client.clientId}
+                        </p>
+                      </Table.Cell>
+                      <Table.Cell className="align-top">
+                        <p className="font-medium text-kumo-strong">{client.clientType}</p>
+                        <p className="mt-1 text-xs text-kumo-subtle">PKCE · S256</p>
+                      </Table.Cell>
+                      <Table.Cell className="align-top">
+                        <StatusPill status={client.disabled ? "disabled" : "active"} />
+                      </Table.Cell>
+                      <Table.Cell className="max-w-[17rem] align-top">
+                        <p className="font-medium text-kumo-strong">
+                          {client.redirectUris.length} configured
+                        </p>
+                        <p className="mt-1 truncate font-mono text-xs text-kumo-subtle">
+                          {client.redirectUris[0] ?? "No redirect URI"}
+                        </p>
+                      </Table.Cell>
+                      <Table.Cell className="max-w-[14rem] align-top">
+                        <p className="break-words font-mono text-xs text-kumo-strong">
+                          {client.scopes.join(" ")}
+                        </p>
+                      </Table.Cell>
+                      <Table.Cell className="align-top whitespace-nowrap text-sm text-kumo-subtle">
+                        {new Date(client.createdAt).toLocaleDateString()}
+                      </Table.Cell>
+                      <Table.Cell className="align-top">
+                        <div className="flex min-w-[16rem] flex-wrap gap-2">
+                          <LinkButton href={clientPath} type="button" variant="secondary">
+                            Details
+                          </LinkButton>
+                          <Button
+                            disabled={busy}
+                            onClick={() =>
+                              void run(
+                                () =>
+                                  statusMutation.mutateAsync({
+                                    clientId: client.clientId,
+                                    id: applicationId,
+                                    status: client.disabled ? "active" : "disabled",
+                                  }),
+                                client.disabled ? "OIDC client enabled." : "OIDC client disabled.",
+                              )
+                            }
+                            type="button"
+                            variant="ghost"
+                          >
+                            {client.disabled ? "Enable" : "Disable"}
+                          </Button>
+                          <AdminConfirmDialog
+                            confirmLabel="Delete client"
+                            description="Existing tokens and consents for this Client will no longer be usable."
+                            onConfirm={() =>
+                              void run(
+                                () =>
+                                  deleteMutation.mutateAsync({
+                                    clientId: client.clientId,
+                                    id: applicationId,
+                                  }),
+                                "OIDC client deleted.",
+                              )
+                            }
+                            title={`Delete ${client.name}?`}
+                            trigger={
+                              <Button disabled={busy} type="button" variant="secondary-destructive">
+                                Delete
+                              </Button>
+                            }
+                          />
+                        </div>
+                      </Table.Cell>
+                    </Table.Row>
+                  );
+                })}
+              </Table.Body>
+            </Table>
+          </div>
+        </div>
+      ) : null}
       {!clientsQuery.isLoading && clients.length === 0 ? (
         <p className="mt-5 text-sm text-kumo-subtle">No human OIDC clients defined.</p>
       ) : null}
+    </LayerCard>
+  );
+}
+
+function ApplicationClientCreateDialog({
+  applicationId,
+  onRefresh,
+}: Readonly<{
+  applicationId: string;
+  onRefresh: (message?: string) => Promise<void>;
+}>) {
+  const queryClient = useQueryClient();
+  const createMutation = useMutation(createApplicationClientMutationOptions());
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [clientType, setClientType] = useState<"public" | "confidential">("public");
+  const [redirectUris, setRedirectUris] = useState("");
+  const [scopes, setScopes] = useState("openid profile email");
+  const [secret, setSecret] = useState<ApplicationClientCreated | null>(null);
+  const [acknowledged, setAcknowledged] = useState(false);
+  const [error, setError] = useState<string>();
+
+  function reset() {
+    setName("");
+    setClientType("public");
+    setRedirectUris("");
+    setScopes("openid profile email");
+    setError(undefined);
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+    if (nextOpen) setError(undefined);
+    if (!nextOpen && !createMutation.isPending) reset();
+  }
+
+  async function create(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(undefined);
+    try {
+      const result = await createMutation.mutateAsync({
+        body: {
+          clientType,
+          name,
+          redirectUris: redirectUris
+            .split(/\n|,/)
+            .map((value) => value.trim())
+            .filter(Boolean),
+          scopes: scopes.split(/\s+/).filter(Boolean),
+        },
+        id: applicationId,
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: applicationQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: applicationQueryKeys.detail(applicationId) }),
+        queryClient.invalidateQueries({ queryKey: applicationQueryKeys.clients(applicationId) }),
+      ]);
+      await onRefresh("OIDC client created.");
+      setOpen(false);
+      reset();
+      setAcknowledged(false);
+      const created = result as ApplicationClientCreated;
+      setSecret(created.clientSecret ? created : null);
+    } catch (createError) {
+      setError(formatApiError(createError));
+    }
+  }
+
+  return (
+    <>
+      <Dialog.Root onOpenChange={handleOpenChange} open={open}>
+        <Dialog.Trigger
+          render={
+            <Button type="button" variant="primary">
+              New OIDC client
+            </Button>
+          }
+        />
+        <Dialog className="max-h-[calc(100svh-2rem)] overflow-y-auto p-6" size="lg">
+          <Dialog.Title className="text-lg font-semibold text-kumo-strong">
+            New OIDC client
+          </Dialog.Title>
+          <Dialog.Description className="mt-2 text-sm leading-6 text-kumo-subtle">
+            Register an application that can sign users in through Shui. The Client secret is shown
+            only once for confidential clients.
+          </Dialog.Description>
+          {error ? (
+            <div className="mt-4">
+              <AdminError>{error}</AdminError>
+            </div>
+          ) : null}
+          <form className="mt-5 grid gap-4" onSubmit={create}>
+            <Input
+              id={`client-create-name-${applicationId}`}
+              label="Name"
+              onChange={(event) => setName(event.target.value)}
+              required
+              value={name}
+            />
+            <Select
+              items={[
+                { label: "Public · PKCE", value: "public" },
+                { label: "Confidential · PKCE", value: "confidential" },
+              ]}
+              label="Client type"
+              onValueChange={(value) =>
+                setClientType(value === "confidential" ? "confidential" : "public")
+              }
+              value={clientType}
+            />
+            <label
+              className="grid gap-1 text-sm font-medium text-kumo-strong"
+              htmlFor={`client-create-redirects-${applicationId}`}
+            >
+              Redirect URIs
+              <textarea
+                aria-describedby={`client-create-redirects-help-${applicationId}`}
+                className="min-h-24 rounded-md border border-kumo-line bg-kumo-canvas px-3 py-2 font-mono text-xs text-kumo-strong outline-none focus-visible:ring-2 focus-visible:ring-(--tangerine)"
+                id={`client-create-redirects-${applicationId}`}
+                onChange={(event) => setRedirectUris(event.target.value)}
+                required
+                value={redirectUris}
+              />
+              <span
+                className="font-normal text-kumo-subtle"
+                id={`client-create-redirects-help-${applicationId}`}
+              >
+                One HTTPS URI per line. Local HTTP is accepted for development.
+              </span>
+            </label>
+            <Input
+              id={`client-create-scopes-${applicationId}`}
+              label="Scopes"
+              onChange={(event) => setScopes(event.target.value)}
+              value={scopes}
+            />
+            <div className="flex justify-end gap-3">
+              <Dialog.Close
+                disabled={createMutation.isPending}
+                render={(props) => (
+                  <Button
+                    {...props}
+                    disabled={createMutation.isPending}
+                    type="button"
+                    variant="secondary"
+                  >
+                    Cancel
+                  </Button>
+                )}
+              />
+              <Button
+                aria-busy={createMutation.isPending}
+                disabled={createMutation.isPending}
+                type="submit"
+                variant="primary"
+              >
+                Create client
+              </Button>
+            </div>
+          </form>
+        </Dialog>
+      </Dialog.Root>
       {secret ? (
         <Dialog.Root
-          onOpenChange={(open) => {
-            if (!open) setSecret(null);
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) setSecret(null);
           }}
           open
         >
-          <Dialog className="p-6" size="lg">
+          <Dialog className="max-h-[calc(100svh-2rem)] overflow-y-auto p-6" size="lg">
             <Dialog.Title className="text-lg font-semibold text-kumo-strong">
               Save this Client secret now
             </Dialog.Title>
@@ -649,12 +776,12 @@ function ApplicationClients({
             </Dialog.Description>
             <label
               className="mt-5 grid gap-2 text-sm font-medium text-kumo-strong"
-              htmlFor="new-client-secret"
+              htmlFor={`new-client-secret-${applicationId}`}
             >
               Client secret
               <input
                 className="rounded-md border border-kumo-line bg-kumo-canvas px-3 py-2 font-mono text-xs text-kumo-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tangerine)"
-                id="new-client-secret"
+                id={`new-client-secret-${applicationId}`}
                 readOnly
                 value={secret.clientSecret ?? ""}
               />
@@ -681,7 +808,7 @@ function ApplicationClients({
           </Dialog>
         </Dialog.Root>
       ) : null}
-    </LayerCard>
+    </>
   );
 }
 

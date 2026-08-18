@@ -8,6 +8,7 @@ import {
   clearDevelopmentEmailSink,
   readDevelopmentEmailSink,
 } from "../src/server/auth";
+import { parseRouterSearch, stringifyRouterSearch } from "../src/shared/routing/search-params";
 import { handleScheduled } from "../src/worker-events";
 
 const origin = "http://localhost:8787";
@@ -76,6 +77,7 @@ async function createOAuthClient(options: {
   requirePKCE: boolean;
   responseTypes: string[];
   scopes: string[];
+  skipConsent?: boolean;
 }) {
   const now = Date.now();
   const storedSecret = options.clientSecret ? await sha256Base64Url(options.clientSecret) : null;
@@ -92,7 +94,7 @@ async function createOAuthClient(options: {
       options.clientId,
       storedSecret,
       0,
-      1,
+      options.skipConsent === false ? 0 : 1,
       "public",
       JSON.stringify(options.scopes),
       JSON.stringify(options.clientCredentialsScopes ?? []),
@@ -932,6 +934,71 @@ describe("Shui worker runtime", () => {
     expect(rejected[0]).toMatchObject({ error: "invalid_grant" });
   });
 
+  it("completes signed consent after the UI router parses the redirect", async () => {
+    await prepareOAuthResource();
+    const clientId = `m0-consent-${crypto.randomUUID()}`;
+    const user = await signUpUser();
+    const redirectUri = `${origin}/oauth/callback`;
+    const verifier = `verifier-${crypto.randomUUID()}-${crypto.randomUUID()}`;
+    const params = new URLSearchParams({
+      client_id: clientId,
+      code_challenge: await sha256Base64Url(verifier),
+      code_challenge_method: "S256",
+      redirect_uri: redirectUri,
+      response_type: "code",
+      resource: resourceIdentifier,
+      scope: "openid profile email",
+      state: crypto.randomUUID(),
+    });
+
+    await createOAuthClient({
+      authMethod: "none",
+      clientId,
+      grantTypes: ["authorization_code"],
+      redirectUris: [redirectUri],
+      requirePKCE: true,
+      responseTypes: ["code"],
+      scopes: ["openid", "profile", "email"],
+      skipConsent: false,
+    });
+
+    const authorizeResponse = await SELF.fetch(`${origin}/api/auth/oauth2/authorize?${params}`, {
+      headers: { cookie: user.cookie },
+      redirect: "manual",
+    });
+    const consentLocation = new URL(authorizeResponse.headers.get("location") ?? "", origin);
+    expect(authorizeResponse.status).toBe(302);
+    expect(consentLocation.pathname).toBe("/consent");
+
+    const routedSearch = stringifyRouterSearch(parseRouterSearch(consentLocation.search));
+    const routedParams = new URLSearchParams(routedSearch);
+    expect(routedParams.getAll("ba_param")).toEqual(
+      consentLocation.searchParams.getAll("ba_param"),
+    );
+
+    const consentResponse = await SELF.fetch(`${origin}/api/auth/oauth2/consent`, {
+      body: JSON.stringify({ accept: true, oauth_query: signedOAuthQuery(routedParams) }),
+      headers: { "content-type": "application/json", cookie: user.cookie, origin },
+      method: "POST",
+    });
+    const consent = (await consentResponse.json()) as {
+      redirect_uri?: string;
+      url?: string;
+    };
+    const callback = new URL(consent.redirect_uri ?? consent.url ?? origin);
+
+    expect(consentResponse.status).toBe(200);
+    expect(callback.pathname).toBe("/oauth/callback");
+    expect(callback.searchParams.get("code")).toBeTruthy();
+
+    const tokenResponse = await exchangeAuthorizationCode(clientId, {
+      code: callback.searchParams.get("code") ?? "",
+      redirectUri,
+      verifier,
+    });
+    expect(tokenResponse.status).toBe(200);
+  });
+
   it("serves JWKS and issuer-path discovery metadata", async () => {
     const jwksResponse = await SELF.fetch(`${origin}/api/auth/jwks`);
     const openIdResponse = await SELF.fetch(`${origin}/api/auth/.well-known/openid-configuration`);
@@ -1741,6 +1808,13 @@ describe("Shui worker runtime", () => {
     const humanToken = (await humanTokenResponse.json()) as TokenResponse;
     const jwks = await getJwkSet();
     const namespace = `${origin}/claims/`;
+    expect(humanToken.id_token).toEqual(expect.any(String));
+    const humanIdTokenClaims = await jwtVerify(humanToken.id_token ?? "", jwks, {
+      audience: humanClient.clientId,
+      issuer,
+    });
+    expect(humanIdTokenClaims.payload.email).toBe(member.email);
+    expect(humanIdTokenClaims.payload.email_verified).toBe(false);
     const humanClaims = await jwtVerify(humanToken.access_token, jwks, {
       audience: application.resourceIdentifier,
       issuer,
@@ -2024,3 +2098,14 @@ describe("Shui worker runtime", () => {
     });
   });
 });
+
+function signedOAuthQuery(params: URLSearchParams) {
+  const signedNames = new Set(params.getAll("ba_param"));
+  const signed = new URLSearchParams();
+
+  for (const [key, value] of params) {
+    if (key === "sig" || key === "ba_param" || signedNames.has(key)) signed.append(key, value);
+  }
+
+  return signed.toString();
+}

@@ -21,22 +21,11 @@ export function ConsentPage({
     setError(undefined);
     setIsPending(true);
     try {
-      const result = await authClient.$fetch("/oauth2/consent", {
-        body: { accept },
-        method: "POST",
-      });
+      const result = await authClient.oauth2.consent({ accept });
       if (result.error) throw new Error(result.error.message || "The consent request failed.");
-      const payload = result.data as {
-        redirect_uri?: unknown;
-        redirect?: unknown;
-        url?: unknown;
-      } | null;
+      const payload = result.data;
       const redirectUri =
-        typeof payload?.redirect_uri === "string"
-          ? payload.redirect_uri
-          : payload?.redirect === true && typeof payload.url === "string"
-            ? payload.url
-            : undefined;
+        payload?.redirect === true && typeof payload.url === "string" ? payload.url : undefined;
       if (typeof redirectUri !== "string") throw new Error("The consent response was incomplete.");
       window.location.assign(redirectUri);
     } catch (submitError) {

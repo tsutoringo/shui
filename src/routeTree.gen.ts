@@ -34,6 +34,7 @@ import { Route as AdminApplicationsApplicationIdAccessRouteImport } from './rout
 import { Route as AdminApplicationsApplicationIdOidcRouteImport } from './routes/admin/applications/$applicationId/oidc'
 import { Route as AdminApplicationsApplicationIdRolesRouteImport } from './routes/admin/applications/$applicationId/roles'
 import { Route as AdminApplicationsApplicationIdSettingsRouteImport } from './routes/admin/applications/$applicationId/settings'
+import { Route as AdminApplicationsApplicationIdOidcClientIdRouteImport } from './routes/admin/applications/$applicationId/oidc.$clientId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -166,6 +167,12 @@ const AdminApplicationsApplicationIdSettingsRoute =
     path: '/settings',
     getParentRoute: () => AdminApplicationsApplicationIdRouteRoute,
   } as any)
+const AdminApplicationsApplicationIdOidcClientIdRoute =
+  AdminApplicationsApplicationIdOidcClientIdRouteImport.update({
+    id: '/$clientId',
+    path: '/$clientId',
+    getParentRoute: () => AdminApplicationsApplicationIdOidcRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -189,10 +196,11 @@ export interface FileRoutesByFullPath {
   '/admin/applications/$applicationId': typeof AdminApplicationsApplicationIdRouteRouteWithChildren
   '/admin/applications/': typeof AdminApplicationsIndexRoute
   '/admin/applications/$applicationId/access': typeof AdminApplicationsApplicationIdAccessRoute
-  '/admin/applications/$applicationId/oidc': typeof AdminApplicationsApplicationIdOidcRoute
+  '/admin/applications/$applicationId/oidc': typeof AdminApplicationsApplicationIdOidcRouteWithChildren
   '/admin/applications/$applicationId/roles': typeof AdminApplicationsApplicationIdRolesRoute
   '/admin/applications/$applicationId/settings': typeof AdminApplicationsApplicationIdSettingsRoute
   '/admin/applications/$applicationId/': typeof AdminApplicationsApplicationIdIndexRoute
+  '/admin/applications/$applicationId/oidc/$clientId': typeof AdminApplicationsApplicationIdOidcClientIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -213,10 +221,11 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/admin/applications': typeof AdminApplicationsIndexRoute
   '/admin/applications/$applicationId/access': typeof AdminApplicationsApplicationIdAccessRoute
-  '/admin/applications/$applicationId/oidc': typeof AdminApplicationsApplicationIdOidcRoute
+  '/admin/applications/$applicationId/oidc': typeof AdminApplicationsApplicationIdOidcRouteWithChildren
   '/admin/applications/$applicationId/roles': typeof AdminApplicationsApplicationIdRolesRoute
   '/admin/applications/$applicationId/settings': typeof AdminApplicationsApplicationIdSettingsRoute
   '/admin/applications/$applicationId': typeof AdminApplicationsApplicationIdIndexRoute
+  '/admin/applications/$applicationId/oidc/$clientId': typeof AdminApplicationsApplicationIdOidcClientIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -241,10 +250,11 @@ export interface FileRoutesById {
   '/admin/applications/$applicationId': typeof AdminApplicationsApplicationIdRouteRouteWithChildren
   '/admin/applications/': typeof AdminApplicationsIndexRoute
   '/admin/applications/$applicationId/access': typeof AdminApplicationsApplicationIdAccessRoute
-  '/admin/applications/$applicationId/oidc': typeof AdminApplicationsApplicationIdOidcRoute
+  '/admin/applications/$applicationId/oidc': typeof AdminApplicationsApplicationIdOidcRouteWithChildren
   '/admin/applications/$applicationId/roles': typeof AdminApplicationsApplicationIdRolesRoute
   '/admin/applications/$applicationId/settings': typeof AdminApplicationsApplicationIdSettingsRoute
   '/admin/applications/$applicationId/': typeof AdminApplicationsApplicationIdIndexRoute
+  '/admin/applications/$applicationId/oidc/$clientId': typeof AdminApplicationsApplicationIdOidcClientIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -274,6 +284,7 @@ export interface FileRouteTypes {
     | '/admin/applications/$applicationId/roles'
     | '/admin/applications/$applicationId/settings'
     | '/admin/applications/$applicationId/'
+    | '/admin/applications/$applicationId/oidc/$clientId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/admin/applications/$applicationId/roles'
     | '/admin/applications/$applicationId/settings'
     | '/admin/applications/$applicationId'
+    | '/admin/applications/$applicationId/oidc/$clientId'
   id:
     | '__root__'
     | '/'
@@ -325,6 +337,7 @@ export interface FileRouteTypes {
     | '/admin/applications/$applicationId/roles'
     | '/admin/applications/$applicationId/settings'
     | '/admin/applications/$applicationId/'
+    | '/admin/applications/$applicationId/oidc/$clientId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -518,12 +531,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminApplicationsApplicationIdSettingsRouteImport
       parentRoute: typeof AdminApplicationsApplicationIdRouteRoute
     }
+    '/admin/applications/$applicationId/oidc/$clientId': {
+      id: '/admin/applications/$applicationId/oidc/$clientId'
+      path: '/$clientId'
+      fullPath: '/admin/applications/$applicationId/oidc/$clientId'
+      preLoaderRoute: typeof AdminApplicationsApplicationIdOidcClientIdRouteImport
+      parentRoute: typeof AdminApplicationsApplicationIdOidcRoute
+    }
   }
 }
 
+interface AdminApplicationsApplicationIdOidcRouteChildren {
+  AdminApplicationsApplicationIdOidcClientIdRoute: typeof AdminApplicationsApplicationIdOidcClientIdRoute
+}
+
+const AdminApplicationsApplicationIdOidcRouteChildren: AdminApplicationsApplicationIdOidcRouteChildren =
+  {
+    AdminApplicationsApplicationIdOidcClientIdRoute:
+      AdminApplicationsApplicationIdOidcClientIdRoute,
+  }
+
+const AdminApplicationsApplicationIdOidcRouteWithChildren =
+  AdminApplicationsApplicationIdOidcRoute._addFileChildren(
+    AdminApplicationsApplicationIdOidcRouteChildren,
+  )
+
 interface AdminApplicationsApplicationIdRouteRouteChildren {
   AdminApplicationsApplicationIdAccessRoute: typeof AdminApplicationsApplicationIdAccessRoute
-  AdminApplicationsApplicationIdOidcRoute: typeof AdminApplicationsApplicationIdOidcRoute
+  AdminApplicationsApplicationIdOidcRoute: typeof AdminApplicationsApplicationIdOidcRouteWithChildren
   AdminApplicationsApplicationIdRolesRoute: typeof AdminApplicationsApplicationIdRolesRoute
   AdminApplicationsApplicationIdSettingsRoute: typeof AdminApplicationsApplicationIdSettingsRoute
   AdminApplicationsApplicationIdIndexRoute: typeof AdminApplicationsApplicationIdIndexRoute
@@ -534,7 +569,7 @@ const AdminApplicationsApplicationIdRouteRouteChildren: AdminApplicationsApplica
     AdminApplicationsApplicationIdAccessRoute:
       AdminApplicationsApplicationIdAccessRoute,
     AdminApplicationsApplicationIdOidcRoute:
-      AdminApplicationsApplicationIdOidcRoute,
+      AdminApplicationsApplicationIdOidcRouteWithChildren,
     AdminApplicationsApplicationIdRolesRoute:
       AdminApplicationsApplicationIdRolesRoute,
     AdminApplicationsApplicationIdSettingsRoute:

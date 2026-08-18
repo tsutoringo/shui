@@ -126,7 +126,13 @@ export function createAuth(environment: AuthEnvironment) {
       },
     },
     plugins: [
-      jwt(),
+      jwt({
+        jwks: {
+          keyPairConfig: {
+            alg: "RS256",
+          },
+        },
+      }),
       oauthProvider({
         allowDynamicClientRegistration: false,
         allowUnauthenticatedClientRegistration: false,
@@ -178,9 +184,13 @@ export function createAuth(environment: AuthEnvironment) {
           if (user) await requireActiveHuman(db, user.id);
           return {};
         },
-        customIdTokenClaims: async ({ user }) => {
+        customIdTokenClaims: async ({ scopes, user }) => {
           await requireActiveHuman(db, user.id);
-          return {};
+          if (!scopes.includes("email")) return {};
+          return {
+            email: user.email,
+            email_verified: user.emailVerified,
+          };
         },
         customUserInfoClaims: async ({ user }) => {
           await requireActiveHuman(db, user.id);

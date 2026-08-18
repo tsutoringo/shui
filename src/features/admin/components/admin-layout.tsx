@@ -1,4 +1,13 @@
-import { Badge, Banner, Breadcrumbs, Button, Dialog, LinkButton, Sidebar } from "@cloudflare/kumo";
+import {
+  Badge,
+  Banner,
+  Breadcrumbs,
+  Button,
+  Dialog,
+  Link,
+  LinkButton,
+  Sidebar,
+} from "@cloudflare/kumo";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactElement, type ReactNode } from "react";
 
@@ -32,16 +41,21 @@ const navigation = [
 
 type AdminIconName = (typeof navigation)[number]["icon"] | "sign-out";
 
+export type AdminBreadcrumb = Readonly<{
+  href?: string;
+  label: string;
+}>;
+
 export function AdminLayout({
   activePath,
+  breadcrumbItems,
   children,
   description,
   eyebrow,
-  breadcrumbLabel,
   title,
 }: Readonly<{
   activePath: (typeof navigation)[number]["href"];
-  breadcrumbLabel?: string;
+  breadcrumbItems?: readonly AdminBreadcrumb[];
   children: ReactNode;
   description: string;
   eyebrow: string;
@@ -54,6 +68,9 @@ export function AdminLayout({
     hasAdminPermission(accessQuery.data, item.permission),
   );
   const activeNavigationItem = navigation.find((item) => item.href === activePath);
+  const resolvedBreadcrumbItems = breadcrumbItems ?? [
+    { label: activeNavigationItem?.label ?? "Administration" },
+  ];
 
   async function signOut() {
     await authClient.signOut();
@@ -123,18 +140,48 @@ export function AdminLayout({
               SHUI<span>/</span>
             </LinkButton>
           </header>
-          <div className="flex h-14.5 items-center border-b border-kumo-line bg-kumo-elevated px-5 sm:px-8">
-            <Breadcrumbs className="mx-auto max-w-7xl" size="sm">
-              <Breadcrumbs.Link href="/" icon={<ShuiMark />}>
-                SHUI
-              </Breadcrumbs.Link>
-              <Breadcrumbs.Separator />
-              <Breadcrumbs.Link href="/admin">Administration</Breadcrumbs.Link>
-              <Breadcrumbs.Separator />
-              <Breadcrumbs.Current>
-                {breadcrumbLabel ?? activeNavigationItem?.label ?? "Administration"}
-              </Breadcrumbs.Current>
-            </Breadcrumbs>
+          <div className="flex min-h-14.5 items-center border-b border-kumo-line bg-kumo-elevated px-5 py-2 sm:px-8">
+            <nav
+              aria-label="breadcrumb"
+              className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-0.5 text-sm"
+            >
+              <span className="flex shrink-0 items-center gap-0.5">
+                <Breadcrumbs.Link href="/" icon={<ShuiMark />}>
+                  SHUI
+                </Breadcrumbs.Link>
+              </span>
+              <span className="flex shrink-0 items-center gap-0.5">
+                <Breadcrumbs.Separator />
+                <Link className="text-kumo-subtle no-underline" href="/admin" variant="plain">
+                  Administration
+                </Link>
+              </span>
+              {resolvedBreadcrumbItems.map((item, index) => {
+                const isCurrent = index === resolvedBreadcrumbItems.length - 1;
+
+                return (
+                  <span
+                    className="flex min-w-0 shrink-0 items-center gap-0.5"
+                    key={`${index}-${item.href ?? "current"}-${item.label}`}
+                  >
+                    <Breadcrumbs.Separator />
+                    {isCurrent ? (
+                      <Breadcrumbs.Current>{item.label}</Breadcrumbs.Current>
+                    ) : item.href ? (
+                      <Link
+                        className="text-kumo-subtle no-underline"
+                        href={item.href}
+                        variant="plain"
+                      >
+                        {item.label}
+                      </Link>
+                    ) : (
+                      <Breadcrumbs.Current>{item.label}</Breadcrumbs.Current>
+                    )}
+                  </span>
+                );
+              })}
+            </nav>
           </div>
           <main
             aria-labelledby="admin-page-title"
