@@ -1,0 +1,101 @@
+{
+  "cli_version": "0.9.0",
+  "checkpoint_id": "01M0AKEMACW7VFD4JBW4NMZEXG",
+  "session_id": "01a012bc-356f-7ed3-9245-a636b75afa79",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-18T14:12:30.505075Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "save_step_count": 4,
+  "files_touched": [
+    "ROADMAP.md",
+    "src/features/consent/components/consent-page.tsx",
+    "src/server/auth.ts",
+    "test/worker-runtime.test.ts"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.6-luna",
+  "turn_id": "a49df14a74cf",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 220307,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 2703360,
+    "output_tokens": 12502,
+    "api_call_count": 40
+  },
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-18T14:12:30.480352Z",
+    "agent_lines": 0,
+    "agent_removed": 2,
+    "human_added": 571,
+    "human_modified": 45,
+    "human_removed": 0,
+    "total_committed": 584,
+    "total_lines_changed": 618,
+    "agent_percentage": 0.3236245954692557,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 1198,
+      "user_lines_removed": 241,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "ROADMAP.md": 2,
+        "src/features/admin/components/admin-layout.tsx": 62,
+        "src/features/applications/components/application-client-detail-page.tsx": 494,
+        "src/features/applications/components/application-detail-page.tsx": 99,
+        "src/features/applications/components/application-detail-tabs.tsx": 299,
+        "src/features/applications/index.ts": 1,
+        "src/features/consent/components/consent-page.tsx": 3,
+        "src/routeTree.gen.ts": 40,
+        "src/router.tsx": 3,
+        "src/routes/admin/applications/$applicationId/oidc.$clientId.tsx": 13,
+        "src/routes/admin/applications/$applicationId/oidc.tsx": 8,
+        "src/routes/consent.tsx": 2,
+        "src/server/auth.ts": 7,
+        "src/shared/routing/search-params.ts": 47,
+        "test/search-params.test.ts": 39,
+        "test/worker-runtime.test.ts": 79
+      },
+      "user_removed_per_file": {
+        "src/features/admin/components/admin-layout.tsx": 15,
+        "src/features/applications/components/application-detail-page.tsx": 28,
+        "src/features/applications/components/application-detail-tabs.tsx": 172,
+        "src/features/consent/components/consent-page.tsx": 14,
+        "src/routeTree.gen.ts": 5,
+        "src/routes/admin/applications/$applicationId/oidc.tsx": 2,
+        "src/routes/consent.tsx": 3,
+        "src/server/auth.ts": 1,
+        "test/worker-runtime.test.ts": 1
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1198,
+      "agent_lines_removed": 241
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1198,
+      "agent_lines_removed": 241
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1198,
+      "agent_lines_removed": 241
+    }
+  ]
+}
