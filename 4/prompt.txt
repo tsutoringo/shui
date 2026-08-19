@@ -1,0 +1,25 @@
+Failed query: select "id", "identifier", "name", "access_token_ttl", "refresh_token_ttl", "signing_algorithm", "signing_key_id", "allowed_scopes", "custom_claims", "dpop_bound_access_tokens_required", "disabled", "created_at", "updated_at", "policy_version", "metadata" from "oauth_resource" where "oauth_resource"."identifier" = ?
+params: http://localhost:8787/api
+
+なんでや
+
+他のは動いているっぽい
+
+---
+
+Failed query: select "id", "identifier", "name", "access_token_ttl", "refresh_token_ttl", "signing_algorithm", "signing_key_id", "allowed_scopes", "custom_claims", "dpop_bound_access_tokens_required", "disabled", "created_at", "updated_at", "policy_version", "metadata" from "oauth_resource" where "oauth_resource"."identifier" = ?
+params: http://localhost:8787/api
+消してmigrationし直したけど動作しない
+これはsign in
+
+---
+
+authだけ戻して
+
+---
+
+なんでこれ変えるとこうなるんだ...?
+
+---
+
+cloudflare:workersとfetch(env)が変わるっていうソースは？

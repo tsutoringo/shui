@@ -3,7 +3,7 @@
   "checkpoint_id": "01M0D5W1GH02A92WBV1T58J30T",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 9,
+  "checkpoints_count": 14,
   "files_touched": [
     "src/features/admin/api/client.ts",
     "src/features/applications/api/client.ts",
@@ -17,6 +17,7 @@
     "src/features/teams/api/client.ts",
     "src/features/teams/api/queries.ts",
     "src/features/users/api/client.ts",
+    "src/routes/api.$.ts",
     "src/server/api.ts",
     "src/server/auth.ts",
     "src/server/modules/api-plugin.ts",
@@ -45,6 +46,8 @@
     "src/server/modules/teams/routes.ts",
     "src/server/modules/users/models.ts",
     "src/server/modules/users/routes.ts",
+    "src/shared/api/eden-fetch.ts",
+    "src/test-worker.ts",
     "test/admin-policy.test.ts",
     "wrangler.staging.jsonc"
   ],
@@ -76,13 +79,20 @@
       "compact_transcript": "/3/transcript.jsonl",
       "content_hash": "/3/content_hash.txt",
       "prompt": "/3/prompt.txt"
+    },
+    {
+      "metadata": "/4/metadata.json",
+      "transcript": "/4/full.jsonl",
+      "compact_transcript": "/4/transcript.jsonl",
+      "content_hash": "/4/content_hash.txt",
+      "prompt": "/4/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 1188941,
+    "input_tokens": 1875748,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 20285952,
-    "output_tokens": 124979,
-    "api_call_count": 210
+    "cache_read_tokens": 26457856,
+    "output_tokens": 165860,
+    "api_call_count": 287
   }
 }

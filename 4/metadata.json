@@ -1,0 +1,111 @@
+{
+  "cli_version": "0.9.0",
+  "checkpoint_id": "01M0D5W1GH02A92WBV1T58J30T",
+  "session_id": "01a017b1-2a6b-7c91-972d-1a8a8169fe02",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-19T14:12:52.901876Z",
+  "branch": "main",
+  "checkpoints_count": 5,
+  "save_step_count": 5,
+  "files_touched": [
+    "src/features/admin/api/client.ts",
+    "src/features/applications/api/client.ts",
+    "src/features/applications/api/queries.ts",
+    "src/features/bootstrap/api/client.ts",
+    "src/features/invitations/api/client.ts",
+    "src/features/invitations/api/queries.ts",
+    "src/features/service-accounts/api/client.ts",
+    "src/features/service-accounts/api/queries.ts",
+    "src/features/system-roles/api/client.ts",
+    "src/features/teams/api/client.ts",
+    "src/features/teams/api/queries.ts",
+    "src/features/users/api/client.ts",
+    "src/routes/api.$.ts",
+    "src/server/api.ts",
+    "src/server/auth.ts",
+    "src/server/modules/api-plugin.ts",
+    "src/server/modules/applications/routes.ts",
+    "src/server/modules/applications/service.ts",
+    "src/server/modules/authorization/plugin.ts",
+    "src/server/modules/authorization/routes.ts",
+    "src/server/modules/bootstrap/routes.ts",
+    "src/server/modules/bootstrap/service.ts",
+    "src/server/modules/index.ts",
+    "src/server/modules/invitations/routes.ts",
+    "src/server/modules/invitations/service.ts",
+    "src/server/modules/models.ts",
+    "src/server/modules/service-accounts/credentials.ts",
+    "src/server/modules/service-accounts/routes.ts",
+    "src/server/modules/system-roles/routes.ts",
+    "src/server/modules/teams/routes.ts",
+    "src/server/modules/users/routes.ts",
+    "src/shared/api/eden-fetch.ts",
+    "src/test-worker.ts",
+    "test/admin-policy.test.ts"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.6-luna",
+  "turn_id": "7e067433be78",
+  "checkpoint_transcript_start": 111,
+  "transcript_lines_at_start": 111,
+  "compact_transcript_start": 21,
+  "token_usage": {
+    "input_tokens": 686807,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 6171904,
+    "output_tokens": 40881,
+    "api_call_count": 77
+  },
+  "session_metrics": {
+    "turn_count": 5
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-19T14:12:52.828698Z",
+    "agent_lines": 703,
+    "agent_removed": 1241,
+    "human_added": 576,
+    "human_modified": 63,
+    "human_removed": 0,
+    "total_committed": 1342,
+    "total_lines_changed": 2583,
+    "agent_percentage": 75.26132404181185,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1364,
+      "agent_lines_removed": 1268
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1364,
+      "agent_lines_removed": 1268
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1333,
+      "agent_lines_removed": 1232
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1335,
+      "agent_lines_removed": 1232
+    }
+  ]
+}
