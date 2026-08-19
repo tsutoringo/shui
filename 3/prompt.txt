@@ -1,0 +1,7 @@
+今pluginの書き換え行っててusersだけ書き換えたとこ。
+
+ほかも同様にしたい。
+
+---
+
+Implement the plan.
