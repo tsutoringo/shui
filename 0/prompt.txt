@@ -1,0 +1,211 @@
+Elysiaを2.0に移行したけどエラーになる
+
+src/server/modules/service-accounts/routes.ts:115:17 - error TS7031: Binding element 'actor' implicitly has an 'any' type.
+
+115     }, async ({ actor, params, request }) =>
+                    ~~~~~
+
+src/server/modules/service-accounts/routes.ts:115:24 - error TS7031: Binding element 'params' implicitly has an 'any' type.
+
+115     }, async ({ actor, params, request }) =>
+                           ~~~~~~
+
+src/server/modules/service-accounts/routes.ts:115:32 - error TS7031: Binding element 'request' implicitly has an 'any' type.
+
+115     }, async ({ actor, params, request }) =>
+                                   ~~~~~~~
+
+src/server/modules/system-roles/routes.ts:16:17 - error TS7031: Binding element 'actor' implicitly has an 'any' type.
+
+16     }, async ({ actor, body, params, request }) =>
+                   ~~~~~
+
+src/server/modules/system-roles/routes.ts:16:24 - error TS7031: Binding element 'body' implicitly has an 'any' type.
+
+16     }, async ({ actor, body, params, request }) =>
+                          ~~~~
+
+src/server/modules/system-roles/routes.ts:16:30 - error TS7031: Binding element 'params' implicitly has an 'any' type.
+
+16     }, async ({ actor, body, params, request }) =>
+                                ~~~~~~
+
+src/server/modules/system-roles/routes.ts:16:38 - error TS7031: Binding element 'request' implicitly has an 'any' type.
+
+16     }, async ({ actor, body, params, request }) =>
+                                        ~~~~~~~
+
+src/server/modules/system-roles/routes.ts:22:17 - error TS7031: Binding element 'actor' implicitly has an 'any' type.
+
+22     }, async ({ actor, params, request }) =>
+                   ~~~~~
+
+src/server/modules/system-roles/routes.ts:22:24 - error TS7031: Binding element 'params' implicitly has an 'any' type.
+
+22     }, async ({ actor, params, request }) =>
+                          ~~~~~~
+
+src/server/modules/system-roles/routes.ts:22:32 - error TS7031: Binding element 'request' implicitly has an 'any' type.
+
+22     }, async ({ actor, params, request }) =>
+                                  ~~~~~~~
+
+src/server/modules/teams/routes.ts:23:17 - error TS7031: Binding element 'actor' implicitly has an 'any' type.
+
+23     }, async ({ actor, body, request }) => createTeam(environment, actor, body, request))
+                   ~~~~~
+
+src/server/modules/teams/routes.ts:23:24 - error TS7031: Binding element 'body' implicitly has an 'any' type.
+
+23     }, async ({ actor, body, request }) => createTeam(environment, actor, body, request))
+                          ~~~~
+
+src/server/modules/teams/routes.ts:23:30 - error TS7031: Binding element 'request' implicitly has an 'any' type.
+
+23     }, async ({ actor, body, request }) => createTeam(environment, actor, body, request))
+                                ~~~~~~~
+
+src/server/modules/teams/routes.ts:29:17 - error TS7031: Binding element 'actor' implicitly has an 'any' type.
+
+29     }, async ({ actor, body, params, request }) =>
+                   ~~~~~
+
+src/server/modules/teams/routes.ts:29:24 - error TS7031: Binding element 'body' implicitly has an 'any' type.
+
+29     }, async ({ actor, body, params, request }) =>
+                          ~~~~
+
+src/server/modules/teams/routes.ts:29:30 - error TS7031: Binding element 'params' implicitly has an 'any' type.
+
+29     }, async ({ actor, body, params, request }) =>
+                                ~~~~~~
+
+src/server/modules/teams/routes.ts:29:38 - error TS7031: Binding element 'request' implicitly has an 'any' type.
+
+29     }, async ({ actor, body, params, request }) =>
+                                        ~~~~~~~
+
+src/server/modules/teams/routes.ts:35:17 - error TS7031: Binding element 'actor' implicitly has an 'any' type.
+
+35     }, async ({ actor, params, request }) =>
+                   ~~~~~
+
+src/server/modules/teams/routes.ts:35:24 - error TS7031: Binding element 'params' implicitly has an 'any' type.
+
+35     }, async ({ actor, params, request }) =>
+                          ~~~~~~
+
+src/server/modules/teams/routes.ts:35:32 - error TS7031: Binding element 'request' implicitly has an 'any' type.
+
+35     }, async ({ actor, params, request }) =>
+                                  ~~~~~~~
+
+src/server/modules/teams/routes.ts:41:17 - error TS7031: Binding element 'actor' implicitly has an 'any' type.
+
+41     }, async ({ actor, params, request }) =>
+                   ~~~~~
+
+src/server/modules/teams/routes.ts:41:24 - error TS7031: Binding element 'params' implicitly has an 'any' type.
+
+41     }, async ({ actor, params, request }) =>
+                          ~~~~~~
+
+src/server/modules/teams/routes.ts:41:32 - error TS7031: Binding element 'request' implicitly has an 'any' type.
+
+41     }, async ({ actor, params, request }) =>
+                                  ~~~~~~~
+
+src/server/modules/teams/routes.ts:47:17 - error TS7031: Binding element 'actor' implicitly has an 'any' type.
+
+47     }, async ({ actor, params, request }) => deleteTeam(environment, actor, params.id, request))
+                   ~~~~~
+
+src/server/modules/teams/routes.ts:47:24 - error TS7031: Binding element 'params' implicitly has an 'any' type.
+
+47     }, async ({ actor, params, request }) => deleteTeam(environment, actor, params.id, request))
+                          ~~~~~~
+
+src/server/modules/teams/routes.ts:47:32 - error TS7031: Binding element 'request' implicitly has an 'any' type.
+
+47     }, async ({ actor, params, request }) => deleteTeam(environment, actor, params.id, request))
+                                  ~~~~~~~
+
+src/server/modules/teams/routes.ts:53:17 - error TS7031: Binding element 'actor' implicitly has an 'any' type.
+
+53     }, async ({ actor, body, params, request }) =>
+                   ~~~~~
+
+src/server/modules/teams/routes.ts:53:24 - error TS7031: Binding element 'body' implicitly has an 'any' type.
+
+53     }, async ({ actor, body, params, request }) =>
+                          ~~~~
+
+src/server/modules/teams/routes.ts:53:30 - error TS7031: Binding element 'params' implicitly has an 'any' type.
+
+53     }, async ({ actor, body, params, request }) =>
+                                ~~~~~~
+
+src/server/modules/teams/routes.ts:53:38 - error TS7031: Binding element 'request' implicitly has an 'any' type.
+
+53     }, async ({ actor, body, params, request }) =>
+                                        ~~~~~~~
+
+src/server/modules/teams/routes.ts:59:17 - error TS7031: Binding element 'actor' implicitly has an 'any' type.
+
+59     }, async ({ actor, params, request }) =>
+                   ~~~~~
+
+src/server/modules/teams/routes.ts:59:24 - error TS7031: Binding element 'params' implicitly has an 'any' type.
+
+59     }, async ({ actor, params, request }) =>
+                          ~~~~~~
+
+src/server/modules/teams/routes.ts:59:32 - error TS7031: Binding element 'request' implicitly has an 'any' type.
+
+59     }, async ({ actor, params, request }) =>
+                                  ~~~~~~~
+
+src/server/modules/users/routes.ts:16:17 - error TS7031: Binding element 'actor' implicitly has an 'any' type.
+
+16     }, async ({ actor, params, request }) =>
+                   ~~~~~
+
+src/server/modules/users/routes.ts:16:24 - error TS7031: Binding element 'params' implicitly has an 'any' type.
+
+16     }, async ({ actor, params, request }) =>
+                          ~~~~~~
+
+src/server/modules/users/routes.ts:16:32 - error TS7031: Binding element 'request' implicitly has an 'any' type.
+
+16     }, async ({ actor, params, request }) =>
+                                  ~~~~~~~
+
+src/server/modules/users/routes.ts:22:17 - error TS7031: Binding element 'actor' implicitly has an 'any' type.
+
+22     }, async ({ actor, params, request }) =>
+                   ~~~~~
+
+src/server/modules/users/routes.ts:22:24 - error TS7031: Binding element 'params' implicitly has an 'any' type.
+
+22     }, async ({ actor, params, request }) =>
+                          ~~~~~~
+
+src/server/modules/users/routes.ts:22:32 - error TS7031: Binding element 'request' implicitly has an 'any' type.
+
+22     }, async ({ actor, params, request }) =>
+                                  ~~~~~~~
+
+src/server/modules/users/routes.ts:28:17 - error TS7031: Binding element 'actor' implicitly has an 'any' type.
+
+28     }, async ({ actor, params, request }) =>
+                   ~~~~~
+
+src/server/modules/users/routes.ts:28:24 - error TS7031: Binding element 'params' implicitly has an 'any' type.
+
+28     }, async ({ actor, params, request }) =>
+                          ~~~~~~
+
+src/server/modules/users/routes.ts:28:32 - error TS7031: Binding element 'request' implicitly has an 'any' type.
+
+28     }, async ({ actor, params, request }) =>
+                                  ~~~~~~~
