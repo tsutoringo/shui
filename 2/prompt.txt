@@ -1,0 +1,13 @@
+modelsを一箇所に集まっているところから各moduleに分割させたい
+
+---
+
+createDomainApiRoutesde
+
+---
+
+createDomainApiRoutesでmodelをツカノをヤメテ各ルートでする。
+
+---
+
+Implement the plan.
