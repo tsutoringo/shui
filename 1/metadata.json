@@ -1,0 +1,64 @@
+{
+  "cli_version": "0.9.0",
+  "checkpoint_id": "01M0BVD3KJB46BVD17CN1GRK65",
+  "session_id": "01a015fd-f9ee-7d51-bb1b-92a5975bfd09",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-19T01:50:38.356437Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [],
+  "agent": "Codex",
+  "model": "gpt-5.6-sol",
+  "turn_id": "face1b5ff122",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 199232,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 6499840,
+    "output_tokens": 20685,
+    "api_call_count": 59
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 428,
+      "user_lines_removed": 666,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "package.json": 3,
+        "pnpm-lock.yaml": 30,
+        "src/server/api.ts": 3,
+        "src/server/modules/applications/routes.ts": 156,
+        "src/server/modules/authorization/plugin.ts": 2,
+        "src/server/modules/authorization/routes.ts": 1,
+        "src/server/modules/bootstrap/routes.ts": 21,
+        "src/server/modules/index.ts": 2,
+        "src/server/modules/invitations/routes.ts": 35,
+        "src/server/modules/service-accounts/routes.ts": 94,
+        "src/server/modules/system-roles/routes.ts": 15,
+        "src/server/modules/teams/routes.ts": 44,
+        "src/server/modules/users/routes.ts": 20,
+        "src/shared/api/eden-fetch.ts": 1,
+        "worker-configuration.d.ts": 1
+      },
+      "user_removed_per_file": {
+        "package.json": 3,
+        "pnpm-lock.yaml": 44,
+        "src/server/api.ts": 3,
+        "src/server/modules/applications/routes.ts": 240,
+        "src/server/modules/authorization/plugin.ts": 2,
+        "src/server/modules/authorization/routes.ts": 5,
+        "src/server/modules/bootstrap/routes.ts": 37,
+        "src/server/modules/index.ts": 2,
+        "src/server/modules/invitations/routes.ts": 59,
+        "src/server/modules/service-accounts/routes.ts": 142,
+        "src/server/modules/system-roles/routes.ts": 23,
+        "src/server/modules/teams/routes.ts": 72,
+        "src/server/modules/users/routes.ts": 32,
+        "src/shared/api/eden-fetch.ts": 1,
+        "worker-configuration.d.ts": 1
+      }
+    }
+  ]
+}
