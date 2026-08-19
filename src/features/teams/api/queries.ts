@@ -10,7 +10,7 @@ import {
   updateTeam,
 } from "~/features/teams/api/client";
 import { userQueryKeys } from "~/features/users/api/queries";
-import type { TeamUpdateBody } from "~/server/modules/models";
+import type { TeamUpdateBody } from "~/server/modules/teams/models";
 
 export const teamQueryKeys = {
   all: ["teams"] as const,

@@ -13,9 +13,8 @@ import type {
   ApplicationRoleGrantBody,
   ApplicationRoleUpdateBody,
   ApplicationUpdateBody,
-  Owner,
-  OwnershipBody,
-} from "~/server/modules/models";
+} from "~/server/modules/applications/models";
+import type { Owner, OwnershipBody } from "~/server/modules/models/common";
 import { getApiFetch } from "~/shared/api/eden-fetch";
 import { unwrapApiResponse } from "~/shared/api/errors";
 

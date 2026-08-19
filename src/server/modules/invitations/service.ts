@@ -19,7 +19,7 @@ import {
   readHumanMapping,
 } from "../identity/service";
 import { ApiError } from "../errors";
-import { type InvitationAcceptBody, type InvitationCreateBody } from "../models";
+import { type InvitationAcceptBody, type InvitationCreateBody } from "./models";
 import {
   auditStatement,
   auditStatementWhen,

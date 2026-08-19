@@ -3,15 +3,13 @@ import { edenFetch } from "@elysiajs/eden";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/start-server-core/request-response";
 
-import { type ApiApp, createApiApp } from "~/server/api";
+import { shuiApi, type ApiApp } from "~/server/api";
 
 export const getApiFetch = createIsomorphicFn()
   .server(() =>
     edenFetch<ApiApp>(env.BETTER_AUTH_URL, {
       fetcher: async (input, init) =>
-        createApiApp(env).fetch(
-          new Request(input, withIncomingAuthHeaders(stripBodyForSafeMethods(init))),
-        ),
+        shuiApi.fetch(new Request(input, withIncomingAuthHeaders(stripBodyForSafeMethods(init)))),
     }),
   )
   .client(() =>

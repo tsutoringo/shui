@@ -17,7 +17,8 @@ import {
   applicationQueryKeys,
   applicationsQueryOptions,
 } from "~/features/applications/api/queries";
-import type { OwnershipBody, ServiceAccountUpdateBody } from "~/server/modules/models";
+import type { OwnershipBody } from "~/server/modules/models/common";
+import type { ServiceAccountUpdateBody } from "~/server/modules/service-accounts/models";
 
 export const serviceAccountQueryKeys = {
   all: ["service-accounts"] as const,

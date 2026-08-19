@@ -1,6 +1,6 @@
+import type { Application } from "~/server/modules/applications/models";
+import type { OwnershipBody } from "~/server/modules/models/common";
 import type {
-  Application,
-  OwnershipBody,
   ServiceAccount,
   ServiceAccountCredential,
   ServiceAccountCredentialCreateBody,
@@ -10,7 +10,7 @@ import type {
   ServiceAccountCreateBody,
   ServiceAccountOwners,
   ServiceAccountUpdateBody,
-} from "~/server/modules/models";
+} from "~/server/modules/service-accounts/models";
 import { getApiFetch } from "~/shared/api/eden-fetch";
 import { unwrapApiResponse } from "~/shared/api/errors";
 

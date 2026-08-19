@@ -5,7 +5,7 @@ import {
   createInvitation,
   getInvitation,
 } from "~/features/invitations/api/client";
-import type { InvitationAcceptBody } from "~/server/modules/models";
+import type { InvitationAcceptBody } from "~/server/modules/invitations/models";
 
 export const invitationQueryKeys = {
   invitation: (token: string) => ["invitations", token] as const,

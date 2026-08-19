@@ -28,8 +28,8 @@ import type {
   ApplicationClientUpdateBody,
   ApplicationRoleUpdateBody,
   ApplicationUpdateBody,
-  OwnershipBody,
-} from "~/server/modules/models";
+} from "~/server/modules/applications/models";
+import type { OwnershipBody } from "~/server/modules/models/common";
 
 export const applicationQueryKeys = {
   all: ["applications"] as const,

@@ -1,4 +1,4 @@
-import type { AdminAccess } from "~/server/modules/models";
+import type { AdminAccess } from "~/server/modules/authorization/models";
 import { getApiFetch } from "~/shared/api/eden-fetch";
 import { unwrapApiResponse } from "~/shared/api/errors";
 

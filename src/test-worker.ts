@@ -1,10 +1,10 @@
-import { createApiApp } from "./server/api";
+import { shuiApi } from "./server/api";
 import { handleRootOAuthAuthorizationServerMetadata } from "./server/metadata";
 
 const worker = {
   async fetch(request: Request, env: Env) {
     const metadataResponse = await handleRootOAuthAuthorizationServerMetadata(request, env);
-    return metadataResponse ?? createApiApp(env).fetch(request);
+    return metadataResponse ?? shuiApi.fetch(request);
   },
 };
 

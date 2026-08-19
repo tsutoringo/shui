@@ -10,7 +10,7 @@ import {
 } from "../../../db/domain-schema";
 import { type AuthEnvironment, type AuthInstance } from "../../auth";
 import { ApiError } from "../errors";
-import { type BootstrapCompleteBody, type BootstrapTokenBody } from "../models";
+import { type BootstrapCompleteBody, type BootstrapTokenBody } from "./models";
 import { ensureControlledUser, ensureHumanPrincipal } from "../identity/service";
 import {
   auditStatementWhen,

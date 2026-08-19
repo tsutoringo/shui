@@ -1,4 +1,4 @@
-import type { User } from "~/server/modules/models";
+import type { User } from "~/server/modules/users/models";
 import { getApiFetch } from "~/shared/api/eden-fetch";
 import { unwrapApiResponse } from "~/shared/api/errors";
 

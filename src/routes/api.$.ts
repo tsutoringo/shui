@@ -1,10 +1,9 @@
-import { env } from "cloudflare:workers";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { createApiApp } from "~/server/api";
+import { shuiApi } from "~/server/api";
 export { getApiFetch } from "~/shared/api/eden-fetch";
 
-const handle = ({ request }: { request: Request }) => createApiApp(env).fetch(request);
+const handle = ({ request }: { request: Request }) => shuiApi.fetch(request);
 
 export const Route = createFileRoute("/api/$")({
   server: {

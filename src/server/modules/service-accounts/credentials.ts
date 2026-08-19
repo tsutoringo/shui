@@ -26,7 +26,7 @@ import type {
   ServiceAccountCredential,
   ServiceAccountCredentialCreateBody,
   ServiceAccountCredentialRotateBody,
-} from "../models";
+} from "./models";
 
 const SERVICE_ACCOUNT_SCOPES = ["api:read"] as const;
 

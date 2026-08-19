@@ -1,11 +1,18 @@
-import { type AuthEnvironment, type AuthInstance } from "../../auth";
-import { createDomainApiRoutes } from "../api-plugin";
+import { createAuth } from "../../auth";
+import { Elysia } from "elysia";
+
+import { CommonModels } from "../models/common";
+import { shuiPlugin } from "../plugin";
+import { AuthorizationModels } from "./models";
 import { requireAdminAccess } from "./service";
 
-export function createAuthorizationRoutes(environment: AuthEnvironment, auth: AuthInstance) {
-  return createDomainApiRoutes(environment, auth, "authorization").get(
+export const authorizationRoute = new Elysia()
+  .use(shuiPlugin)
+  .model({ ...CommonModels, ...AuthorizationModels })
+  .get(
     "/admin/access",
-    ({ request }) => requireAdminAccess(auth, environment, request),
-    { response: "AdminAccess" },
+    ({ request, environment }) => requireAdminAccess(createAuth(environment), environment, request),
+    {
+      response: "AdminAccess",
+    },
   );
-}

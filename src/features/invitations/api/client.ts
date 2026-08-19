@@ -4,7 +4,7 @@ import type {
   InvitationCreateBody,
   InvitationCreated,
   InvitationPublic,
-} from "~/server/modules/models";
+} from "~/server/modules/invitations/models";
 import { getApiFetch } from "~/shared/api/eden-fetch";
 import { unwrapApiResponse } from "~/shared/api/errors";
 

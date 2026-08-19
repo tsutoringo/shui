@@ -1,4 +1,9 @@
-import type { Team, TeamCreateBody, TeamMemberBody, TeamUpdateBody } from "~/server/modules/models";
+import type {
+  Team,
+  TeamCreateBody,
+  TeamMemberBody,
+  TeamUpdateBody,
+} from "~/server/modules/teams/models";
 import { getApiFetch } from "~/shared/api/eden-fetch";
 import { unwrapApiResponse } from "~/shared/api/errors";
 

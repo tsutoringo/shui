@@ -45,7 +45,7 @@ import type {
   ApplicationRoleUpdateBody,
   ApplicationRoleGrantBody,
   ApplicationUpdateBody,
-} from "../models";
+} from "./models";
 
 const SUPPORTED_SCOPES = ["openid", "profile", "email", "api:read"] as const;
 const ROLE_KEY_PATTERN = /^[a-z0-9][a-z0-9._:-]*$/;

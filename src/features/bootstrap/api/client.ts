@@ -3,7 +3,7 @@ import type {
   BootstrapCompleteBody,
   BootstrapReservation,
   BootstrapTokenBody,
-} from "~/server/modules/models";
+} from "~/server/modules/bootstrap/models";
 import { getApiFetch } from "~/shared/api/eden-fetch";
 import { unwrapApiResponse } from "~/shared/api/errors";
 

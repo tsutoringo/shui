@@ -9,6 +9,7 @@ import { auditEvents, humanPrincipals, principals } from "../db/domain-schema";
 import { audienceResources, resolveShuiClaims } from "./modules/applications/claims";
 import { createOAuthConsentAccessPlugin } from "./modules/applications/consent";
 import { consumeRateLimitBucket } from "./shared/infrastructure";
+import { env } from "cloudflare:workers";
 
 export type DevelopmentEmailKind = "invitation" | "password-reset" | "verification";
 
@@ -265,6 +266,8 @@ export function createAuth(environment: AuthEnvironment) {
 }
 
 export type AuthInstance = ReturnType<typeof createAuth>;
+let authInsntance: AuthInstance | null = null;
+export const getAuth = (): AuthInstance => (authInsntance ??= createAuth(env));
 
 async function consumeRateLimit(
   database: D1Database,
