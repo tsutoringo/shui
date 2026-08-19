@@ -3,10 +3,12 @@
   "checkpoint_id": "01M0D5W1GH02A92WBV1T58J30T",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 1,
+  "checkpoints_count": 4,
   "files_touched": [
     "src/server/api.ts",
-    "src/server/modules/index.ts"
+    "src/server/auth.ts",
+    "src/server/modules/index.ts",
+    "wrangler.staging.jsonc"
   ],
   "sessions": [
     {
@@ -15,13 +17,20 @@
       "compact_transcript": "/0/transcript.jsonl",
       "content_hash": "/0/content_hash.txt",
       "prompt": "/0/prompt.txt"
+    },
+    {
+      "metadata": "/1/metadata.json",
+      "transcript": "/1/full.jsonl",
+      "compact_transcript": "/1/transcript.jsonl",
+      "content_hash": "/1/content_hash.txt",
+      "prompt": "/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 199232,
+    "input_tokens": 716559,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 6499840,
-    "output_tokens": 20685,
-    "api_call_count": 59
+    "cache_read_tokens": 11487488,
+    "output_tokens": 61237,
+    "api_call_count": 113
   }
 }
